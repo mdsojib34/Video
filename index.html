@@ -6,8 +6,8 @@
 <title>VidUnlock Pro — Premium Video Unlock</title>
 <!-- Telegram Mini App SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<!-- Advertisement SDK -->
-<script src='//libtl.com/sdk.js' data-zone='11399844' data-sdk='show_11399844'></script>
+<!-- Updated Advertisement SDK -->
+<script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
 
 <style>
 /* =========================================================
@@ -551,8 +551,9 @@ async function watchAd() {
   const v = currentActiveVid;
   const btn = document.getElementById('ad-btn');
   
-  if (typeof show_11399844 !== 'function') {
+  if (typeof show_11404425 !== 'function') {
     showToast("Ad SDK loading... please wait.", "warning");
+    console.error("show_11404425 not found. Ad Zone might not be initialized.");
     return;
   }
 
@@ -562,20 +563,20 @@ async function watchAd() {
 
   try {
     // Calling SDK and waiting for completion
-    await show_11399844(); 
+    // Based on the user's new Zone ID: 11404425
+    await show_11404425(); 
     
-    // If we reach here, it means Ad was closed/completed
+    // If we reach here, it means Ad was closed/completed successfully
     handleAdSuccess(v.id);
     
   } catch (err) {
-    console.error("Ad failed:", err);
+    console.error("Ad Display Error:", err);
     showToast("Ad display failed. Try again.", "danger");
   } finally {
     isAdShowing = false;
-    if (btn) {
-      btn.disabled = false;
-      const prog = state.progress[v.id] || 0;
-      btn.textContent = `📺 WATCH AD TO UNLOCK (${prog}/${v.requiredAds})`;
+    // Re-check the current progress and update UI
+    if (currentActiveVid && currentActiveVid.id === v.id) {
+       updateDetailUI(v);
     }
   }
 }
@@ -584,6 +585,7 @@ function handleAdSuccess(vidId) {
   const v = state.videos.find(x => x.id === vidId);
   if(!v) return;
 
+  // Increment Progress only on successful Ad Completion
   state.progress[vidId] = (state.progress[vidId] || 0) + 1;
   state.adViews++;
 
@@ -592,12 +594,11 @@ function handleAdSuccess(vidId) {
     delete state.progress[vidId];
     showToast("অভিনন্দন! ভিডিওটি আনলক হয়েছে। 🎉", "success");
   } else {
-    showToast(`অ্যাড দেখা সফল! বাকি: ${v.requiredAds - state.progress[vidId]}`, "info");
+    showToast(`অ্যাড দেখা সফল! (${state.progress[vidId]}/${v.requiredAds})`, "info");
   }
   
   saveState();
   renderAll(); // Updates background grids
-  updateDetailUI(v); // Updates current modal UI immediately
 }
 
 function watchExternal(link) {
@@ -763,4 +764,4 @@ function clearAppData() {
 window.onload = initApp;
 </script>
 </body>
-</html>
+   </html>
