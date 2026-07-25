@@ -11,7 +11,7 @@
 
 <style>
 /* =========================================================
-   CORE DESIGN SYSTEM (Preserved & Enhanced)
+   CORE DESIGN SYSTEM (Preserved)
    ========================================================= */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -176,9 +176,7 @@ body{padding-bottom:100px}
       <input type="text" id="main-search" placeholder="ভিডিও বা ক্যাটাগরি খুঁজুন..." oninput="handleSearch()">
     </div>
   </div>
-  <div class="cat-tabs" id="category-tabs">
-    <!-- Tabs injected by JS -->
-  </div>
+  <div class="cat-tabs" id="category-tabs"></div>
 </div>
 
 <!-- VIEW: HOME -->
@@ -198,7 +196,6 @@ body{padding-bottom:100px}
       <h3 class="page-title">🕘 দেখা শুরু করুন</h3>
       <div class="grid" id="recent-grid"></div>
     </div>
-
     <h3 class="page-title" id="grid-title">সব ভিডিও</h3>
     <div class="grid" id="main-grid"></div>
   </div>
@@ -223,7 +220,6 @@ body{padding-bottom:100px}
     <h2 id="prof-name">Guest</h2>
     <p style="color:var(--muted);font-size:12px" id="prof-id">ID: 000000</p>
   </div>
-  
   <div class="admin-card" style="padding:0">
     <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="showView('fav')">❤️ আমার পছন্দের ভিডিও</button>
     <div style="height:1px;background:var(--border)"></div>
@@ -236,14 +232,12 @@ body{padding-bottom:100px}
 <!-- VIEW: ADMIN -->
 <section class="view" id="view-admin">
   <h3 class="page-title">🛠 অ্যাডমিন প্যানেল</h3>
-  
   <div class="cat-tabs" style="padding:0;margin-bottom:15px">
     <button class="tab active" onclick="switchAdminSubView('dash', this)">ড্যাশবোর্ড</button>
     <button class="tab" onclick="switchAdminSubView('vids', this)">ভিডিও</button>
     <button class="tab" onclick="switchAdminSubView('cats', this)">ক্যাটাগরি</button>
     <button class="tab" onclick="switchAdminSubView('settings', this)">সেটিংস</button>
   </div>
-
   <div id="admin-dash" class="admin-subview">
     <div class="grid" style="grid-template-columns:1fr 1fr">
       <div class="admin-card"><div style="font-size:10px;color:var(--muted)">মোট ভিডিও</div><h3 id="ad-stat-v">0</h3></div>
@@ -251,12 +245,7 @@ body{padding-bottom:100px}
       <div class="admin-card"><div style="font-size:10px;color:var(--muted)">ইউজার</div><h3 id="ad-stat-u">0</h3></div>
       <div class="admin-card"><div style="font-size:10px;color:var(--muted)">অ্যাড ভিউ</div><h3 id="ad-stat-av">0</h3></div>
     </div>
-    <div class="admin-card">
-      <h4 style="margin-bottom:10px">Storage Usage</h4>
-      <div id="storage-info" style="font-size:12px;color:var(--muted)">Calculating...</div>
-    </div>
   </div>
-
   <div id="admin-vids" class="admin-subview hidden">
     <div class="admin-card">
       <h4>➕ নতুন ভিডিও যোগ করুন</h4>
@@ -284,7 +273,6 @@ body{padding-bottom:100px}
     </div>
     <div id="admin-vid-list"></div>
   </div>
-
   <div id="admin-cats" class="admin-subview hidden">
     <div class="admin-card">
       <h4>➕ নতুন ক্যাটাগরি</h4>
@@ -294,16 +282,12 @@ body{padding-bottom:100px}
     </div>
     <div id="admin-cat-list"></div>
   </div>
-
   <div id="admin-settings" class="admin-subview hidden">
     <div class="admin-card">
       <h4>Data Management</h4>
       <div style="display:grid;gap:10px;margin-top:10px">
-        <button class="btn btn-g" onclick="exportData()">📥 Export Full Backup (JSON)</button>
-        <label class="btn btn-g">
-          📤 Import Backup
-          <input type="file" style="display:none" accept=".json" onchange="importData(this)">
-        </label>
+        <button class="btn btn-g" onclick="exportData()">📥 Export Backup (JSON)</button>
+        <label class="btn btn-g">📤 Import Backup<input type="file" style="display:none" accept=".json" onchange="importData(this)"></label>
         <button class="btn btn-d" onclick="clearAppData()">⚠️ Clear All Data</button>
       </div>
     </div>
@@ -319,9 +303,7 @@ body{padding-bottom:100px}
       <button id="md-fav-btn" style="background:none;border:none;font-size:22px">🤍</button>
     </div>
     <div class="sheet-content">
-      <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:15px">
-        <!-- Thumbnail or Video Player -->
-      </div>
+      <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:15px"></div>
       <h2 id="md-title"></h2>
       <div style="display:flex;gap:8px;margin:10px 0">
         <span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span>
@@ -329,9 +311,7 @@ body{padding-bottom:100px}
       </div>
       <p id="md-desc" style="font-size:13px;color:var(--muted);line-height:1.5"></p>
       
-      <div id="md-action-area">
-        <!-- Action buttons (Unlock / Play) -->
-      </div>
+      <div id="md-action-area"></div>
 
       <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:15px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -373,11 +353,11 @@ let state = {
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
     { id: 'cat_viral', name: 'ভাইরাল', icon: '🔥', order: 1 }
   ],
-  videos: [], // { id, title, categoryId, thumb, source, link, fileId, requiredAds, views: {}, serial, badge }
-  unlocked: {}, // { vidId: true }
-  progress: {}, // { vidId: count }
-  favorites: {}, // { vidId: true }
-  comments: {}, // { vidId: [] }
+  videos: [],
+  unlocked: {},
+  progress: {},
+  favorites: {},
+  comments: {},
   recent: [],
   adViews: 0,
   users: {},
@@ -385,24 +365,23 @@ let state = {
 };
 
 let tg = window.Telegram.WebApp;
-let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest', last_name: 'Demo' };
+let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
 let currentView = 'home';
 let currentCat = 'cat_all';
-let isAdLoading = false;
+let isAdShowing = false;
 let db = null;
 
 /* =======================================================
-   2. INDEXEDDB SETUP (FOR GALLERY VIDEOS)
+   2. INDEXEDDB SETUP
    ======================================================= */
 async function initDB() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const request = indexedDB.open(DB_NAME, 2);
     request.onupgradeneeded = (e) => {
       let db = e.target.result;
       if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
     };
     request.onsuccess = (e) => { db = e.target.result; resolve(); };
-    request.onerror = (e) => { console.error("DB Error", e); reject(); };
   });
 }
 
@@ -420,60 +399,26 @@ async function getFile(id) {
   });
 }
 
-async function deleteFile(id) {
-  const tx = db.transaction('files', 'readwrite');
-  tx.objectStore('files').delete(id);
-}
-
 /* =======================================================
    3. APP INITIALIZATION
    ======================================================= */
 async function initApp() {
-  try {
-    tg.ready();
-    tg.expand();
-    await initDB();
-    
-    // Load state
-    const saved = localStorage.getItem(STORE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Data Migration Logic
-      if (parsed.version < 3) migrateData(parsed);
-      state = { ...state, ...parsed };
-    }
+  tg.ready();
+  tg.expand();
+  await initDB();
+  
+  const saved = localStorage.getItem(STORE_KEY);
+  if (saved) state = { ...state, ...JSON.parse(saved) };
 
-    // Register User
-    const uid = user.id.toString();
-    if (!state.users[uid]) {
-      state.users[uid] = { name: user.first_name, username: user.username, joined: Date.now() };
-    }
-
-    // Admin UI
-    if (Number(user.id) === ADMIN_ID) {
-      document.getElementById('nav-admin').classList.remove('hidden');
-      document.getElementById('u-badge').style.display = 'inline-block';
-    }
-
-    updateUserUI();
-    renderCategories();
-    renderAll();
-    
-    document.getElementById('app-loader').style.display = 'none';
-  } catch (err) {
-    console.error("App Init Failed", err);
-    showToast("App Error! Please reload.", "danger");
+  if (Number(user.id) === ADMIN_ID) {
+    document.getElementById('nav-admin').classList.remove('hidden');
+    document.getElementById('u-badge').style.display = 'inline-block';
   }
-}
 
-function migrateData(old) {
-  // Legacy fix: req -> requiredAds
-  if (old.videos) {
-    old.videos.forEach(v => {
-      if (v.req && !v.requiredAds) v.requiredAds = v.req;
-    });
-  }
-  old.version = 3;
+  updateUserUI();
+  renderCategories();
+  renderAll();
+  document.getElementById('app-loader').style.display = 'none';
 }
 
 function saveState() {
@@ -485,38 +430,34 @@ function saveState() {
    ======================================================= */
 function renderCategories() {
   const container = document.getElementById('category-tabs');
-  const sorted = [...state.categories].sort((a,b) => (a.order || 0) - (b.order || 0));
-  container.innerHTML = sorted.map(c => `
+  container.innerHTML = state.categories.map(c => `
     <button class="tab ${currentCat === c.id ? 'active' : ''}" onclick="switchCat('${c.id}')">
       ${c.icon} ${c.name}
     </button>
   `).join('');
   
-  // Also update Admin Select
   const select = document.getElementById('av-cat');
-  if(select) select.innerHTML = sorted.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  if(select) select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
 function createVideoCard(v) {
   const isUnlocked = state.unlocked[v.id];
   const isFav = state.favorites[v.id];
-  const views = Object.keys(v.views || {}).length;
-  
   return `
     <div class="card" onclick="openDetail('${v.id}')">
       <div class="card-thumb">
-        <img src="${v.thumb || 'https://via.placeholder.com/300x180'}" loading="lazy">
+        <img src="${v.thumb || ''}" loading="lazy">
         <div class="card-badge ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}">
           ${isUnlocked ? '🔓 আনলক' : '🔒 লক'}
         </div>
         <div class="card-play"><div class="play-btn-circle">▶</div></div>
       </div>
       <div class="card-body">
-        <div class="card-cat">${state.categories.find(c=>c.id===v.categoryId)?.name || 'অন্যান্য'}</div>
+        <div class="card-cat">${state.categories.find(c=>c.id===v.categoryId)?.name || ''}</div>
         <div class="card-title">${v.title}</div>
         <div class="card-footer">
-          <span>👁 ${views} ভিউ</span>
-          <span style="color:${isFav ? 'var(--accent)' : 'inherit'}">${isFav ? '❤️' : '🤍'}</span>
+          <span>👁 ${Object.keys(v.views || {}).length} ভিউ</span>
+          <span>${isFav ? '❤️' : '🤍'}</span>
         </div>
       </div>
     </div>
@@ -533,51 +474,25 @@ function renderAll() {
 
 function renderHome() {
   const grid = document.getElementById('main-grid');
-  let vids = state.videos.filter(v => v.active !== false);
-  
-  // Search filter
-  const q = document.getElementById('main-search').value.toLowerCase();
-  if (q) {
-    vids = vids.filter(v => v.title.toLowerCase().includes(q) || 
-                            state.categories.find(c=>c.id===v.categoryId)?.name.toLowerCase().includes(q));
-  } else if (currentCat !== 'cat_all') {
-    vids = vids.filter(v => v.categoryId === currentCat);
-  }
-
-  // Sort by serial
-  vids.sort((a,b) => (a.serial || 0) - (b.serial || 0));
-
-  if (vids.length === 0) {
-    grid.innerHTML = `<div class="empty-state"><i>📭</i>কোনো ভিডিও পাওয়া যায়নি</div>`;
-  } else {
-    grid.innerHTML = vids.map(createVideoCard).join('');
-  }
-
-  // Recent
-  const recentGrid = document.getElementById('recent-grid');
-  if (state.recent && state.recent.length > 0) {
-    document.getElementById('recent-watched-container').classList.remove('hidden');
-    const recentVids = state.recent.map(rid => state.videos.find(v => v.id === rid)).filter(v => v);
-    recentGrid.innerHTML = recentVids.slice(0, 4).map(createVideoCard).join('');
-  } else {
-    document.getElementById('recent-watched-container').classList.add('hidden');
-  }
+  let vids = state.videos;
+  if (currentCat !== 'cat_all') vids = vids.filter(v => v.categoryId === currentCat);
+  grid.innerHTML = vids.map(createVideoCard).join('');
 }
 
 function renderFavs() {
   const grid = document.getElementById('fav-grid');
   const vids = state.videos.filter(v => state.favorites[v.id]);
-  grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : `<div class="empty-state"><i>❤️</i>কোনো ভিডিও পছন্দ করেননি</div>`;
+  grid.innerHTML = vids.map(createVideoCard).join('');
 }
 
 function renderUnlocked() {
   const grid = document.getElementById('unlock-grid');
   const vids = state.videos.filter(v => state.unlocked[v.id]);
-  grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : `<div class="empty-state"><i>🔓</i>কোনো ভিডিও আনলক করেননি</div>`;
+  grid.innerHTML = vids.map(createVideoCard).join('');
 }
 
 /* =======================================================
-   5. VIDEO ACTIONS & AD LOGIC
+   5. VIDEO ACTIONS & AD SYSTEM (FIXED)
    ======================================================= */
 let currentActiveVid = null;
 
@@ -586,91 +501,89 @@ async function openDetail(id) {
   if (!v) return;
   currentActiveVid = v;
 
-  // Tracking View
   if (!v.views) v.views = {};
   v.views[user.id] = true;
-  
-  // Track Recent
-  state.recent = [id, ...state.recent.filter(rid => rid !== id)].slice(0, 10);
   saveState();
 
+  updateDetailUI(v);
+  document.getElementById('modal-detail').classList.add('open');
+}
+
+async function updateDetailUI(v) {
   const isUnlocked = state.unlocked[v.id];
   const prog = state.progress[v.id] || 0;
   const req = v.requiredAds || 1;
-  const pct = Math.min(100, Math.floor((prog/req)*100));
+  const pct = Math.floor((prog/req)*100);
 
   document.getElementById('md-title').textContent = v.title;
-  document.getElementById('md-desc').textContent = v.desc || "প্রিমিয়াম ভিডিওটি দেখতে অ্যাড দেখুন।";
   document.getElementById('md-views').textContent = Object.keys(v.views).length + " Views";
-  document.getElementById('md-fav-btn').textContent = state.favorites[id] ? "❤️" : "🤍";
-  document.getElementById('md-fav-btn').onclick = () => toggleFav(id);
+  document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
+  document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
 
-  // Content (Thumb or Video Player)
   const mediaCont = document.getElementById('md-media-container');
   if (isUnlocked && v.source === 'file') {
     const blob = await getFile(v.fileId);
-    if (blob) {
-      const url = URL.createObjectURL(blob);
-      mediaCont.innerHTML = `<video src="${url}" controls style="width:100%;height:100%" poster="${v.thumb}"></video>`;
-    } else {
-      mediaCont.innerHTML = `<div style="padding:40px;text-align:center">⚠️ File Missing!</div>`;
-    }
+    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
   } else {
     mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
   }
 
-  // Action Area
   const actionArea = document.getElementById('md-action-area');
   if (isUnlocked) {
     actionArea.innerHTML = `
       <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
         <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
         ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">প্লেয়ারে ভিডিও চালু করুন।</p>`}
-      </div>
-    `;
+      </div>`;
   } else {
     actionArea.innerHTML = `
       <div class="prog-wrap">
-        <div class="prog-labels"><span>আনলক অগ্রগতি</span><span>${prog}/${req} (Ads)</span></div>
-        <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <div class="prog-labels"><span>আনলক অগ্রগতি</span><span id="prog-text">${prog}/${req} Ads</span></div>
+        <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:${pct}%"></div></div>
       </div>
-      <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK (${prog}/${req})</button>
-    `;
+      <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK</button>`;
   }
-
   renderComments(v.id);
-  document.getElementById('modal-detail').classList.add('open');
 }
 
 async function watchAd() {
-  if (isAdLoading) return;
+  if (isAdShowing) return;
   const v = currentActiveVid;
   const btn = document.getElementById('ad-btn');
   
-  isAdLoading = true;
+  if (typeof show_11399844 !== 'function') {
+    showToast("Ad SDK loading... please wait.", "warning");
+    return;
+  }
+
+  isAdShowing = true;
   btn.disabled = true;
-  btn.textContent = "⏳ Loading Advertisement...";
+  btn.textContent = "⏳ লোড হচ্ছে...";
 
   try {
-    // Advertisement SDK Integration
-    if (typeof show_11399844 === 'function') {
-      await show_11399844();
-      handleAdSuccess(v.id);
-    } else {
-      showToast("Ad SDK not loaded. Try later.", "danger");
-    }
+    // Calling SDK and waiting for completion
+    await show_11399844(); 
+    
+    // If we reach here, it means Ad was closed/completed
+    handleAdSuccess(v.id);
+    
   } catch (err) {
-    console.error("Ad failed", err);
-    showToast("Ad display failed.", "danger");
+    console.error("Ad failed:", err);
+    showToast("Ad display failed. Try again.", "danger");
   } finally {
-    isAdLoading = false;
-    btn.disabled = false;
-    btn.textContent = `📺 WATCH AD TO UNLOCK (${state.progress[v.id] || 0}/${v.requiredAds})`;
+    isAdShowing = false;
+    if (btn) {
+      btn.disabled = false;
+      const prog = state.progress[v.id] || 0;
+      btn.textContent = `📺 WATCH AD TO UNLOCK (${prog}/${v.requiredAds})`;
+    }
   }
 }
 
 function handleAdSuccess(vidId) {
   const v = state.videos.find(x => x.id === vidId);
+  if(!v) return;
+
   state.progress[vidId] = (state.progress[vidId] || 0) + 1;
   state.adViews++;
 
@@ -679,12 +592,12 @@ function handleAdSuccess(vidId) {
     delete state.progress[vidId];
     showToast("অভিনন্দন! ভিডিওটি আনলক হয়েছে। 🎉", "success");
   } else {
-    showToast(`অ্যাড ভিউ সফল! বাকি আছে: ${v.requiredAds - state.progress[vidId]}`, "info");
+    showToast(`অ্যাড দেখা সফল! বাকি: ${v.requiredAds - state.progress[vidId]}`, "info");
   }
   
   saveState();
-  renderAll();
-  openDetail(vidId);
+  renderAll(); // Updates background grids
+  updateDetailUI(v); // Updates current modal UI immediately
 }
 
 function watchExternal(link) {
@@ -695,17 +608,45 @@ function watchExternal(link) {
 /* =======================================================
    6. ADMIN ACTIONS
    ======================================================= */
-let editingVidId = null;
+function saveVideo() {
+  const title = document.getElementById('av-title').value;
+  const catId = document.getElementById('av-cat').value;
+  const source = document.getElementById('av-source').value;
+  const link = document.getElementById('av-link').value;
+  const ads = parseInt(document.getElementById('av-ads').value) || 1;
+  const thumbBase64 = document.getElementById('av-thumb-prev')._data;
+  const videoFile = document.getElementById('av-file').files[0];
+
+  if (!title) return showToast("শিরোনাম দিন");
+
+  const vidId = 'v' + Date.now();
+  const vidData = { id: vidId, title, categoryId: catId, source, link, requiredAds: ads, thumb: thumbBase64, views: {}, serial: state.videos.length + 1 };
+
+  if (source === 'file' && videoFile) {
+    vidData.fileId = 'file_' + vidId;
+    saveFile(vidData.fileId, videoFile);
+  }
+
+  state.videos.push(vidData);
+  saveState();
+  renderAll();
+  showToast("ভিডিও সেভ হয়েছে");
+}
+
+function renderAdmin() {
+  if (Number(user.id) !== ADMIN_ID) return;
+  document.getElementById('ad-stat-v').textContent = state.videos.length;
+  document.getElementById('ad-stat-c').textContent = state.categories.length;
+  document.getElementById('ad-stat-u').textContent = Object.keys(state.users).length;
+  document.getElementById('ad-stat-av').textContent = state.adViews;
+}
 
 function switchAdminSubView(id, btn) {
   document.querySelectorAll('.admin-subview').forEach(v => v.classList.add('hidden'));
   document.getElementById('admin-' + id).classList.remove('hidden');
-  document.querySelectorAll('.admin-subview-tab').forEach(b => b.classList.remove('active')); // Note: tab logic cleanup
-  if (btn) {
-    const tabs = btn.parentElement.querySelectorAll('.tab');
-    tabs.forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-  }
+  const tabs = btn.parentElement.querySelectorAll('.tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 function toggleSourceType(type) {
@@ -713,188 +654,14 @@ function toggleSourceType(type) {
   document.getElementById('source-file-wrap').classList.toggle('hidden', type === 'link');
 }
 
-async function saveVideo() {
-  const title = document.getElementById('av-title').value.trim();
-  const catId = document.getElementById('av-cat').value;
-  const source = document.getElementById('av-source').value;
-  const link = document.getElementById('av-link').value.trim();
-  const ads = parseInt(document.getElementById('av-ads').value) || 1;
-  const thumbBase64 = document.getElementById('av-thumb-prev')._data;
-  const videoFile = document.getElementById('av-file').files[0];
-
-  if (!title) return showToast("শিরোনাম দিন", "warning");
-
-  let vidData = editingVidId ? state.videos.find(v=>v.id === editingVidId) : { id: 'v' + Date.now(), views: {}, serial: state.videos.length + 1 };
-  
-  vidData.title = title;
-  vidData.categoryId = catId;
-  vidData.source = source;
-  vidData.link = link;
-  vidData.requiredAds = ads;
-  if (thumbBase64) vidData.thumb = thumbBase64;
-
-  if (source === 'file' && videoFile) {
-    vidData.fileId = 'file_' + vidData.id;
-    await saveFile(vidData.fileId, videoFile);
-  }
-
-  if (editingVidId) {
-    showToast("ভিডিও আপডেট হয়েছে");
-    editingVidId = null;
-  } else {
-    state.videos.push(vidData);
-    showToast("ভিডিও সেভ হয়েছে");
-  }
-
-  saveState();
-  renderAll();
-  resetVideoForm();
-}
-
-function resetVideoForm() {
-  document.getElementById('av-title').value = '';
-  document.getElementById('av-link').value = '';
-  document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
-  document.getElementById('av-thumb-prev')._data = null;
-  document.getElementById('av-file').value = '';
-}
-
-function renderAdmin() {
-  if (Number(user.id) !== ADMIN_ID) return;
-
-  // Stats
-  document.getElementById('ad-stat-v').textContent = state.videos.length;
-  document.getElementById('ad-stat-c').textContent = state.categories.length;
-  document.getElementById('ad-stat-u').textContent = Object.keys(state.users).length;
-  document.getElementById('ad-stat-av').textContent = state.adViews;
-
-  // Video Management List
-  const vList = document.getElementById('admin-vid-list');
-  vList.innerHTML = state.videos.map(v => `
-    <div class="admin-card" style="display:flex;gap:10px;align-items:center">
-      <img src="${v.thumb}" style="width:50px;height:40px;border-radius:6px;object-fit:cover">
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:700">${v.title}</div>
-        <div style="font-size:9px;color:var(--muted)">Serial: ${v.serial} | Ads: ${v.requiredAds}</div>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="editVideo('${v.id}')">✏️</button>
-        <button onclick="deleteVideo('${v.id}')">🗑️</button>
-      </div>
-    </div>
-  `).join('');
-
-  // Category List
-  const cList = document.getElementById('admin-cat-list');
-  cList.innerHTML = state.categories.map(c => `
-    <div class="admin-card" style="display:flex;justify-content:space-between;padding:10px 15px">
-      <span>${c.icon} ${c.name}</span>
-      <button onclick="deleteCategory('${c.id}')" ${c.id.startsWith('cat_') ? 'disabled style="opacity:0.3"' : ''}>🗑️</button>
-    </div>
-  `).join('');
-
-  calcStorage();
-}
-
-function editVideo(id) {
-  const v = state.videos.find(x => x.id === id);
-  editingVidId = id;
-  document.getElementById('av-title').value = v.title;
-  document.getElementById('av-cat').value = v.categoryId;
-  document.getElementById('av-source').value = v.source;
-  document.getElementById('av-link').value = v.link;
-  document.getElementById('av-ads').value = v.requiredAds;
-  toggleSourceType(v.source);
-  switchAdminSubView('vids');
-  window.scrollTo(0,0);
-}
-
-function deleteVideo(id) {
-  if (confirm("ভিডিওটি মুছতে চান?")) {
-    const v = state.videos.find(x=>x.id === id);
-    if(v.fileId) deleteFile(v.fileId);
-    state.videos = state.videos.filter(v => v.id !== id);
-    saveState(); renderAll();
-  }
-}
-
-function saveCategory() {
-  const name = document.getElementById('ac-name').value.trim();
-  const icon = document.getElementById('ac-icon').value.trim() || '📁';
-  if (!name) return;
-  state.categories.push({ id: 'c' + Date.now(), name, icon, order: state.categories.length });
-  saveState(); renderCategories(); renderAdmin();
-  document.getElementById('ac-name').value = '';
-}
-
-function deleteCategory(id) {
-  if (confirm("ক্যাটাগরি মুছবেন? এর ভিডিওগুলো 'অন্যান্য' তে চলে যাবে।")) {
-    state.videos.forEach(v => { if(v.categoryId === id) v.categoryId = 'cat_all'; });
-    state.categories = state.categories.filter(c => c.id !== id);
-    saveState(); renderCategories(); renderAll();
-  }
-}
-
 /* =======================================================
-   7. BACKUP, RESTORE & STORAGE
-   ======================================================= */
-function exportData() {
-  const data = JSON.stringify(state);
-  const blob = new Blob([data], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `vidunlock_backup_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-}
-
-function importData(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      if (parsed.videos) {
-        state = parsed;
-        saveState();
-        location.reload();
-      }
-    } catch(err) { showToast("Invalid File", "danger"); }
-  };
-  reader.readAsText(file);
-}
-
-function clearAppData() {
-  if (confirm("সব তথ্য মুছে যাবে! নিশ্চিত?")) {
-    localStorage.clear();
-    location.reload();
-  }
-}
-
-async function calcStorage() {
-  const info = document.getElementById('storage-info');
-  if (navigator.storage && navigator.storage.estimate) {
-    const est = await navigator.storage.estimate();
-    const used = (est.usage / (1024 * 1024)).toFixed(2);
-    info.textContent = `ব্যবহৃত স্টোরেজ: ${used} MB`;
-  }
-}
-
-/* =======================================================
-   8. UTILS
+   7. UTILS & OTHERS
    ======================================================= */
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + viewId).classList.add('active');
-  
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const btnIdx = { home: 0, fav: 1, unlock: 2, profile: 3, admin: 4 };
-  const navItems = document.querySelectorAll('.nav-item');
-  if(navItems[btnIdx[viewId]]) navItems[btnIdx[viewId]].classList.add('active');
-  
   currentView = viewId;
-  window.scrollTo(0,0);
 }
 
 function switchCat(id) {
@@ -904,36 +671,33 @@ function switchCat(id) {
 }
 
 function handleSearch() {
-  if (currentView !== 'home') showView('home');
-  renderHome();
+  const q = document.getElementById('main-search').value.toLowerCase();
+  const grid = document.getElementById('main-grid');
+  const filtered = state.videos.filter(v => v.title.toLowerCase().includes(q));
+  grid.innerHTML = filtered.map(createVideoCard).join('');
 }
 
 function toggleFav(id) {
   state.favorites[id] = !state.favorites[id];
-  document.getElementById('md-fav-btn').textContent = state.favorites[id] ? "❤️" : "🤍";
   saveState();
   renderAll();
-  showToast(state.favorites[id] ? "পছন্দে যোগ করা হয়েছে" : "পছন্দ থেকে সরানো হয়েছে");
+  document.getElementById('md-fav-btn').textContent = state.favorites[id] ? "❤️" : "🤍";
 }
 
 function showToast(msg, type = 'info') {
   const cont = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast`;
-  toast.style.borderLeft = `4px solid ${type === 'success' ? 'var(--success)' : type === 'danger' ? 'var(--danger)' : 'var(--primary)'}`;
   toast.innerHTML = `<span>${type === 'success' ? '✅' : 'ℹ️'}</span> ${msg}`;
   cont.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
 
 function updateUserUI() {
-  const name = user.first_name + ' ' + (user.last_name || '');
-  document.getElementById('u-name').textContent = name;
-  document.getElementById('u-avatar').textContent = name.charAt(0).toUpperCase();
-  document.getElementById('hero-welcome').textContent = `হ্যালো, ${user.first_name}! 👋`;
-  document.getElementById('prof-name').textContent = name;
-  document.getElementById('prof-id').textContent = `TG ID: ${user.id}`;
-  document.getElementById('prof-pic').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('u-name').textContent = user.first_name;
+  document.getElementById('u-avatar').textContent = user.first_name.charAt(0);
+  document.getElementById('prof-name').textContent = user.first_name;
+  document.getElementById('prof-id').textContent = `ID: ${user.id}`;
 }
 
 function updateStats() {
@@ -957,43 +721,15 @@ function previewFile(input, targetId) {
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
-  const media = document.getElementById('md-media-container');
-  media.innerHTML = ''; // Stop video playback
-}
-
-function shareVideo() {
-  const v = currentActiveVid;
-  if(!v) return;
-  const text = `VidUnlock এ এই ভিডিওটি দেখুন: ${v.title}\nআশেপাশের সবাইকে ইনভাইট করুন।`;
-  const url = `https://t.me/${tg.initDataUnsafe?.receiver?.username || 'BotName'}?start=vid_${v.id}`;
-  
-  if(navigator.share) {
-    navigator.share({ title: v.title, text: text, url: url }).catch(() => copyToClipboard(url));
-  } else {
-    copyToClipboard(url);
-  }
-}
-
-function copyToClipboard(txt) {
-  const el = document.createElement('textarea');
-  el.value = txt;
-  document.body.appendChild(el);
-  el.select();
-  document.execCommand('copy');
-  document.body.removeChild(el);
-  showToast("লিঙ্ক কপি করা হয়েছে!");
+  document.getElementById('md-media-container').innerHTML = '';
 }
 
 function renderComments(vidId) {
   const cont = document.getElementById('md-comments');
   const list = state.comments[vidId] || [];
-  if (list.length === 0) {
-    cont.innerHTML = `<p style="font-size:11px;color:var(--muted)">কোনো মন্তব্য নেই। প্রথমটি আপনি করুন!</p>`;
-    return;
-  }
   cont.innerHTML = list.map(c => `
     <div class="comment-item">
-      <div class="comment-meta"><span>${c.user}</span><span>${new Date(c.time).toLocaleDateString()}</span></div>
+      <div class="comment-meta"><span>${c.user}</span><span>Just now</span></div>
       <div style="font-size:12px">${c.text}</div>
     </div>
   `).join('');
@@ -1001,24 +737,30 @@ function renderComments(vidId) {
 
 function postComment() {
   const input = document.getElementById('md-comment-input');
-  const text = input.value.trim();
-  if(!text || !currentActiveVid) return;
-  
-  const vidId = currentActiveVid.id;
-  if(!state.comments[vidId]) state.comments[vidId] = [];
-  state.comments[vidId].unshift({ user: user.first_name, text, time: Date.now() });
-  
+  if(!input.value || !currentActiveVid) return;
+  if(!state.comments[currentActiveVid.id]) state.comments[currentActiveVid.id] = [];
+  state.comments[currentActiveVid.id].unshift({ user: user.first_name, text: input.value });
   input.value = '';
   saveState();
-  renderComments(vidId);
+  renderComments(currentActiveVid.id);
 }
 
-// Global Ad SDK Completion Event Fallback
-// Since we use the SDK function, we assume it's integrated correctly.
+function exportData() {
+  const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'backup.json';
+  a.click();
+}
 
-// START APP
+function clearAppData() {
+  if (confirm("Clear everything?")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
 window.onload = initApp;
-
 </script>
 </body>
 </html>
