@@ -6,95 +6,174 @@
 <title>VidUnlock Pro — Premium Video Unlock</title>
 <!-- Telegram Mini App SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Advertisement SDK -->
 <script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
 
 <style>
-/* Existing CSS remains exactly same */
+/* =========================================================
+   CORE DESIGN SYSTEM (Preserved)
+   ========================================================= */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0b0d17; --surface:#141826; --surface-2:#1c2135; --border:#262c44;
-  --text:#f2f4fb; --muted:#8e94b3; --primary:#7c5cff; --primary-2:#5b8dff;
-  --accent:#ff5c9d; --success:#22c58a; --warning:#ffb547; --danger:#ff5773;
+  --bg:#0b0d17;
+  --surface:#141826;
+  --surface-2:#1c2135;
+  --border:#262c44;
+  --text:#f2f4fb;
+  --muted:#8e94b3;
+  --primary:#7c5cff;
+  --primary-2:#5b8dff;
+  --accent:#ff5c9d;
+  --success:#22c58a;
+  --warning:#ffb547;
+  --danger:#ff5773;
   --grad-hero:linear-gradient(135deg,#7c5cff 0%,#5b8dff 50%,#22c9d9 100%);
+  --grad-unlock:linear-gradient(135deg,#22c58a 0%,#5bd6b0 100%);
+  --grad-card:linear-gradient(160deg,#1a1f33 0%,#141826 100%);
   --shadow-glow:0 10px 40px -10px rgba(124,92,255,.55);
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:100px;overflow-x:hidden}
+html,body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;overflow-x:hidden}
+body{padding-bottom:100px}
+
+/* LOADING SCREEN */
 #app-loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
-.spinner{width:40px;height:40px;border:3px solid var(--surface-2);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+.spinner{width:50px;height:50px;border:4px solid var(--surface-2);border-top:4px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* HEADER */
 .app-header{position:sticky;top:0;z-index:100;backdrop-filter:blur(18px);background:rgba(11,13,23,.85);border-bottom:1px solid var(--border)}
 .app-header .row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800}
-.brand-logo{width:34px;height:34px;border-radius:10px;background:var(--grad-hero);display:grid;place-items:center;box-shadow:var(--shadow-glow)}
+.brand-logo{width:34px;height:34px;border-radius:10px;background:var(--grad-hero);display:grid;place-items:center;font-size:16px;box-shadow:var(--shadow-glow)}
 .user-chip{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface)}
 .user-avatar{width:24px;height:24px;border-radius:50%;background:var(--grad-hero);display:grid;place-items:center;font-size:11px;font-weight:700}
 .admin-badge{font-size:8px;padding:2px 5px;border-radius:4px;background:linear-gradient(135deg,#ff5c9d,#ffb547);color:#1a1035;font-weight:800;margin-left:4px}
-.search-container{padding:10px 16px}.search-box{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);padding:10px 15px;border-radius:14px}
+
+/* SEARCH & CATEGORY */
+.search-container{padding:10px 16px}
+.search-box{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);padding:10px 15px;border-radius:14px}
 .search-box input{background:none;border:none;color:#fff;font-size:14px;width:100%;outline:none}
 .cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 16px 15px;scrollbar-width:none}
+.cat-tabs::-webkit-scrollbar{display:none}
 .tab{padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:13px;white-space:nowrap;transition:0.3s}
 .tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
-.hero-card{background:var(--grad-hero);padding:20px;border-radius:24px;margin:0 16px 20px;box-shadow:var(--shadow-glow)}
-.view{display:none;padding:0 16px}.view.active{display:block;animation:fadeIn 0.4s ease}
+
+/* HERO SECTION */
+.hero-card{background:var(--grad-hero);padding:20px;border-radius:24px;margin:0 16px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow-glow)}
+.hero-card h2{font-size:20px;margin-bottom:4px}
+.hero-card p{font-size:12px;opacity:0.9}
+.hero-stats{display:flex;gap:10px;margin-top:15px}
+.stat-pill{background:rgba(255,255,255,0.15);padding:8px 12px;border-radius:12px;flex:1;text-align:center}
+.stat-pill b{display:block;font-size:16px}
+.stat-pill span{font-size:9px;text-transform:uppercase;opacity:0.8}
+
+/* VIEWS */
+.view{display:none;padding:0 16px}
+.view.active{display:block;animation:fadeIn 0.4s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.page-title{font-size:18px;font-weight:800;margin:20px 0 15px;display:flex;align-items:center;gap:8px}
+
+/* GRID & CARDS */
 .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:12px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative}
+.card{background:var(--grad-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative;transition:0.2s}
+.card:active{transform:scale(0.97)}
 .card-thumb{aspect-ratio:16/10;position:relative;background:#000}
 .card-thumb img{width:100%;height:100%;object-fit:cover}
 .card-badge{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:6px;font-size:9px;font-weight:700;backdrop-filter:blur(6px)}
 .badge-locked{background:rgba(0,0,0,0.6);color:var(--warning)}
 .badge-unlocked{background:rgba(34,197,138,0.85);color:#fff}
-.card-body{padding:10px}.card-title{font-size:13px;font-weight:600;line-height:1.3;height:34px;overflow:hidden}
+.card-play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,0.2)}
+.play-btn-circle{width:36px;height:36px;background:rgba(255,255,255,0.25);backdrop-filter:blur(4px);border-radius:50%;display:grid;place-items:center}
+.card-body{padding:10px}
+.card-cat{font-size:9px;color:var(--primary-2);text-transform:uppercase;font-weight:700;margin-bottom:2px}
+.card-title{font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:34px}
+.card-footer{margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted)}
+
+/* MODAL / BOTTOM SHEET */
 .modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);display:none;align-items:flex-end}
-.modal.open{display:flex}.modal-sheet{background:var(--bg);width:100%;max-height:92vh;border-radius:28px 28px 0 0;overflow:hidden;display:flex;flex-direction:column}
+.modal.open{display:flex}
+.modal-sheet{background:var(--bg);width:100%;max-height:92vh;border-radius:28px 28px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.4s cubic-bezier(0,0,0.2,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .sheet-header{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .sheet-content{padding:16px;overflow-y:auto;flex:1}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;border-radius:14px;font-weight:700;font-size:14px;width:100%;border:none;color:#fff;cursor:pointer}
-.btn-p{background:var(--grad-hero)}.btn-g{background:var(--surface-2)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(11,13,23,0.9);backdrop-filter:blur(15px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 5px;z-index:150}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:10px;background:none;border:none}
-.nav-item.active{color:var(--primary)}
+
+/* PROGRESS BAR */
+.prog-wrap{margin:15px 0}
+.prog-labels{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px}
+.prog-track{height:8px;background:var(--surface-2);border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;background:var(--grad-hero);border-radius:10px;transition:0.5s ease;width:0%}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;border-radius:14px;font-weight:700;font-size:14px;width:100%;border:none;color:#fff;transition:0.2s}
+.btn:active{transform:scale(0.96)}
+.btn-p{background:var(--grad-hero);box-shadow:var(--shadow-glow)}
+.btn-s{background:var(--grad-unlock)}
+.btn-g{background:var(--surface-2);border:1px solid var(--border)}
+.btn-d{background:var(--danger)}
+.btn:disabled{opacity:0.6;pointer-events:none}
+
+/* COMMENTS */
+.comment-list{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.comment-item{background:var(--surface-2);padding:10px;border-radius:12px}
+.comment-meta{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;color:var(--primary-2)}
+
+/* ADMIN INTERFACE */
 .admin-card{background:var(--surface);border:1px solid var(--border);padding:15px;border-radius:18px;margin-bottom:15px}
 .form-group{margin-bottom:12px}
 .form-group label{display:block;font-size:11px;margin-bottom:5px;color:var(--muted)}
-.form-group input, .form-group select, .form-group textarea{width:100%;background:var(--bg);border:1px solid var(--border);padding:10px;border-radius:10px;color:#fff}
+.form-group input, .form-group select, .form-group textarea{width:100%;background:var(--bg);border:1px solid var(--border);padding:10px;border-radius:10px;color:#fff;font-family:inherit}
+.thumb-prev{width:100%;aspect-ratio:16/9;border:2px dashed var(--border);border-radius:12px;margin-top:5px;display:grid;place-items:center;overflow:hidden}
+.thumb-prev img{width:100%;height:100%;object-fit:cover}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(11,13,23,0.9);backdrop-filter:blur(15px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 5px calc(10px + env(safe-area-inset-bottom));z-index:150}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:10px;font-weight:600;flex:1;background:none;border:none}
+.nav-item.active{color:var(--primary)}
+.nav-item i{font-size:20px}
+
+/* TOAST */
+#toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:90%;max-width:400px;pointer-events:none}
+.toast{background:var(--surface-2);border:1px solid var(--border);padding:12px 16px;border-radius:12px;margin-bottom:10px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,0.5);display:flex;align-items:center;gap:10px;animation:toastIn 0.3s forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
+
+/* UTILS */
 .hidden{display:none}
-#toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:90%}
-.toast{background:var(--surface-2);padding:12px 16px;border-radius:12px;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-state i{font-size:40px;display:block;margin-bottom:10px}
 </style>
 </head>
 <body>
 
+<!-- LOADING SCREEN -->
 <div id="app-loader">
   <div class="spinner"></div>
-  <p style="font-size:12px; color:var(--muted)" data-i18n="loading">Loading VidUnlock...</p>
+  <p style="font-size:12px; color:var(--muted)">VidUnlock Loading...</p>
 </div>
 
+<!-- HEADER -->
 <header class="app-header">
   <div class="row">
     <div class="brand">
       <div class="brand-logo">▶</div>
       <div>
         <div style="font-size:14px">VidUnlock</div>
-        <div style="font-size:8px;color:var(--muted)" data-i18n="premium_access">PREMIUM ACCESS</div>
+        <div style="font-size:8px;color:var(--muted)">PREMIUM ACCESS</div>
       </div>
     </div>
     <div class="user-chip">
       <div class="user-avatar" id="u-avatar">U</div>
-      <div style="font-size:11px;max-width:70px;overflow:hidden;white-space:nowrap" id="u-name">Guest</div>
+      <div style="font-size:11px;max-width:70px;overflow:hidden;text-overflow:ellipsis" id="u-name">Guest</div>
       <span class="admin-badge" id="u-badge" style="display:none">ADMIN</span>
     </div>
   </div>
 </header>
 
+<!-- SEARCH & CATEGORIES -->
 <div id="sticky-utils">
   <div class="search-container">
     <div class="search-box">
       <span>🔍</span>
-      <input type="text" id="main-search" data-i18n-placeholder="search_placeholder" oninput="handleSearch()">
+      <input type="text" id="main-search" placeholder="ভিডিও বা ক্যাটাগরি খুঁজুন..." oninput="handleSearch()">
     </div>
   </div>
   <div class="cat-tabs" id="category-tabs"></div>
@@ -104,62 +183,115 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <section class="view active" id="view-home">
   <div class="hero-card">
     <h2 id="hero-welcome">হ্যালো! 👋</h2>
-    <p data-i18n="hero_desc">আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন একদম ফ্রিতে।</p>
+    <p>আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন একদম ফ্রিতে।</p>
+    <div class="hero-stats">
+      <div class="stat-pill"><b id="stat-total-v">0</b><span>ভিডিও</span></div>
+      <div class="stat-pill"><b id="stat-unlocked-v">0</b><span>আনলক</span></div>
+      <div class="stat-pill"><b id="stat-fav-v">0</b><span>পছন্দ</span></div>
+    </div>
   </div>
-  <h3 class="page-title" style="margin:15px 0" data-i18n="all_videos">সব ভিডিও</h3>
-  <div class="grid" id="main-grid"></div>
+
+  <div id="home-content">
+    <div id="recent-watched-container" class="hidden">
+      <h3 class="page-title">🕘 দেখা শুরু করুন</h3>
+      <div class="grid" id="recent-grid"></div>
+    </div>
+    <h3 class="page-title" id="grid-title">সব ভিডিও</h3>
+    <div class="grid" id="main-grid"></div>
+  </div>
 </section>
 
 <!-- VIEW: FAVORITES -->
 <section class="view" id="view-fav">
-  <h3 class="page-title" style="margin:15px 0" data-i18n="my_favorites">আপনার পছন্দ</h3>
+  <h3 class="page-title">❤️ আপনার পছন্দ</h3>
   <div class="grid" id="fav-grid"></div>
 </section>
 
 <!-- VIEW: UNLOCKED -->
 <section class="view" id="view-unlock">
-  <h3 class="page-title" style="margin:15px 0" data-i18n="unlocked_videos">আনলক করা</h3>
+  <h3 class="page-title">🔓 আনলক করা</h3>
   <div class="grid" id="unlock-grid"></div>
 </section>
 
 <!-- VIEW: PROFILE -->
 <section class="view" id="view-profile">
   <div style="text-align:center;padding:30px 0">
-    <div id="prof-pic" style="width:80px;height:80px;border-radius:50%;background:var(--grad-hero);margin:0 auto 15px;display:grid;place-items:center;font-size:30px;border:3px solid var(--surface-2)">U</div>
+    <div id="prof-pic" style="width:80px;height:80px;border-radius:50%;background:var(--grad-hero);margin:0 auto 15px;display:grid;place-items:center;font-size:30px;font-weight:800;border:3px solid var(--surface-2)">U</div>
     <h2 id="prof-name">Guest</h2>
     <p style="color:var(--muted);font-size:12px" id="prof-id">ID: 000000</p>
   </div>
-
-  <div class="admin-card">
-    <div class="form-group">
-      <label data-i18n="select_language">ভাষা নির্বাচন করুন</label>
-      <select id="lang-selector" onchange="changeLanguage(this.value)">
-        <option value="bn">বাংলা</option>
-        <option value="en">English</option>
-      </select>
-    </div>
-  </div>
-
   <div class="admin-card" style="padding:0">
-    <button class="btn btn-g" style="justify-content:flex-start" onclick="showView('fav')" data-i18n="my_favorites">❤️ আমার পছন্দের ভিডিও</button>
+    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="showView('fav')">❤️ আমার পছন্দের ভিডিও</button>
     <div style="height:1px;background:var(--border)"></div>
-    <button class="btn btn-g" style="justify-content:flex-start" onclick="showView('unlock')" data-i18n="unlocked_videos">🔓 আনলক করা ভিডিও</button>
+    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="showView('unlock')">🔓 আনলক করা ভিডিও</button>
+    <div style="height:1px;background:var(--border)"></div>
+    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="exportData()">📥 ব্যাকআপ ডাউনলোড</button>
   </div>
 </section>
 
 <!-- VIEW: ADMIN -->
 <section class="view" id="view-admin">
   <h3 class="page-title">🛠 অ্যাডমিন প্যানেল</h3>
-  <div class="admin-card">
-    <h4>➕ নতুন ভিডিও যোগ করুন</h4>
-    <div class="form-group"><label>শিরোনাম</label><input type="text" id="av-title"></div>
-    <div class="form-group"><label>ক্যাটাগরি</label><select id="av-cat"></select></div>
-    <div class="form-group"><label>থাম্বনেইল URL</label><input type="text" id="av-thumb"></div>
-    <div class="form-group"><label>ভিডিও URL (Premium)</label><input type="text" id="av-link"></div>
-    <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1"></div>
-    <button class="btn btn-p" onclick="adminSaveVideo()" id="btn-save-video">সেভ ভিডিও (Global)</button>
+  <div class="cat-tabs" style="padding:0;margin-bottom:15px">
+    <button class="tab active" onclick="switchAdminSubView('dash', this)">ড্যাশবোর্ড</button>
+    <button class="tab" onclick="switchAdminSubView('vids', this)">ভিডিও</button>
+    <button class="tab" onclick="switchAdminSubView('cats', this)">ক্যাটাগরি</button>
+    <button class="tab" onclick="switchAdminSubView('settings', this)">সেটিংস</button>
   </div>
-  <div id="admin-vid-list"></div>
+  <div id="admin-dash" class="admin-subview">
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="admin-card"><div style="font-size:10px;color:var(--muted)">মোট ভিডিও</div><h3 id="ad-stat-v">0</h3></div>
+      <div class="admin-card"><div style="font-size:10px;color:var(--muted)">মোট ক্যাটাগরি</div><h3 id="ad-stat-c">0</h3></div>
+      <div class="admin-card"><div style="font-size:10px;color:var(--muted)">ইউজার</div><h3 id="ad-stat-u">0</h3></div>
+      <div class="admin-card"><div style="font-size:10px;color:var(--muted)">অ্যাড ভিউ</div><h3 id="ad-stat-av">0</h3></div>
+    </div>
+  </div>
+  <div id="admin-vids" class="admin-subview hidden">
+    <div class="admin-card">
+      <h4>➕ নতুন ভিডিও যোগ করুন</h4>
+      <div class="form-group"><label>শিরোনাম</label><input type="text" id="av-title"></div>
+      <div class="form-group"><label>ক্যাটাগরি</label><select id="av-cat"></select></div>
+      <div class="form-group">
+        <label>থাম্বনেইল</label>
+        <input type="file" accept="image/*" onchange="previewFile(this, 'av-thumb-prev')">
+        <div class="thumb-prev" id="av-thumb-prev"><span>Preview</span></div>
+      </div>
+      <div class="form-group">
+        <label>সোর্স টাইপ</label>
+        <select id="av-source" onchange="toggleSourceType(this.value)">
+          <option value="link">External Link / Telegram</option>
+          <option value="file">📁 Gallery Upload (IndexedDB)</option>
+        </select>
+      </div>
+      <div id="source-link-wrap" class="form-group"><label>ভিডিও লিঙ্ক</label><input type="text" id="av-link"></div>
+      <div id="source-file-wrap" class="form-group hidden">
+        <label>ভিডিও ফাইল</label>
+        <input type="file" id="av-file" accept="video/*">
+      </div>
+      <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1" min="1"></div>
+      <button class="btn btn-p" onclick="saveVideo()">সেভ ভিডিও</button>
+    </div>
+    <div id="admin-vid-list"></div>
+  </div>
+  <div id="admin-cats" class="admin-subview hidden">
+    <div class="admin-card">
+      <h4>➕ নতুন ক্যাটাগরি</h4>
+      <div class="form-group"><label>নাম</label><input type="text" id="ac-name"></div>
+      <div class="form-group"><label>ইমোজি/আইকন</label><input type="text" id="ac-icon" placeholder="🔥"></div>
+      <button class="btn btn-p" onclick="saveCategory()">সেভ ক্যাটাগরি</button>
+    </div>
+    <div id="admin-cat-list"></div>
+  </div>
+  <div id="admin-settings" class="admin-subview hidden">
+    <div class="admin-card">
+      <h4>Data Management</h4>
+      <div style="display:grid;gap:10px;margin-top:10px">
+        <button class="btn btn-g" onclick="exportData()">📥 Export Backup (JSON)</button>
+        <label class="btn btn-g">📤 Import Backup<input type="file" style="display:none" accept=".json" onchange="importData(this)"></label>
+        <button class="btn btn-d" onclick="clearAppData()">⚠️ Clear All Data</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- MODAL: DETAIL -->
@@ -173,17 +305,35 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
     <div class="sheet-content">
       <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:15px"></div>
       <h2 id="md-title"></h2>
-      <div style="margin:10px 0"><span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span></div>
+      <div style="display:flex;gap:8px;margin:10px 0">
+        <span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span>
+        <span style="font-size:11px;color:var(--muted)" id="md-views">0 Views</span>
+      </div>
+      <p id="md-desc" style="font-size:13px;color:var(--muted);line-height:1.5"></p>
+      
       <div id="md-action-area"></div>
+
+      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:15px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h4>💬 কমেন্টস</h4>
+          <button class="btn btn-g" style="padding:5px 10px;width:auto;font-size:10px" onclick="shareVideo()">🔗 শেয়ার</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="md-comment-input" placeholder="আপনার মন্তব্য লিখুন..." style="flex:1;background:var(--surface);border:1px solid var(--border);padding:10px;border-radius:10px;color:#fff">
+          <button class="btn btn-p" style="width:auto;padding:0 15px" onclick="postComment()">Submit</button>
+        </div>
+        <div class="comment-list" id="md-comments"></div>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="nav-item active" onclick="showView('home')"><i>🏠</i><span data-i18n="nav_home">হোম</span></button>
-  <button class="nav-item" onclick="showView('fav')"><i>❤️</i><span data-i18n="nav_fav">পছন্দ</span></button>
-  <button class="nav-item" onclick="showView('unlock')"><i>🔓</i><span data-i18n="nav_unlock">আনলক</span></button>
-  <button class="nav-item" onclick="showView('profile')"><i>👤</i><span data-i18n="nav_profile">প্রোফাইল</span></button>
+  <button class="nav-item active" onclick="showView('home')"><i>🏠</i>হোম</button>
+  <button class="nav-item" onclick="showView('fav')"><i>❤️</i>পছন্দ</button>
+  <button class="nav-item" onclick="showView('unlock')"><i>🔓</i>আনলক</button>
+  <button class="nav-item" onclick="showView('profile')"><i>👤</i>প্রোফাইল</button>
   <button class="nav-item hidden" id="nav-admin" onclick="showView('admin')"><i>🛠</i>অ্যাডমিন</button>
 </nav>
 
@@ -191,281 +341,382 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
 <script>
 /* =======================================================
-   1. CONFIGURATION & STATE
+   1. CORE STATE & CONFIG
    ======================================================= */
-const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-const ADMIN_ID = 7904568371; // আপনার টেলিগ্রাম আইডি
-
-const supabase = idb = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const tg = window.Telegram.WebApp;
-const user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest', username: 'guest' };
+const ADMIN_ID = 7904568371;
+const DB_NAME = "VidUnlockDB_V2";
+const STORE_KEY = "VidUnlock_Core_State";
 
 let state = {
+  version: 3,
+  categories: [
+    { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
+    { id: 'cat_viral', name: 'ভাইরাল', icon: '🔥', order: 1 }
+  ],
   videos: [],
-  categories: [],
-  userUnlocks: {}, // {vid_id: {ads_watched, is_unlocked}}
-  userFavs: new Set(),
-  language: 'bn'
+  unlocked: {},
+  progress: {},
+  favorites: {},
+  comments: {},
+  recent: [],
+  adViews: 0,
+  users: {},
+  settings: { maintenance: false }
 };
 
-const i18n = {
-  bn: {
-    loading: "লোড হচ্ছে...", premium_access: "প্রিমিয়াম এক্সেস", search_placeholder: "ভিডিও খুঁজুন...",
-    all_videos: "সব ভিডিও", my_favorites: "আপনার পছন্দ", unlocked_videos: "আনলক করা",
-    hero_desc: "আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন একদম ফ্রিতে।",
-    select_language: "ভাষা নির্বাচন করুন", nav_home: "হোম", nav_fav: "পছন্দ",
-    nav_unlock: "আনলক", nav_profile: "প্রোফাইল", watch_ad: "ভিডিও দেখতে বিজ্ঞাপন দেখুন",
-    congrats: "অভিনন্দন! ভিডিওটি আনলক হয়েছে।", ad_success: "বিজ্ঞাপন সফলভাবে দেখা হয়েছে!"
-  },
-  en: {
-    loading: "Loading...", premium_access: "PREMIUM ACCESS", search_placeholder: "Search videos...",
-    all_videos: "All Videos", my_favorites: "My Favorites", unlocked_videos: "Unlocked",
-    hero_desc: "Unlock your favorite premium videos for free.",
-    select_language: "Select Language", nav_home: "Home", nav_fav: "Favorites",
-    nav_unlock: "Unlocked", nav_profile: "Profile", watch_ad: "Watch Ad to Unlock",
-    congrats: "Congrats! Video unlocked successfully.", ad_success: "Ad watched successfully!"
-  }
-};
+let tg = window.Telegram.WebApp;
+let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
+let currentView = 'home';
+let currentCat = 'cat_all';
+let isAdShowing = false;
+let db = null;
 
 /* =======================================================
-   2. INITIALIZATION
+   2. INDEXEDDB SETUP
    ======================================================= */
-async function init() {
+async function initDB() {
+  return new Promise((resolve) => {
+    const request = indexedDB.open(DB_NAME, 2);
+    request.onupgradeneeded = (e) => {
+      let db = e.target.result;
+      if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
+    };
+    request.onsuccess = (e) => { db = e.target.result; resolve(); };
+  });
+}
+
+async function saveFile(id, blob) {
+  const tx = db.transaction('files', 'readwrite');
+  return tx.objectStore('files').put(blob, id);
+}
+
+async function getFile(id) {
+  return new Promise((resolve) => {
+    const tx = db.transaction('files', 'readonly');
+    const req = tx.objectStore('files').get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
+}
+
+/* =======================================================
+   3. APP INITIALIZATION
+   ======================================================= */
+async function initApp() {
   tg.ready();
   tg.expand();
+  await initDB();
   
-  // Sync User to Supabase
-  await syncUser();
-  
-  // Load Global Data
-  await loadGlobalData();
-  
-  // UI Setup
-  updateLanguageUI();
+  const saved = localStorage.getItem(STORE_KEY);
+  if (saved) state = { ...state, ...JSON.parse(saved) };
+
+  if (Number(user.id) === ADMIN_ID) {
+    document.getElementById('nav-admin').classList.remove('hidden');
+    document.getElementById('u-badge').style.display = 'inline-block';
+  }
+
   updateUserUI();
+  renderCategories();
   renderAll();
-  
   document.getElementById('app-loader').style.display = 'none';
 }
 
-async function syncUser() {
-  const { data, error } = await supabase.from('users').upsert({
-    telegram_id: user.id,
-    first_name: user.first_name,
-    last_name: user.last_name || '',
-    username: user.username || '',
-    photo_url: user.photo_url || ''
-  }).select();
-  
-  if (data && data[0]) state.language = data[0].language || 'bn';
-  document.getElementById('lang-selector').value = state.language;
-
-  // Load User Specific Data
-  const { data: unlocks } = await supabase.from('user_progress').select('*').eq('user_id', user.id);
-  unlocks?.forEach(u => state.userUnlocks[u.video_id] = u);
-
-  const { data: favs } = await supabase.from('favorites').select('video_id').eq('user_id', user.id);
-  favs?.forEach(f => state.userFavs.add(f.video_id));
-}
-
-async function loadGlobalData() {
-  const { data: vids } = await supabase.from('videos').select('*').eq('is_active', true);
-  const { data: cats } = await supabase.from('categories').select('*').order('display_order');
-  state.videos = vids || [];
-  state.categories = cats || [];
+function saveState() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
 }
 
 /* =======================================================
-   3. RENDERING
+   4. RENDERING LOGIC
    ======================================================= */
-function renderAll() {
-  renderGrid('main-grid', state.videos);
-  renderGrid('fav-grid', state.videos.filter(v => state.userFavs.has(v.id)));
-  renderGrid('unlock-grid', state.videos.filter(v => state.userUnlocks[v.id]?.is_unlocked));
-  renderCategories();
-}
-
-function renderGrid(containerId, vids) {
-  const grid = document.getElementById(containerId);
-  if (!vids.length) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">No videos found</div>`;
-    return;
-  }
-  grid.innerHTML = vids.map(v => {
-    const isUnlocked = state.userUnlocks[v.id]?.is_unlocked;
-    return `
-      <div class="card" onclick="openDetail('${v.id}')">
-        <div class="card-thumb">
-          <img src="${v.thumbnail_url}" loading="lazy">
-          <div class="card-badge ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}">
-            ${isUnlocked ? '🔓 UNLOCKED' : '🔒 LOCKED'}
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="card-title">${v.title}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
 function renderCategories() {
-  const tabs = document.getElementById('category-tabs');
-  tabs.innerHTML = state.categories.map(c => `
-    <button class="tab" onclick="filterCat('${c.id}')">${c.icon} ${c.name}</button>
+  const container = document.getElementById('category-tabs');
+  container.innerHTML = state.categories.map(c => `
+    <button class="tab ${currentCat === c.id ? 'active' : ''}" onclick="switchCat('${c.id}')">
+      ${c.icon} ${c.name}
+    </button>
   `).join('');
   
   const select = document.getElementById('av-cat');
   if(select) select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
+function createVideoCard(v) {
+  const isUnlocked = state.unlocked[v.id];
+  const isFav = state.favorites[v.id];
+  return `
+    <div class="card" onclick="openDetail('${v.id}')">
+      <div class="card-thumb">
+        <img src="${v.thumb || ''}" loading="lazy">
+        <div class="card-badge ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}">
+          ${isUnlocked ? '🔓 আনলক' : '🔒 লক'}
+        </div>
+        <div class="card-play"><div class="play-btn-circle">▶</div></div>
+      </div>
+      <div class="card-body">
+        <div class="card-cat">${state.categories.find(c=>c.id===v.categoryId)?.name || ''}</div>
+        <div class="card-title">${v.title}</div>
+        <div class="card-footer">
+          <span>👁 ${Object.keys(v.views || {}).length} ভিউ</span>
+          <span>${isFav ? '❤️' : '🤍'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  renderHome();
+  renderFavs();
+  renderUnlocked();
+  renderAdmin();
+  updateStats();
+}
+
+function renderHome() {
+  const grid = document.getElementById('main-grid');
+  let vids = state.videos;
+  if (currentCat !== 'cat_all') vids = vids.filter(v => v.categoryId === currentCat);
+  grid.innerHTML = vids.map(createVideoCard).join('');
+}
+
+function renderFavs() {
+  const grid = document.getElementById('fav-grid');
+  const vids = state.videos.filter(v => state.favorites[v.id]);
+  grid.innerHTML = vids.map(createVideoCard).join('');
+}
+
+function renderUnlocked() {
+  const grid = document.getElementById('unlock-grid');
+  const vids = state.videos.filter(v => state.unlocked[v.id]);
+  grid.innerHTML = vids.map(createVideoCard).join('');
+}
+
 /* =======================================================
-   4. VIDEO ACTIONS & ADS
+   5. VIDEO ACTIONS & AD SYSTEM (FIXED)
    ======================================================= */
-let currentVid = null;
+let currentActiveVid = null;
 
 async function openDetail(id) {
-  currentVid = state.videos.find(v => v.id === id);
-  const isUnlocked = state.userUnlocks[id]?.is_unlocked;
-  
-  document.getElementById('md-title').textContent = currentVid.title;
-  document.getElementById('md-fav-btn').textContent = state.userFavs.has(id) ? '❤️' : '🤍';
-  document.getElementById('md-fav-btn').onclick = () => toggleFav(id);
+  const v = state.videos.find(x => x.id === id);
+  if (!v) return;
+  currentActiveVid = v;
 
-  const media = document.getElementById('md-media-container');
-  const action = document.getElementById('md-action-area');
+  if (!v.views) v.views = {};
+  v.views[user.id] = true;
+  saveState();
 
-  if (isUnlocked) {
-    media.innerHTML = `<video src="${currentVid.video_url}" controls controlsList="nodownload" style="width:100%;height:100%"></video>`;
-    action.innerHTML = `<button class="btn btn-p" onclick="window.open('${currentVid.video_url}')">OPEN EXTERNAL PLAYER</button>`;
-  } else {
-    media.innerHTML = `<img src="${currentVid.thumbnail_url}" style="width:100%;height:100%;object-fit:cover">`;
-    const progress = state.userUnlocks[id]?.ads_watched || 0;
-    const req = currentVid.required_ads;
-    action.innerHTML = `
-      <div style="margin-bottom:10px;font-size:12px;text-align:center">Progress: ${progress}/${req} Ads</div>
-      <button class="btn btn-p" onclick="watchAd()" id="ad-btn">${i18n[state.language].watch_ad}</button>
-    `;
-  }
+  updateDetailUI(v);
   document.getElementById('modal-detail').classList.add('open');
 }
 
+async function updateDetailUI(v) {
+  const isUnlocked = state.unlocked[v.id];
+  const prog = state.progress[v.id] || 0;
+  const req = v.requiredAds || 1;
+  const pct = Math.floor((prog/req)*100);
+
+  document.getElementById('md-title').textContent = v.title;
+  document.getElementById('md-views').textContent = Object.keys(v.views).length + " Views";
+  document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
+  document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
+
+  const mediaCont = document.getElementById('md-media-container');
+  if (isUnlocked && v.source === 'file') {
+    const blob = await getFile(v.fileId);
+    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
+  } else {
+    mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
+  }
+
+  const actionArea = document.getElementById('md-action-area');
+  if (isUnlocked) {
+    actionArea.innerHTML = `
+      <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
+        <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
+        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">প্লেয়ারে ভিডিও চালু করুন।</p>`}
+      </div>`;
+  } else {
+    actionArea.innerHTML = `
+      <div class="prog-wrap">
+        <div class="prog-labels"><span>আনলক অগ্রগতি</span><span id="prog-text">${prog}/${req} Ads</span></div>
+        <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:${pct}%"></div></div>
+      </div>
+      <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK</button>`;
+  }
+  renderComments(v.id);
+}
+
 async function watchAd() {
+  if (isAdShowing) return;
+  const v = currentActiveVid;
   const btn = document.getElementById('ad-btn');
+  
+  if (typeof show_11404425 !== 'function') {
+    showToast("Ad SDK loading... please wait.", "warning");
+    return;
+  }
+
+  isAdShowing = true;
   btn.disabled = true;
-  btn.textContent = "Loading Ad...";
+  btn.textContent = "⏳ লোড হচ্ছে...";
 
   try {
-    await show_11404425(); // Ad SDK Call
-    await handleAdSuccess();
-  } catch (e) {
-    showToast("Ad failed to load", "danger");
-    btn.disabled = false;
+    // Calling SDK and waiting for completion
+    await show_11404425(); 
+    
+    // If we reach here, it means Ad was closed/completed
+    handleAdSuccess(v.id);
+    
+  } catch (err) {
+    console.error("Ad failed:", err);
+    showToast("Ad display failed. Try again.", "danger");
+  } finally {
+    isAdShowing = false;
+    if (btn) {
+      btn.disabled = false;
+      const prog = state.progress[v.id] || 0;
+      btn.textContent = `📺 WATCH AD TO UNLOCK (${prog}/${v.requiredAds})`;
+    }
   }
 }
 
-async function handleAdSuccess() {
-  const vidId = currentVid.id;
-  let currentProg = state.userUnlocks[vidId] || { ads_watched: 0, is_unlocked: false };
+function handleAdSuccess(vidId) {
+  const v = state.videos.find(x => x.id === vidId);
+  if(!v) return;
+
+  state.progress[vidId] = (state.progress[vidId] || 0) + 1;
+  state.adViews++;
+
+  if (state.progress[vidId] >= v.requiredAds) {
+    state.unlocked[vidId] = true;
+    delete state.progress[vidId];
+    showToast("অভিনন্দন! ভিডিওটি আনলক হয়েছে। 🎉", "success");
+  } else {
+    showToast(`অ্যাড দেখা সফল! বাকি: ${v.requiredAds - state.progress[vidId]}`, "info");
+  }
   
-  currentProg.ads_watched++;
-  if (currentProg.ads_watched >= currentVid.required_ads) {
-    currentProg.is_unlocked = true;
-    showToast(i18n[state.language].congrats, "success");
-  } else {
-    showToast(i18n[state.language].ad_success, "info");
-  }
+  saveState();
+  renderAll(); // Updates background grids
+  updateDetailUI(v); // Updates current modal UI immediately
+}
 
-  // Save to Supabase
-  await supabase.from('user_progress').upsert({
-    user_id: user.id,
-    video_id: vidId,
-    ads_watched: currentProg.ads_watched,
-    is_unlocked: currentProg.is_unlocked
-  });
-
-  state.userUnlocks[vidId] = currentProg;
-  openDetail(vidId); // Refresh modal
-  renderAll(); // Refresh background
+function watchExternal(link) {
+  if (tg.openLink) tg.openLink(link);
+  else window.open(link, '_blank');
 }
 
 /* =======================================================
-   5. ADMIN FUNCTIONS
+   6. ADMIN ACTIONS
    ======================================================= */
-async function adminSaveVideo() {
-  if (user.id !== ADMIN_ID) return;
+function saveVideo() {
   const title = document.getElementById('av-title').value;
-  const category_id = document.getElementById('av-cat').value;
-  const thumbnail_url = document.getElementById('av-thumb').value;
-  const video_url = document.getElementById('av-link').value;
-  const required_ads = document.getElementById('av-ads').value;
+  const catId = document.getElementById('av-cat').value;
+  const source = document.getElementById('av-source').value;
+  const link = document.getElementById('av-link').value;
+  const ads = parseInt(document.getElementById('av-ads').value) || 1;
+  const thumbBase64 = document.getElementById('av-thumb-prev')._data;
+  const videoFile = document.getElementById('av-file').files[0];
 
-  const { error } = await supabase.from('videos').insert([{
-    title, category_id, thumbnail_url, video_url, required_ads
-  }]);
+  if (!title) return showToast("শিরোনাম দিন");
 
-  if (!error) {
-    showToast("Global Video Added!");
-    loadGlobalData().then(renderAll);
-  } else {
-    showToast("Error adding video", "danger");
+  const vidId = 'v' + Date.now();
+  const vidData = { id: vidId, title, categoryId: catId, source, link, requiredAds: ads, thumb: thumbBase64, views: {}, serial: state.videos.length + 1 };
+
+  if (source === 'file' && videoFile) {
+    vidData.fileId = 'file_' + vidId;
+    saveFile(vidData.fileId, videoFile);
   }
+
+  state.videos.push(vidData);
+  saveState();
+  renderAll();
+  showToast("ভিডিও সেভ হয়েছে");
+}
+
+function renderAdmin() {
+  if (Number(user.id) !== ADMIN_ID) return;
+  document.getElementById('ad-stat-v').textContent = state.videos.length;
+  document.getElementById('ad-stat-c').textContent = state.categories.length;
+  document.getElementById('ad-stat-u').textContent = Object.keys(state.users).length;
+  document.getElementById('ad-stat-av').textContent = state.adViews;
+}
+
+function switchAdminSubView(id, btn) {
+  document.querySelectorAll('.admin-subview').forEach(v => v.classList.add('hidden'));
+  document.getElementById('admin-' + id).classList.remove('hidden');
+  const tabs = btn.parentElement.querySelectorAll('.tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleSourceType(type) {
+  document.getElementById('source-link-wrap').classList.toggle('hidden', type === 'file');
+  document.getElementById('source-file-wrap').classList.toggle('hidden', type === 'link');
 }
 
 /* =======================================================
-   6. UTILS
+   7. UTILS & OTHERS
    ======================================================= */
-async function changeLanguage(lang) {
-  state.language = lang;
-  await supabase.from('users').update({ language: lang }).eq('telegram_id', user.id);
-  updateLanguageUI();
-}
-
-function updateLanguageUI() {
-  const texts = i18n[state.language];
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    el.textContent = texts[el.getAttribute('data-i18n')];
-  });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    el.placeholder = texts[el.getAttribute('data-i18n-placeholder')];
-  });
-}
-
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + viewId).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if (user.id === ADMIN_ID) document.getElementById('nav-admin').classList.remove('hidden');
+  currentView = viewId;
 }
 
-function toggleFav(vidId) {
-  if (state.userFavs.has(vidId)) {
-    state.userFavs.delete(vidId);
-    supabase.from('favorites').delete().eq('user_id', user.id).eq('video_id', vidId).then();
-  } else {
-    state.userFavs.add(vidId);
-    supabase.from('favorites').insert({ user_id: user.id, video_id: vidId }).then();
-  }
-  document.getElementById('md-fav-btn').textContent = state.userFavs.has(vidId) ? '❤️' : '🤍';
+function switchCat(id) {
+  currentCat = id;
+  renderCategories();
+  renderHome();
+}
+
+function handleSearch() {
+  const q = document.getElementById('main-search').value.toLowerCase();
+  const grid = document.getElementById('main-grid');
+  const filtered = state.videos.filter(v => v.title.toLowerCase().includes(q));
+  grid.innerHTML = filtered.map(createVideoCard).join('');
+}
+
+function toggleFav(id) {
+  state.favorites[id] = !state.favorites[id];
+  saveState();
   renderAll();
+  document.getElementById('md-fav-btn').textContent = state.favorites[id] ? "❤️" : "🤍";
 }
 
 function showToast(msg, type = 'info') {
-  const container = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.innerHTML = `<span>${type === 'success' ? '✅' : 'ℹ️'}</span> ${msg}`;
-  container.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  const cont = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast`;
+  toast.innerHTML = `<span>${type === 'success' ? '✅' : 'ℹ️'}</span> ${msg}`;
+  cont.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
 }
 
 function updateUserUI() {
   document.getElementById('u-name').textContent = user.first_name;
-  document.getElementById('u-avatar').textContent = user.first_name[0];
+  document.getElementById('u-avatar').textContent = user.first_name.charAt(0);
   document.getElementById('prof-name').textContent = user.first_name;
   document.getElementById('prof-id').textContent = `ID: ${user.id}`;
-  if (user.id === ADMIN_ID) document.getElementById('u-badge').style.display = 'block';
+}
+
+function updateStats() {
+  document.getElementById('stat-total-v').textContent = state.videos.length;
+  document.getElementById('stat-unlocked-v').textContent = Object.keys(state.unlocked).length;
+  document.getElementById('stat-fav-v').textContent = Object.keys(state.favorites).filter(k => state.favorites[k]).length;
+}
+
+function previewFile(input, targetId) {
+  const file = input.files[0];
+  const target = document.getElementById(targetId);
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      target.innerHTML = `<img src="${e.target.result}">`;
+      target._data = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
 }
 
 function closeModal(id) {
@@ -473,7 +724,43 @@ function closeModal(id) {
   document.getElementById('md-media-container').innerHTML = '';
 }
 
-window.onload = init;
+function renderComments(vidId) {
+  const cont = document.getElementById('md-comments');
+  const list = state.comments[vidId] || [];
+  cont.innerHTML = list.map(c => `
+    <div class="comment-item">
+      <div class="comment-meta"><span>${c.user}</span><span>Just now</span></div>
+      <div style="font-size:12px">${c.text}</div>
+    </div>
+  `).join('');
+}
+
+function postComment() {
+  const input = document.getElementById('md-comment-input');
+  if(!input.value || !currentActiveVid) return;
+  if(!state.comments[currentActiveVid.id]) state.comments[currentActiveVid.id] = [];
+  state.comments[currentActiveVid.id].unshift({ user: user.first_name, text: input.value });
+  input.value = '';
+  saveState();
+  renderComments(currentActiveVid.id);
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'backup.json';
+  a.click();
+}
+
+function clearAppData() {
+  if (confirm("Clear everything?")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+window.onload = initApp;
 </script>
 </body>
 </html>
