@@ -1,499 +1,479 @@
---- START OF FILE text/html ---
 <!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>VidUnlock Pro — Premium Video Unlock</title>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
-
 <!-- Telegram Mini App SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Advertisement SDK -->
 <script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
 
 <style>
-/* CSS VARIABLES & RESET */
-:root {
+/* Existing CSS remains exactly same */
+:root{
   --bg:#0b0d17; --surface:#141826; --surface-2:#1c2135; --border:#262c44;
   --text:#f2f4fb; --muted:#8e94b3; --primary:#7c5cff; --primary-2:#5b8dff;
   --accent:#ff5c9d; --success:#22c58a; --warning:#ffb547; --danger:#ff5773;
   --grad-hero:linear-gradient(135deg,#7c5cff 0%,#5b8dff 50%,#22c9d9 100%);
   --shadow-glow:0 10px 40px -10px rgba(124,92,255,.55);
 }
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select: none; }
-body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding-bottom:100px; }
-
-/* LOADING SCREEN */
-#app-loader { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
-.spinner { width:40px; height:40px; border:3px solid var(--surface-2); border-top:3px solid var(--primary); border-radius:50%; animation:spin 1s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-
-/* HEADER */
-.app-header { position:sticky; top:0; z-index:100; backdrop-filter:blur(18px); background:rgba(11,13,23,0.85); border-bottom:1px solid var(--border); }
-.app-header .row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:800; }
-.brand-logo { width:34px; height:34px; border-radius:10px; background:var(--grad-hero); display:grid; place-items:center; font-size:16px; box-shadow:var(--shadow-glow); }
-.user-chip { display:flex; align-items:center; gap:8px; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:var(--surface); }
-.user-avatar-mini { width:24px; height:24px; border-radius:50%; object-fit: cover; }
-
-/* SEARCH & CATEGORY */
-.search-container { padding:10px 16px; }
-.search-box { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); padding:10px 15px; border-radius:14px; }
-.search-box input { background:none; border:none; color:#fff; font-size:14px; width:100%; outline:none; }
-.cat-tabs { display:flex; gap:8px; overflow-x:auto; padding:0 16px 15px; scrollbar-width:none; }
-.cat-tabs::-webkit-scrollbar { display:none; }
-.tab { padding:8px 16px; background:var(--surface); border:1px solid var(--border); border-radius:12px; font-size:13px; white-space:nowrap; cursor:pointer; color: var(--muted); }
-.tab.active { background:var(--primary); border-color:var(--primary); color:#fff; }
-
-/* HERO SECTION */
-.hero-card { background:var(--grad-hero); padding:20px; border-radius:24px; margin:0 16px 20px; position:relative; overflow:hidden; box-shadow:var(--shadow-glow); }
-.hero-card h2 { font-size:20px; margin-bottom:4px; }
-.hero-stats { display:flex; gap:10px; margin-top:15px; }
-.stat-pill { background:rgba(255,255,255,0.15); padding:8px 12px; border-radius:12px; flex:1; text-align:center; }
-.stat-pill b { display:block; font-size:16px; }
-.stat-pill span { font-size:9px; text-transform:uppercase; }
-
-/* GRID & CARDS */
-.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; padding: 0 16px; }
-.card { background:linear-gradient(160deg,#1a1f33 0%,#141826 100%); border:1px solid var(--border); border-radius:18px; overflow:hidden; position:relative; }
-.card-thumb { aspect-ratio:16/10; position:relative; background:#000; }
-.card-thumb img { width:100%; height:100%; object-fit:cover; }
-.card-badge { position:absolute; top:8px; left:8px; padding:3px 7px; border-radius:6px; font-size:9px; font-weight:700; backdrop-filter:blur(6px); }
-.badge-locked { background:rgba(0,0,0,0.6); color:var(--warning); }
-.badge-unlocked { background:rgba(34,197,138,0.85); color:#fff; }
-.card-body { padding:10px; }
-.card-title { font-size:13px; font-weight:600; line-height:1.3; height:34px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-
-/* MODERN PROFILE PAGE */
-.profile-header { background: var(--surface); padding: 40px 20px; text-align: center; border-radius: 0 0 30px 30px; border-bottom: 1px solid var(--border); }
-.profile-pic-container { position: relative; width: 100px; height: 100px; margin: 0 auto 15px; }
-.profile-pic { width: 100%; height: 100%; border-radius: 50%; border: 4px solid var(--primary); object-fit: cover; }
-.profile-badge { position: absolute; bottom: 0; right: 0; background: var(--grad-hero); font-size: 10px; padding: 4px 8px; border-radius: 10px; }
-.profile-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 16px; }
-.p-stat-card { background: var(--surface); padding: 15px; border-radius: 18px; text-align: center; border: 1px solid var(--border); }
-.p-stat-card b { font-size: 18px; color: var(--primary); }
-.p-stat-card span { font-size: 10px; color: var(--muted); display: block; margin-top: 5px; }
-
-/* MODAL & PLAYER */
-.modal { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); display:none; align-items:flex-end; }
-.modal.open { display:flex; }
-.modal-sheet { background:var(--bg); width:100%; max-height:92vh; border-radius:28px 28px 0 0; display:flex; flex-direction:column; overflow:hidden; }
-.sheet-content { padding:16px; overflow-y:auto; flex:1; }
-video { width:100%; border-radius:12px; background:#000; }
-
-/* BOTTOM NAV */
-.bottom-nav { position:fixed; bottom:0; left:0; right:0; background:rgba(11,13,23,0.95); backdrop-filter:blur(15px); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:10px 5px calc(10px + env(safe-area-inset-bottom)); z-index:150; }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); font-size:10px; background:none; border:none; cursor:pointer; flex:1; }
-.nav-item.active { color:var(--primary); font-weight: bold; }
-.nav-item i { font-size:20px; }
-
-/* UTILS */
-.hidden { display:none; }
-.btn { padding:12px; border-radius:14px; border:none; font-weight:700; cursor:pointer; width:100%; display:flex; justify-content:center; align-items:center; gap:8px; }
-.btn-p { background:var(--grad-hero); color:#fff; }
-.btn-g { background:var(--surface-2); color:var(--text); }
-.view { display:none; }
-.view.active { display:block; }
-
-/* ADMIN */
-.admin-subview { padding: 16px; }
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: var(--muted); }
-.form-group input, .form-group select { width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: #fff; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:100px;overflow-x:hidden}
+#app-loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.spinner{width:40px;height:40px;border:3px solid var(--surface-2);border-top:3px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app-header{position:sticky;top:0;z-index:100;backdrop-filter:blur(18px);background:rgba(11,13,23,.85);border-bottom:1px solid var(--border)}
+.app-header .row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800}
+.brand-logo{width:34px;height:34px;border-radius:10px;background:var(--grad-hero);display:grid;place-items:center;box-shadow:var(--shadow-glow)}
+.user-chip{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface)}
+.user-avatar{width:24px;height:24px;border-radius:50%;background:var(--grad-hero);display:grid;place-items:center;font-size:11px;font-weight:700}
+.admin-badge{font-size:8px;padding:2px 5px;border-radius:4px;background:linear-gradient(135deg,#ff5c9d,#ffb547);color:#1a1035;font-weight:800;margin-left:4px}
+.search-container{padding:10px 16px}.search-box{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);padding:10px 15px;border-radius:14px}
+.search-box input{background:none;border:none;color:#fff;font-size:14px;width:100%;outline:none}
+.cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 16px 15px;scrollbar-width:none}
+.tab{padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:13px;white-space:nowrap;transition:0.3s}
+.tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.hero-card{background:var(--grad-hero);padding:20px;border-radius:24px;margin:0 16px 20px;box-shadow:var(--shadow-glow)}
+.view{display:none;padding:0 16px}.view.active{display:block;animation:fadeIn 0.4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative}
+.card-thumb{aspect-ratio:16/10;position:relative;background:#000}
+.card-thumb img{width:100%;height:100%;object-fit:cover}
+.card-badge{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:6px;font-size:9px;font-weight:700;backdrop-filter:blur(6px)}
+.badge-locked{background:rgba(0,0,0,0.6);color:var(--warning)}
+.badge-unlocked{background:rgba(34,197,138,0.85);color:#fff}
+.card-body{padding:10px}.card-title{font-size:13px;font-weight:600;line-height:1.3;height:34px;overflow:hidden}
+.modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);display:none;align-items:flex-end}
+.modal.open{display:flex}.modal-sheet{background:var(--bg);width:100%;max-height:92vh;border-radius:28px 28px 0 0;overflow:hidden;display:flex;flex-direction:column}
+.sheet-header{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.sheet-content{padding:16px;overflow-y:auto;flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;border-radius:14px;font-weight:700;font-size:14px;width:100%;border:none;color:#fff;cursor:pointer}
+.btn-p{background:var(--grad-hero)}.btn-g{background:var(--surface-2)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(11,13,23,0.9);backdrop-filter:blur(15px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 5px;z-index:150}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:10px;background:none;border:none}
+.nav-item.active{color:var(--primary)}
+.admin-card{background:var(--surface);border:1px solid var(--border);padding:15px;border-radius:18px;margin-bottom:15px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:11px;margin-bottom:5px;color:var(--muted)}
+.form-group input, .form-group select, .form-group textarea{width:100%;background:var(--bg);border:1px solid var(--border);padding:10px;border-radius:10px;color:#fff}
+.hidden{display:none}
+#toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2000;width:90%}
+.toast{background:var(--surface-2);padding:12px 16px;border-radius:12px;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
 </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
 <div id="app-loader">
   <div class="spinner"></div>
-  <p id="loader-text">VidUnlock লোড হচ্ছে...</p>
+  <p style="font-size:12px; color:var(--muted)" data-i18n="loading">Loading VidUnlock...</p>
 </div>
 
-<!-- HEADER -->
 <header class="app-header">
   <div class="row">
     <div class="brand">
       <div class="brand-logo">▶</div>
       <div>
         <div style="font-size:14px">VidUnlock</div>
-        <div style="font-size:8px;color:var(--muted)" id="tagline">PREMIUM ACCESS</div>
+        <div style="font-size:8px;color:var(--muted)" data-i18n="premium_access">PREMIUM ACCESS</div>
       </div>
     </div>
     <div class="user-chip">
-      <img src="" id="u-avatar" class="user-avatar-mini" alt="">
-      <div style="font-size:11px;" id="u-name">User</div>
+      <div class="user-avatar" id="u-avatar">U</div>
+      <div style="font-size:11px;max-width:70px;overflow:hidden;white-space:nowrap" id="u-name">Guest</div>
+      <span class="admin-badge" id="u-badge" style="display:none">ADMIN</span>
     </div>
   </div>
 </header>
 
-<!-- HOME VIEW -->
-<section class="view active" id="view-home">
+<div id="sticky-utils">
   <div class="search-container">
     <div class="search-box">
       <span>🔍</span>
-      <input type="text" id="main-search" placeholder="Search videos..." oninput="handleSearch()">
+      <input type="text" id="main-search" data-i18n-placeholder="search_placeholder" oninput="handleSearch()">
     </div>
   </div>
   <div class="cat-tabs" id="category-tabs"></div>
+</div>
 
+<!-- VIEW: HOME -->
+<section class="view active" id="view-home">
   <div class="hero-card">
     <h2 id="hero-welcome">হ্যালো! 👋</h2>
-    <p id="hero-desc">আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন।</p>
-    <div class="hero-stats">
-      <div class="stat-pill"><b id="stat-total-v">0</b><span class="lang-txt" data-bn="ভিডিও" data-en="Videos">ভিডিও</span></div>
-      <div class="stat-pill"><b id="stat-unlocked-v">0</b><span class="lang-txt" data-bn="আনলক" data-en="Unlocked">আনলক</span></div>
-      <div class="stat-pill"><b id="stat-fav-v">0</b><span class="lang-txt" data-bn="পছন্দ" data-en="Favs">পছন্দ</span></div>
-    </div>
+    <p data-i18n="hero_desc">আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন একদম ফ্রিতে।</p>
   </div>
+  <h3 class="page-title" style="margin:15px 0" data-i18n="all_videos">সব ভিডিও</h3>
   <div class="grid" id="main-grid"></div>
 </section>
 
-<!-- FAVORITES VIEW -->
+<!-- VIEW: FAVORITES -->
 <section class="view" id="view-fav">
-  <h3 style="padding:20px 16px" class="lang-txt" data-bn="❤️ আপনার পছন্দ" data-en="❤️ Your Favorites">❤️ আপনার পছন্দ</h3>
+  <h3 class="page-title" style="margin:15px 0" data-i18n="my_favorites">আপনার পছন্দ</h3>
   <div class="grid" id="fav-grid"></div>
 </section>
 
-<!-- UNLOCKED VIEW -->
+<!-- VIEW: UNLOCKED -->
 <section class="view" id="view-unlock">
-  <h3 style="padding:20px 16px" class="lang-txt" data-bn="🔓 আনলক করা" data-en="🔓 Unlocked Videos">🔓 আনলক করা</h3>
+  <h3 class="page-title" style="margin:15px 0" data-i18n="unlocked_videos">আনলক করা</h3>
   <div class="grid" id="unlock-grid"></div>
 </section>
 
-<!-- MODERN PROFILE VIEW -->
+<!-- VIEW: PROFILE -->
 <section class="view" id="view-profile">
-  <div class="profile-header">
-    <div class="profile-pic-container">
-      <img src="" id="p-img" class="profile-pic">
-      <div class="profile-badge">PREMIUM</div>
-    </div>
-    <h2 id="p-name">Telegram User</h2>
-    <p id="p-uid" style="color:var(--muted); font-size:12px; margin-top:5px;">ID: 000000</p>
+  <div style="text-align:center;padding:30px 0">
+    <div id="prof-pic" style="width:80px;height:80px;border-radius:50%;background:var(--grad-hero);margin:0 auto 15px;display:grid;place-items:center;font-size:30px;border:3px solid var(--surface-2)">U</div>
+    <h2 id="prof-name">Guest</h2>
+    <p style="color:var(--muted);font-size:12px" id="prof-id">ID: 000000</p>
   </div>
 
-  <div class="profile-stats-grid">
-    <div class="p-stat-card"><b id="ps-total">0</b><span class="lang-txt" data-bn="মোট ভিডিও" data-en="Total Videos">মোট ভিডিও</span></div>
-    <div class="p-stat-card"><b id="ps-unlock">0</b><span class="lang-txt" data-bn="আনলক" data-en="Unlocked">আনলক</span></div>
-    <div class="p-stat-card"><b id="ps-fav">0</b><span class="lang-txt" data-bn="পছন্দ" data-en="Favorites">পছন্দ</span></div>
-  </div>
-
-  <div style="padding:0 16px">
+  <div class="admin-card">
     <div class="form-group">
-      <label class="lang-txt" data-bn="ভাষা নির্বাচন করুন" data-en="Select Language">ভাষা নির্বাচন করুন</label>
-      <select id="lang-select" onchange="changeLang(this.value)">
-        <option value="bn">Bengali (বাংলা)</option>
+      <label data-i18n="select_language">ভাষা নির্বাচন করুন</label>
+      <select id="lang-selector" onchange="changeLanguage(this.value)">
+        <option value="bn">বাংলা</option>
         <option value="en">English</option>
       </select>
     </div>
-    <button class="btn btn-g" onclick="tg.close()">🚪 Exit App</button>
+  </div>
+
+  <div class="admin-card" style="padding:0">
+    <button class="btn btn-g" style="justify-content:flex-start" onclick="showView('fav')" data-i18n="my_favorites">❤️ আমার পছন্দের ভিডিও</button>
+    <div style="height:1px;background:var(--border)"></div>
+    <button class="btn btn-g" style="justify-content:flex-start" onclick="showView('unlock')" data-i18n="unlocked_videos">🔓 আনলক করা ভিডিও</button>
   </div>
 </section>
 
-<!-- ADMIN VIEW -->
+<!-- VIEW: ADMIN -->
 <section class="view" id="view-admin">
-  <div class="admin-subview">
-    <h3 class="lang-txt" data-bn="🛠 অ্যাডমিন প্যানেল" data-en="🛠 Admin Panel">🛠 অ্যাডমিন প্যানেল</h3>
-    <div class="form-group" style="margin-top:15px">
-      <label>Video Title</label>
-      <input type="text" id="av-title">
-    </div>
-    <div class="form-group">
-      <label>Category ID</label>
-      <select id="av-cat">
-        <option value="viral">Viral 🔥</option>
-        <option value="premium">Premium 💎</option>
-        <option value="movie">Movies 🍿</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Thumbnail URL</label>
-      <input type="text" id="av-thumb">
-    </div>
-    <div class="form-group">
-      <label>Video URL (Direct/Telegram)</label>
-      <input type="text" id="av-link">
-    </div>
-    <div class="form-group">
-      <label>Ads Required to Unlock</label>
-      <input type="number" id="av-ads" value="1">
-    </div>
-    <button class="btn btn-p" onclick="addVideoToFirebase()">Upload Video to Global</button>
+  <h3 class="page-title">🛠 অ্যাডমিন প্যানেল</h3>
+  <div class="admin-card">
+    <h4>➕ নতুন ভিডিও যোগ করুন</h4>
+    <div class="form-group"><label>শিরোনাম</label><input type="text" id="av-title"></div>
+    <div class="form-group"><label>ক্যাটাগরি</label><select id="av-cat"></select></div>
+    <div class="form-group"><label>থাম্বনেইল URL</label><input type="text" id="av-thumb"></div>
+    <div class="form-group"><label>ভিডিও URL (Premium)</label><input type="text" id="av-link"></div>
+    <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1"></div>
+    <button class="btn btn-p" onclick="adminSaveVideo()" id="btn-save-video">সেভ ভিডিও (Global)</button>
   </div>
+  <div id="admin-vid-list"></div>
 </section>
 
-<!-- MODAL DETAIL -->
+<!-- MODAL: DETAIL -->
 <div class="modal" id="modal-detail">
   <div class="modal-sheet">
-    <div style="padding:15px; display:flex; justify-content:space-between; border-bottom:1px solid var(--border)">
-      <button onclick="closeModal()" style="background:none; border:none; color:#fff; font-size:20px;">✕</button>
-      <div id="md-title" style="font-weight:700; font-size:14px">Video Detail</div>
-      <button id="md-fav-btn" style="background:none; border:none; font-size:20px;">🤍</button>
+    <div class="sheet-header">
+      <button onclick="closeModal('modal-detail')" style="background:none;border:none;font-size:22px;color:#fff">✕</button>
+      <div id="md-header-title" style="font-weight:700">Video Details</div>
+      <button id="md-fav-btn" style="background:none;border:none;font-size:22px">🤍</button>
     </div>
     <div class="sheet-content">
-      <div id="player-container"></div>
-      <div id="md-action-area" style="margin-top:20px"></div>
+      <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:15px"></div>
+      <h2 id="md-title"></h2>
+      <div style="margin:10px 0"><span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span></div>
+      <div id="md-action-area"></div>
     </div>
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="nav-item active" onclick="showView('home', this)"><i>🏠</i><span class="lang-txt" data-bn="হোম" data-en="Home">হোম</span></button>
-  <button class="nav-item" onclick="showView('fav', this)"><i>❤️</i><span class="lang-txt" data-bn="পছন্দ" data-en="Favs">পছন্দ</span></button>
-  <button class="nav-item" onclick="showView('unlock', this)"><i>🔓</i><span class="lang-txt" data-bn="আনলক" data-en="Unlocked">আনলক</span></button>
-  <button class="nav-item" onclick="showView('profile', this)"><i>👤</i><span class="lang-txt" data-bn="প্রোফাইল" data-en="Profile">প্রোফাইল</span></button>
-  <button class="nav-item hidden" id="nav-admin" onclick="showView('admin', this)"><i>🛠</i>Admin</button>
+  <button class="nav-item active" onclick="showView('home')"><i>🏠</i><span data-i18n="nav_home">হোম</span></button>
+  <button class="nav-item" onclick="showView('fav')"><i>❤️</i><span data-i18n="nav_fav">পছন্দ</span></button>
+  <button class="nav-item" onclick="showView('unlock')"><i>🔓</i><span data-i18n="nav_unlock">আনলক</span></button>
+  <button class="nav-item" onclick="showView('profile')"><i>👤</i><span data-i18n="nav_profile">প্রোফাইল</span></button>
+  <button class="nav-item hidden" id="nav-admin" onclick="showView('admin')"><i>🛠</i>অ্যাডমিন</button>
 </nav>
+
+<div id="toast-container"></div>
 
 <script>
 /* =======================================================
-   1. FIREBASE CONFIGURATION (ইউজারকে এখানে নিজের ডাটা বসাতে হবে)
+   1. CONFIGURATION & STATE
    ======================================================= */
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 const ADMIN_ID = 7904568371; // আপনার টেলিগ্রাম আইডি
 
-/* =======================================================
-   2. APP STATE & TG INIT
-   ======================================================= */
-let tg = window.Telegram.WebApp;
-let userData = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest User', photo_url: '' };
-let currentLang = localStorage.getItem('appLang') || 'bn';
-let globalVideos = [];
-let userDoc = { favorites: {}, unlocked: {}, progress: {} };
-let activeVideo = null;
+const supabase = idb = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const tg = window.Telegram.WebApp;
+const user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest', username: 'guest' };
+
+let state = {
+  videos: [],
+  categories: [],
+  userUnlocks: {}, // {vid_id: {ads_watched, is_unlocked}}
+  userFavs: new Set(),
+  language: 'bn'
+};
+
+const i18n = {
+  bn: {
+    loading: "লোড হচ্ছে...", premium_access: "প্রিমিয়াম এক্সেস", search_placeholder: "ভিডিও খুঁজুন...",
+    all_videos: "সব ভিডিও", my_favorites: "আপনার পছন্দ", unlocked_videos: "আনলক করা",
+    hero_desc: "আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন একদম ফ্রিতে।",
+    select_language: "ভাষা নির্বাচন করুন", nav_home: "হোম", nav_fav: "পছন্দ",
+    nav_unlock: "আনলক", nav_profile: "প্রোফাইল", watch_ad: "ভিডিও দেখতে বিজ্ঞাপন দেখুন",
+    congrats: "অভিনন্দন! ভিডিওটি আনলক হয়েছে।", ad_success: "বিজ্ঞাপন সফলভাবে দেখা হয়েছে!"
+  },
+  en: {
+    loading: "Loading...", premium_access: "PREMIUM ACCESS", search_placeholder: "Search videos...",
+    all_videos: "All Videos", my_favorites: "My Favorites", unlocked_videos: "Unlocked",
+    hero_desc: "Unlock your favorite premium videos for free.",
+    select_language: "Select Language", nav_home: "Home", nav_fav: "Favorites",
+    nav_unlock: "Unlocked", nav_profile: "Profile", watch_ad: "Watch Ad to Unlock",
+    congrats: "Congrats! Video unlocked successfully.", ad_success: "Ad watched successfully!"
+  }
+};
 
 /* =======================================================
-   3. INITIALIZATION
+   2. INITIALIZATION
    ======================================================= */
 async function init() {
   tg.ready();
   tg.expand();
   
-  // Profile UI Update
-  document.getElementById('u-name').textContent = userData.first_name;
-  document.getElementById('p-name').textContent = userData.first_name + (userData.username ? ` (@${userData.username})` : "");
-  document.getElementById('p-uid').textContent = `ID: ${userData.id}`;
-  const pPic = userData.photo_url || `https://ui-avatars.com/api/?name=${userData.first_name}&background=7c5cff&color=fff`;
-  document.getElementById('u-avatar').src = pPic;
-  document.getElementById('p-img').src = pPic;
+  // Sync User to Supabase
+  await syncUser();
   
-  if(userData.id === ADMIN_ID) document.getElementById('nav-admin').classList.remove('hidden');
+  // Load Global Data
+  await loadGlobalData();
+  
+  // UI Setup
+  updateLanguageUI();
+  updateUserUI();
+  renderAll();
+  
+  document.getElementById('app-loader').style.display = 'none';
+}
 
-  // Load User Data from Firestore
-  const uRef = db.collection("users").doc(String(userData.id));
-  uRef.onSnapshot((doc) => {
-    if(doc.exists) userDoc = doc.data();
-    else uRef.set(userDoc);
-    renderAll();
-  });
+async function syncUser() {
+  const { data, error } = await supabase.from('users').upsert({
+    telegram_id: user.id,
+    first_name: user.first_name,
+    last_name: user.last_name || '',
+    username: user.username || '',
+    photo_url: user.photo_url || ''
+  }).select();
+  
+  if (data && data[0]) state.language = data[0].language || 'bn';
+  document.getElementById('lang-selector').value = state.language;
 
-  // Load Global Videos from Firestore
-  db.collection("videos").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-    globalVideos = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-    renderAll();
-    document.getElementById('app-loader').style.display = 'none';
-  });
+  // Load User Specific Data
+  const { data: unlocks } = await supabase.from('user_progress').select('*').eq('user_id', user.id);
+  unlocks?.forEach(u => state.userUnlocks[u.video_id] = u);
 
-  applyLang();
+  const { data: favs } = await supabase.from('favorites').select('video_id').eq('user_id', user.id);
+  favs?.forEach(f => state.userFavs.add(f.video_id));
+}
+
+async function loadGlobalData() {
+  const { data: vids } = await supabase.from('videos').select('*').eq('is_active', true);
+  const { data: cats } = await supabase.from('categories').select('*').order('display_order');
+  state.videos = vids || [];
+  state.categories = cats || [];
 }
 
 /* =======================================================
-   4. CORE FUNCTIONS
+   3. RENDERING
    ======================================================= */
 function renderAll() {
-  renderGrid('main-grid', globalVideos);
-  renderGrid('fav-grid', globalVideos.filter(v => userDoc.favorites[v.id]));
-  renderGrid('unlock-grid', globalVideos.filter(v => userDoc.unlocked[v.id]));
-  updateStats();
+  renderGrid('main-grid', state.videos);
+  renderGrid('fav-grid', state.videos.filter(v => state.userFavs.has(v.id)));
+  renderGrid('unlock-grid', state.videos.filter(v => state.userUnlocks[v.id]?.is_unlocked));
+  renderCategories();
 }
 
-function renderGrid(targetId, vids) {
-  const container = document.getElementById(targetId);
-  if(vids.length === 0) {
-    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted)">No videos found</div>`;
+function renderGrid(containerId, vids) {
+  const grid = document.getElementById(containerId);
+  if (!vids.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">No videos found</div>`;
     return;
   }
-  container.innerHTML = vids.map(v => `
-    <div class="card" onclick="openDetail('${v.id}')">
-      <div class="card-thumb">
-        <img src="${v.thumb}" loading="lazy">
-        <div class="card-badge ${userDoc.unlocked[v.id] ? 'badge-unlocked' : 'badge-locked'}">
-          ${userDoc.unlocked[v.id] ? '🔓 Unlocked' : '🔒 Locked'}
+  grid.innerHTML = vids.map(v => {
+    const isUnlocked = state.userUnlocks[v.id]?.is_unlocked;
+    return `
+      <div class="card" onclick="openDetail('${v.id}')">
+        <div class="card-thumb">
+          <img src="${v.thumbnail_url}" loading="lazy">
+          <div class="card-badge ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}">
+            ${isUnlocked ? '🔓 UNLOCKED' : '🔒 LOCKED'}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">${v.title}</div>
         </div>
       </div>
-      <div class="card-body">
-        <div class="card-title">${v.title}</div>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
-function openDetail(id) {
-  const v = globalVideos.find(x => x.id === id);
-  if(!v) return;
-  activeVideo = v;
+function renderCategories() {
+  const tabs = document.getElementById('category-tabs');
+  tabs.innerHTML = state.categories.map(c => `
+    <button class="tab" onclick="filterCat('${c.id}')">${c.icon} ${c.name}</button>
+  `).join('');
   
-  const isUnlocked = userDoc.unlocked[v.id];
-  document.getElementById('md-title').textContent = v.title;
-  document.getElementById('md-fav-btn').textContent = userDoc.favorites[v.id] ? '❤️' : '🤍';
-  document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
+  const select = document.getElementById('av-cat');
+  if(select) select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+/* =======================================================
+   4. VIDEO ACTIONS & ADS
+   ======================================================= */
+let currentVid = null;
+
+async function openDetail(id) {
+  currentVid = state.videos.find(v => v.id === id);
+  const isUnlocked = state.userUnlocks[id]?.is_unlocked;
   
-  const actionArea = document.getElementById('md-action-area');
-  const playerCont = document.getElementById('player-container');
-  
-  if(isUnlocked) {
-    playerCont.innerHTML = `
-      <video id="main-player" controls controlsList="nodownload" oncontextmenu="return false;" disablePictureInPicture>
-        <source src="${v.link}" type="video/mp4">
-      </video>
-    `;
-    actionArea.innerHTML = `<div class="btn btn-g">✅ You have full access</div>`;
+  document.getElementById('md-title').textContent = currentVid.title;
+  document.getElementById('md-fav-btn').textContent = state.userFavs.has(id) ? '❤️' : '🤍';
+  document.getElementById('md-fav-btn').onclick = () => toggleFav(id);
+
+  const media = document.getElementById('md-media-container');
+  const action = document.getElementById('md-action-area');
+
+  if (isUnlocked) {
+    media.innerHTML = `<video src="${currentVid.video_url}" controls controlsList="nodownload" style="width:100%;height:100%"></video>`;
+    action.innerHTML = `<button class="btn btn-p" onclick="window.open('${currentVid.video_url}')">OPEN EXTERNAL PLAYER</button>`;
   } else {
-    playerCont.innerHTML = `<img src="${v.thumb}" style="width:100%; border-radius:12px">`;
-    const prog = userDoc.progress[v.id] || 0;
-    const pct = Math.floor((prog / v.ads) * 100);
-    actionArea.innerHTML = `
-      <div style="margin-bottom:15px">
-        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px">
-          <span>Unlock Progress</span><span>${prog}/${v.ads} Ads</span>
-        </div>
-        <div style="height:8px; background:var(--surface-2); border-radius:10px; overflow:hidden">
-          <div style="width:${pct}%; height:100%; background:var(--grad-hero)"></div>
-        </div>
-      </div>
-      <button class="btn btn-p" onclick="watchAd()">📺 Watch Ad to Unlock</button>
+    media.innerHTML = `<img src="${currentVid.thumbnail_url}" style="width:100%;height:100%;object-fit:cover">`;
+    const progress = state.userUnlocks[id]?.ads_watched || 0;
+    const req = currentVid.required_ads;
+    action.innerHTML = `
+      <div style="margin-bottom:10px;font-size:12px;text-align:center">Progress: ${progress}/${req} Ads</div>
+      <button class="btn btn-p" onclick="watchAd()" id="ad-btn">${i18n[state.language].watch_ad}</button>
     `;
   }
-  
   document.getElementById('modal-detail').classList.add('open');
 }
 
 async function watchAd() {
-  if(typeof show_11404425 !== 'function') return alert("Ad SDK not ready");
-  
+  const btn = document.getElementById('ad-btn');
+  btn.disabled = true;
+  btn.textContent = "Loading Ad...";
+
   try {
-    await show_11404425();
-    // Ad Success
-    const vId = activeVideo.id;
-    let currentProg = (userDoc.progress[vId] || 0) + 1;
-    
-    let updateObj = {};
-    if(currentProg >= activeVideo.ads) {
-      updateObj[`unlocked.${vId}`] = true;
-      updateObj[`progress.${vId}`] = firebase.firestore.FieldValue.delete();
-    } else {
-      updateObj[`progress.${vId}`] = currentProg;
-    }
-    
-    await db.collection("users").doc(String(userData.id)).update(updateObj);
-    openDetail(vId); // Refresh modal
-  } catch(e) {
-    alert("Ad failed or closed");
+    await show_11404425(); // Ad SDK Call
+    await handleAdSuccess();
+  } catch (e) {
+    showToast("Ad failed to load", "danger");
+    btn.disabled = false;
   }
 }
 
-async function toggleFav(id) {
-  const newState = !userDoc.favorites[id];
-  await db.collection("users").doc(String(userData.id)).update({
-    [`favorites.${id}`]: newState
+async function handleAdSuccess() {
+  const vidId = currentVid.id;
+  let currentProg = state.userUnlocks[vidId] || { ads_watched: 0, is_unlocked: false };
+  
+  currentProg.ads_watched++;
+  if (currentProg.ads_watched >= currentVid.required_ads) {
+    currentProg.is_unlocked = true;
+    showToast(i18n[state.language].congrats, "success");
+  } else {
+    showToast(i18n[state.language].ad_success, "info");
+  }
+
+  // Save to Supabase
+  await supabase.from('user_progress').upsert({
+    user_id: user.id,
+    video_id: vidId,
+    ads_watched: currentProg.ads_watched,
+    is_unlocked: currentProg.is_unlocked
   });
-  document.getElementById('md-fav-btn').textContent = newState ? '❤️' : '🤍';
+
+  state.userUnlocks[vidId] = currentProg;
+  openDetail(vidId); // Refresh modal
+  renderAll(); // Refresh background
 }
 
 /* =======================================================
-   5. ADMIN ACTIONS (SAVE TO FIREBASE)
+   5. ADMIN FUNCTIONS
    ======================================================= */
-async function addVideoToFirebase() {
+async function adminSaveVideo() {
+  if (user.id !== ADMIN_ID) return;
   const title = document.getElementById('av-title').value;
-  const cat = document.getElementById('av-cat').value;
-  const thumb = document.getElementById('av-thumb').value;
-  const link = document.getElementById('av-link').value;
-  const ads = parseInt(document.getElementById('av-ads').value);
+  const category_id = document.getElementById('av-cat').value;
+  const thumbnail_url = document.getElementById('av-thumb').value;
+  const video_url = document.getElementById('av-link').value;
+  const required_ads = document.getElementById('av-ads').value;
 
-  if(!title || !link) return alert("Fill required fields");
+  const { error } = await supabase.from('videos').insert([{
+    title, category_id, thumbnail_url, video_url, required_ads
+  }]);
 
-  await db.collection("videos").add({
-    title, categoryId: cat, thumb, link, ads,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  
-  alert("Video Added Globally!");
+  if (!error) {
+    showToast("Global Video Added!");
+    loadGlobalData().then(renderAll);
+  } else {
+    showToast("Error adding video", "danger");
+  }
 }
 
 /* =======================================================
-   6. LANGUAGE & UI UTILS
+   6. UTILS
    ======================================================= */
-function applyLang() {
-  document.querySelectorAll('.lang-txt').forEach(el => {
-    el.textContent = el.getAttribute(`data-${currentLang}`);
+async function changeLanguage(lang) {
+  state.language = lang;
+  await supabase.from('users').update({ language: lang }).eq('telegram_id', user.id);
+  updateLanguageUI();
+}
+
+function updateLanguageUI() {
+  const texts = i18n[state.language];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = texts[el.getAttribute('data-i18n')];
   });
-  document.getElementById('lang-select').value = currentLang;
-  
-  // Contextual translations
-  const t = {
-    bn: { search: "ভিডিও খুঁজুন...", welcome: "হ্যালো! 👋", desc: "পছন্দের ভিডিও আনলক করুন।" },
-    en: { search: "Search videos...", welcome: "Hello! 👋", desc: "Unlock your favorite videos." }
-  };
-  document.getElementById('main-search').placeholder = t[currentLang].search;
-  document.getElementById('hero-welcome').textContent = t[currentLang].welcome;
-  document.getElementById('hero-desc').textContent = t[currentLang].desc;
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = texts[el.getAttribute('data-i18n-placeholder')];
+  });
 }
 
-function changeLang(l) {
-  currentLang = l;
-  localStorage.setItem('appLang', l);
-  applyLang();
-}
-
-function showView(id, btn) {
+function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + id).classList.add('active');
+  document.getElementById('view-' + viewId).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  btn.classList.add('active');
+  if (user.id === ADMIN_ID) document.getElementById('nav-admin').classList.remove('hidden');
 }
 
-function closeModal() {
-  document.getElementById('modal-detail').classList.remove('open');
-  document.getElementById('player-container').innerHTML = '';
+function toggleFav(vidId) {
+  if (state.userFavs.has(vidId)) {
+    state.userFavs.delete(vidId);
+    supabase.from('favorites').delete().eq('user_id', user.id).eq('video_id', vidId).then();
+  } else {
+    state.userFavs.add(vidId);
+    supabase.from('favorites').insert({ user_id: user.id, video_id: vidId }).then();
+  }
+  document.getElementById('md-fav-btn').textContent = state.userFavs.has(vidId) ? '❤️' : '🤍';
+  renderAll();
 }
 
-function updateStats() {
-  const unlockedCount = Object.keys(userDoc.unlocked).length;
-  const favCount = Object.keys(userDoc.favorites).filter(k => userDoc.favorites[k]).length;
-  
-  document.getElementById('stat-total-v').textContent = globalVideos.length;
-  document.getElementById('stat-unlocked-v').textContent = unlockedCount;
-  document.getElementById('stat-fav-v').textContent = favCount;
-  
-  document.getElementById('ps-total').textContent = globalVideos.length;
-  document.getElementById('ps-unlock').textContent = unlockedCount;
-  document.getElementById('ps-fav').textContent = favCount;
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span>${type === 'success' ? '✅' : 'ℹ️'}</span> ${msg}`;
+  container.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 }
 
-function handleSearch() {
-  const q = document.getElementById('main-search').value.toLowerCase();
-  const filtered = globalVideos.filter(v => v.title.toLowerCase().includes(q));
-  renderGrid('main-grid', filtered);
+function updateUserUI() {
+  document.getElementById('u-name').textContent = user.first_name;
+  document.getElementById('u-avatar').textContent = user.first_name[0];
+  document.getElementById('prof-name').textContent = user.first_name;
+  document.getElementById('prof-id').textContent = `ID: ${user.id}`;
+  if (user.id === ADMIN_ID) document.getElementById('u-badge').style.display = 'block';
 }
 
-// Start App
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.getElementById('md-media-container').innerHTML = '';
+}
+
 window.onload = init;
 </script>
 </body>
 </html>
---- END OF FILE ---
