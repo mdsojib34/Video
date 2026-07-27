@@ -9,9 +9,35 @@
 <!-- Advertisement SDK -->
 <script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
 
+<!-- Firebase SDKs & Config -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  // আপনার দেওয়া Firebase Config এখানে যুক্ত করা হলো
+  const firebaseConfig = {
+    apiKey: "AIzaSyD02il4iKbRsYv45KGPGr8PQplF5wawgls",
+    authDomain: "telegram-bot-80f03.firebaseapp.com",
+    databaseURL: "https://telegram-bot-80f03-default-rtdb.firebaseio.com",
+    projectId: "telegram-bot-80f03",
+    storageBucket: "telegram-bot-80f03.firebasestorage.app",
+    messagingSenderId: "735419091756",
+    appId: "1:735419091756:web:4b8224b4d323d71c9e7a89",
+    measurementId: "G-V1E9LZSF0W"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  window.FB = { db, storage, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, ref, uploadBytes, getDownloadURL, arrayUnion };
+  if(window.initAppAfterFirebase) window.initAppAfterFirebase();
+</script>
+
 <style>
 /* =========================================================
-   CORE DESIGN SYSTEM (Preserved)
+   CORE DESIGN SYSTEM (Preserved 100%)
    ========================================================= */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -224,8 +250,6 @@ body{padding-bottom:100px}
     <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="showView('fav')">❤️ আমার পছন্দের ভিডিও</button>
     <div style="height:1px;background:var(--border)"></div>
     <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="showView('unlock')">🔓 আনলক করা ভিডিও</button>
-    <div style="height:1px;background:var(--border)"></div>
-    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="exportData()">📥 ব্যাকআপ ডাউনলোড</button>
   </div>
 </section>
 
@@ -236,7 +260,6 @@ body{padding-bottom:100px}
     <button class="tab active" onclick="switchAdminSubView('dash', this)">ড্যাশবোর্ড</button>
     <button class="tab" onclick="switchAdminSubView('vids', this)">ভিডিও</button>
     <button class="tab" onclick="switchAdminSubView('cats', this)">ক্যাটাগরি</button>
-    <button class="tab" onclick="switchAdminSubView('settings', this)">সেটিংস</button>
   </div>
   <div id="admin-dash" class="admin-subview">
     <div class="grid" style="grid-template-columns:1fr 1fr">
@@ -260,7 +283,7 @@ body{padding-bottom:100px}
         <label>সোর্স টাইপ</label>
         <select id="av-source" onchange="toggleSourceType(this.value)">
           <option value="link">External Link / Telegram</option>
-          <option value="file">📁 Gallery Upload (IndexedDB)</option>
+          <option value="file">📁 Firebase Storage Upload</option>
         </select>
       </div>
       <div id="source-link-wrap" class="form-group"><label>ভিডিও লিঙ্ক</label><input type="text" id="av-link"></div>
@@ -281,16 +304,6 @@ body{padding-bottom:100px}
       <button class="btn btn-p" onclick="saveCategory()">সেভ ক্যাটাগরি</button>
     </div>
     <div id="admin-cat-list"></div>
-  </div>
-  <div id="admin-settings" class="admin-subview hidden">
-    <div class="admin-card">
-      <h4>Data Management</h4>
-      <div style="display:grid;gap:10px;margin-top:10px">
-        <button class="btn btn-g" onclick="exportData()">📥 Export Backup (JSON)</button>
-        <label class="btn btn-g">📤 Import Backup<input type="file" style="display:none" accept=".json" onchange="importData(this)"></label>
-        <button class="btn btn-d" onclick="clearAppData()">⚠️ Clear All Data</button>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -340,75 +353,32 @@ body{padding-bottom:100px}
 <div id="toast-container"></div>
 
 <script>
-/* =======================================================
-   1. CORE STATE & CONFIG
-   ======================================================= */
 const ADMIN_ID = 7904568371;
-const DB_NAME = "VidUnlockDB_V2";
-const STORE_KEY = "VidUnlock_Core_State";
-
-let state = {
-  version: 3,
-  categories: [
-    { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
-    { id: 'cat_viral', name: 'ভাইরাল', icon: '🔥', order: 1 }
-  ],
-  videos: [],
-  unlocked: {},
-  progress: {},
-  favorites: {},
-  comments: {},
-  recent: [],
-  adViews: 0,
-  users: {},
-  settings: { maintenance: false }
-};
 
 let tg = window.Telegram.WebApp;
 let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
 let currentView = 'home';
 let currentCat = 'cat_all';
 let isAdShowing = false;
-let db = null;
+let currentActiveVid = null;
 
-/* =======================================================
-   2. INDEXEDDB SETUP
-   ======================================================= */
-async function initDB() {
-  return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 2);
-    request.onupgradeneeded = (e) => {
-      let db = e.target.result;
-      if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
-    };
-    request.onsuccess = (e) => { db = e.target.result; resolve(); };
-  });
-}
+let state = {
+  categories: [
+    { id: 'cat_all', name: 'সব', icon: '✨' },
+    { id: 'cat_viral', name: 'ভাইরাল', icon: '🔥' }
+  ],
+  videos: [],
+  unlocked: {},
+  progress: {},
+  favorites: {},
+  comments: {},
+  adViews: 0,
+  users: {}
+};
 
-async function saveFile(id, blob) {
-  const tx = db.transaction('files', 'readwrite');
-  return tx.objectStore('files').put(blob, id);
-}
-
-async function getFile(id) {
-  return new Promise((resolve) => {
-    const tx = db.transaction('files', 'readonly');
-    const req = tx.objectStore('files').get(id);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => resolve(null);
-  });
-}
-
-/* =======================================================
-   3. APP INITIALIZATION
-   ======================================================= */
-async function initApp() {
+window.initAppAfterFirebase = async function() {
   tg.ready();
   tg.expand();
-  await initDB();
-  
-  const saved = localStorage.getItem(STORE_KEY);
-  if (saved) state = { ...state, ...JSON.parse(saved) };
 
   if (Number(user.id) === ADMIN_ID) {
     document.getElementById('nav-admin').classList.remove('hidden');
@@ -416,18 +386,58 @@ async function initApp() {
   }
 
   updateUserUI();
-  renderCategories();
-  renderAll();
-  document.getElementById('app-loader').style.display = 'none';
+  setupRealtimeListeners();
+};
+
+function setupRealtimeListeners() {
+  const { db, collection, doc, getDoc, setDoc, onSnapshot } = window.FB;
+
+  onSnapshot(collection(db, "videos"), (snapshot) => {
+    state.videos = [];
+    snapshot.forEach((docSnap) => {
+      state.videos.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    renderAll();
+    document.getElementById('app-loader').style.display = 'none';
+  });
+
+  onSnapshot(collection(db, "categories"), (snapshot) => {
+    if(!snapshot.empty) {
+      state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨' }];
+      snapshot.forEach((docSnap) => {
+        state.categories.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      renderCategories();
+    }
+  });
+
+  const userRef = doc(db, "users", String(user.id));
+  onSnapshot(userRef, async (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      state.unlocked = data.unlocked || {};
+      state.favorites = data.favorites || {};
+      state.progress = data.progress || {};
+      state.adViews = data.adViews || 0;
+    } else {
+      await setDoc(userRef, { unlocked: {}, favorites: {}, progress: {}, adViews: 0, name: user.first_name });
+    }
+    renderAll();
+  });
 }
 
-function saveState() {
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+async function syncUserData() {
+  const { db, doc, setDoc } = window.FB;
+  const userRef = doc(db, "users", String(user.id));
+  await setDoc(userRef, {
+    unlocked: state.unlocked,
+    favorites: state.favorites,
+    progress: state.progress,
+    adViews: state.adViews,
+    name: user.first_name
+  }, { merge: true });
 }
 
-/* =======================================================
-   4. RENDERING LOGIC
-   ======================================================= */
 function renderCategories() {
   const container = document.getElementById('category-tabs');
   container.innerHTML = state.categories.map(c => `
@@ -437,7 +447,7 @@ function renderCategories() {
   `).join('');
   
   const select = document.getElementById('av-cat');
-  if(select) select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  if(select) select.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
 function createVideoCard(v) {
@@ -491,39 +501,34 @@ function renderUnlocked() {
   grid.innerHTML = vids.map(createVideoCard).join('');
 }
 
-/* =======================================================
-   5. VIDEO ACTIONS & AD SYSTEM (FIXED)
-   ======================================================= */
-let currentActiveVid = null;
-
 async function openDetail(id) {
   const v = state.videos.find(x => x.id === id);
   if (!v) return;
   currentActiveVid = v;
 
+  const { db, doc, updateDoc } = window.FB;
   if (!v.views) v.views = {};
   v.views[user.id] = true;
-  saveState();
+  await updateDoc(doc(db, "videos", v.id), { [`views.${user.id}`]: true });
 
   updateDetailUI(v);
   document.getElementById('modal-detail').classList.add('open');
 }
 
-async function updateDetailUI(v) {
+function updateDetailUI(v) {
   const isUnlocked = state.unlocked[v.id];
   const prog = state.progress[v.id] || 0;
   const req = v.requiredAds || 1;
   const pct = Math.floor((prog/req)*100);
 
   document.getElementById('md-title').textContent = v.title;
-  document.getElementById('md-views').textContent = Object.keys(v.views).length + " Views";
+  document.getElementById('md-views').textContent = Object.keys(v.views || {}).length + " Views";
   document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
 
   const mediaCont = document.getElementById('md-media-container');
   if (isUnlocked && v.source === 'file') {
-    const blob = await getFile(v.fileId);
-    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
+    mediaCont.innerHTML = `<video src="${v.fileUrl}" controls style="width:100%;height:100%"></video>`;
   } else {
     mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
   }
@@ -543,7 +548,7 @@ async function updateDetailUI(v) {
       </div>
       <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK</button>`;
   }
-  renderComments(v.id);
+  renderComments(v);
 }
 
 async function watchAd() {
@@ -561,12 +566,8 @@ async function watchAd() {
   btn.textContent = "⏳ লোড হচ্ছে...";
 
   try {
-    // Calling SDK and waiting for completion
     await show_11404425(); 
-    
-    // If we reach here, it means Ad was closed/completed
     handleAdSuccess(v.id);
-    
   } catch (err) {
     console.error("Ad failed:", err);
     showToast("Ad display failed. Try again.", "danger");
@@ -580,7 +581,7 @@ async function watchAd() {
   }
 }
 
-function handleAdSuccess(vidId) {
+async function handleAdSuccess(vidId) {
   const v = state.videos.find(x => x.id === vidId);
   if(!v) return;
 
@@ -595,9 +596,9 @@ function handleAdSuccess(vidId) {
     showToast(`অ্যাড দেখা সফল! বাকি: ${v.requiredAds - state.progress[vidId]}`, "info");
   }
   
-  saveState();
-  renderAll(); // Updates background grids
-  updateDetailUI(v); // Updates current modal UI immediately
+  await syncUserData();
+  renderAll();
+  updateDetailUI(v);
 }
 
 function watchExternal(link) {
@@ -605,10 +606,7 @@ function watchExternal(link) {
   else window.open(link, '_blank');
 }
 
-/* =======================================================
-   6. ADMIN ACTIONS
-   ======================================================= */
-function saveVideo() {
+async function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
   const source = document.getElementById('av-source').value;
@@ -618,19 +616,45 @@ function saveVideo() {
   const videoFile = document.getElementById('av-file').files[0];
 
   if (!title) return showToast("শিরোনাম দিন");
+  showToast("আপলোড হচ্ছে...", "info");
 
+  const { db, storage, collection, doc, setDoc, ref, uploadBytes, getDownloadURL } = window.FB;
   const vidId = 'v' + Date.now();
-  const vidData = { id: vidId, title, categoryId: catId, source, link, requiredAds: ads, thumb: thumbBase64, views: {}, serial: state.videos.length + 1 };
+  let fileUrl = "";
 
   if (source === 'file' && videoFile) {
-    vidData.fileId = 'file_' + vidId;
-    saveFile(vidData.fileId, videoFile);
+    const storageRef = ref(storage, `videos/${vidId}_${videoFile.name}`);
+    const snapshot = await uploadBytes(storageRef, videoFile);
+    fileUrl = await getDownloadURL(snapshot.ref);
   }
 
-  state.videos.push(vidData);
-  saveState();
-  renderAll();
-  showToast("ভিডিও সেভ হয়েছে");
+  const vidData = { 
+    title, 
+    categoryId: catId, 
+    source, 
+    link: link || "", 
+    fileUrl: fileUrl || "", 
+    requiredAds: ads, 
+    thumb: thumbBase64 || "", 
+    views: {}, 
+    createdAt: Date.now() 
+  };
+
+  await setDoc(doc(db, "videos", vidId), vidData);
+  showToast("ভিডিও সফলভাবে সেভ হয়েছে", "success");
+}
+
+async function saveCategory() {
+  const name = document.getElementById('ac-name').value;
+  const icon = document.getElementById('ac-icon').value;
+  if (!name) return showToast("ক্যাটাগরির নাম দিন");
+
+  const { db, doc, setDoc } = window.FB;
+  const catId = 'cat_' + Date.now();
+  await setDoc(doc(db, "categories", catId), { name, icon: icon || '📁' });
+  showToast("ক্যাটাগরি সেভ হয়েছে", "success");
+  document.getElementById('ac-name').value = '';
+  document.getElementById('ac-icon').value = '';
 }
 
 function renderAdmin() {
@@ -654,9 +678,6 @@ function toggleSourceType(type) {
   document.getElementById('source-file-wrap').classList.toggle('hidden', type === 'link');
 }
 
-/* =======================================================
-   7. UTILS & OTHERS
-   ======================================================= */
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + viewId).classList.add('active');
@@ -677,9 +698,9 @@ function handleSearch() {
   grid.innerHTML = filtered.map(createVideoCard).join('');
 }
 
-function toggleFav(id) {
+async function toggleFav(id) {
   state.favorites[id] = !state.favorites[id];
-  saveState();
+  await syncUserData();
   renderAll();
   document.getElementById('md-fav-btn').textContent = state.favorites[id] ? "❤️" : "🤍";
 }
@@ -724,9 +745,9 @@ function closeModal(id) {
   document.getElementById('md-media-container').innerHTML = '';
 }
 
-function renderComments(vidId) {
+function renderComments(v) {
   const cont = document.getElementById('md-comments');
-  const list = state.comments[vidId] || [];
+  const list = v.comments || [];
   cont.innerHTML = list.map(c => `
     <div class="comment-item">
       <div class="comment-meta"><span>${c.user}</span><span>Just now</span></div>
@@ -735,32 +756,32 @@ function renderComments(vidId) {
   `).join('');
 }
 
-function postComment() {
+async function postComment() {
   const input = document.getElementById('md-comment-input');
   if(!input.value || !currentActiveVid) return;
-  if(!state.comments[currentActiveVid.id]) state.comments[currentActiveVid.id] = [];
-  state.comments[currentActiveVid.id].unshift({ user: user.first_name, text: input.value });
+  
+  const { db, doc, updateDoc, arrayUnion } = window.FB;
+  const newComment = { user: user.first_name, text: input.value, time: Date.now() };
+  
+  await updateDoc(doc(db, "videos", currentActiveVid.id), {
+    comments: arrayUnion(newComment)
+  });
+
+  if(!currentActiveVid.comments) currentActiveVid.comments = [];
+  currentActiveVid.comments.unshift(newComment);
+  
   input.value = '';
-  saveState();
-  renderComments(currentActiveVid.id);
+  renderComments(currentActiveVid);
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'backup.json';
-  a.click();
-}
-
-function clearAppData() {
-  if (confirm("Clear everything?")) {
-    localStorage.clear();
-    location.reload();
+function shareVideo() {
+  if (tg.openTelegramLink && currentActiveVid) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(currentActiveVid.title)}`);
+  } else {
+    navigator.clipboard.writeText(window.location.href);
+    showToast("লিংক কপি করা হয়েছে!", "success");
   }
 }
-
-window.onload = initApp;
 </script>
 </body>
 </html>
