@@ -260,11 +260,16 @@ body{padding-bottom:100px}
         <label>সোর্স টাইপ</label>
         <select id="av-source" onchange="toggleSourceType(this.value)">
           <option value="link">External Link / Telegram</option>
+          <option value="file">📁 Gallery Upload (IndexedDB)</option>
         </select>
       </div>
       <div id="source-link-wrap" class="form-group"><label>ভিডিও লিঙ্ক</label><input type="text" id="av-link"></div>
+      <div id="source-file-wrap" class="form-group hidden">
+        <label>ভিডিও ফাইল</label>
+        <input type="file" id="av-file" accept="video/*">
+      </div>
       <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1" min="1"></div>
-      <button class="btn btn-p" onclick="saveVideoToGitHub()">সেভ ভিডিও</button>
+      <button class="btn btn-p" onclick="saveVideo()">সেভ ভিডিও</button>
     </div>
     <div id="admin-vid-list"></div>
   </div>
@@ -282,7 +287,8 @@ body{padding-bottom:100px}
       <h4>Data Management</h4>
       <div style="display:grid;gap:10px;margin-top:10px">
         <button class="btn btn-g" onclick="exportData()">📥 Export Backup (JSON)</button>
-        <button class="btn btn-d" onclick="clearAppData()">⚠️ Clear Local Data</button>
+        <label class="btn btn-g">📤 Import Backup<input type="file" style="display:none" accept=".json" onchange="importData(this)"></label>
+        <button class="btn btn-d" onclick="clearAppData()">⚠️ Clear All Data</button>
       </div>
     </div>
   </div>
@@ -335,13 +341,11 @@ body{padding-bottom:100px}
 
 <script>
 /* =======================================================
-   1. CORE STATE & GITHUB CONFIG
+   1. CORE STATE & CONFIG
    ======================================================= */
 const ADMIN_ID = 7904568371;
-const GITHUB_USER = "mdsojib34";
-const GITHUB_REPO = "Telegram Bot";
-const GITHUB_TOKEN = "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";
-const FILE_PATH = "videos.json";
+const DB_NAME = "VidUnlockDB_V2";
+const STORE_KEY = "VidUnlock_Core_State";
 
 let state = {
   version: 3,
@@ -354,8 +358,10 @@ let state = {
   progress: {},
   favorites: {},
   comments: {},
+  recent: [],
   adViews: 0,
-  users: {}
+  users: {},
+  settings: { maintenance: false }
 };
 
 let tg = window.Telegram.WebApp;
@@ -363,71 +369,34 @@ let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
 let currentView = 'home';
 let currentCat = 'cat_all';
 let isAdShowing = false;
-let fileSha = ""; // GitHub file SHA for updating
+let db = null;
 
 /* =======================================================
-   2. GITHUB API FUNCTIONS (Cloud Sync)
+   2. INDEXEDDB SETUP
    ======================================================= */
-async function loadVideosFromGitHub() {
-  try {
-    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `token ${GITHUB_TOKEN}` }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      fileSha = data.sha;
-      const decodedContent = JSON.parse(atob(data.content));
-      if (decodedContent.videos) {
-        state.videos = decodedContent.videos;
-      }
-      if (decodedContent.categories) {
-        state.categories = decodedContent.categories;
-      }
-    }
-  } catch (err) {
-    console.error("Error loading from GitHub:", err);
-  }
+async function initDB() {
+  return new Promise((resolve) => {
+    const request = indexedDB.open(DB_NAME, 2);
+    request.onupgradeneeded = (e) => {
+      let db = e.target.result;
+      if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
+    };
+    request.onsuccess = (e) => { db = e.target.result; resolve(); };
+  });
 }
 
-async function saveVideosToGitHub() {
-  try {
-    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
-    const contentData = JSON.stringify({
-      videos: state.videos,
-      categories: state.categories
-    }, null, 2);
-    
-    const encodedContent = btoa(unescape(encodeURIComponent(contentData)));
+async function saveFile(id, blob) {
+  const tx = db.transaction('files', 'readwrite');
+  return tx.objectStore('files').put(blob, id);
+}
 
-    const bodyData = {
-      message: "Update videos.json via Admin Panel",
-      content: encodedContent,
-      sha: fileSha
-    };
-
-    const res = await fetch(url, {
-      method: "PUT",
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(bodyData)
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      fileSha = data.content.sha;
-      return true;
-    } else {
-      const errRes = await res.json();
-      console.error("GitHub save error:", errRes);
-      return false;
-    }
-  } catch (err) {
-    console.error("Error saving to GitHub:", err);
-    return false;
-  }
+async function getFile(id) {
+  return new Promise((resolve) => {
+    const tx = db.transaction('files', 'readonly');
+    const req = tx.objectStore('files').get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
 }
 
 /* =======================================================
@@ -436,19 +405,10 @@ async function saveVideosToGitHub() {
 async function initApp() {
   tg.ready();
   tg.expand();
+  await initDB();
   
-  // Load local user settings (favorites, unlocked, etc.)
-  const saved = localStorage.getItem("VidUnlock_User_State");
-  if (saved) {
-    const local = JSON.parse(saved);
-    state.unlocked = local.unlocked || {};
-    state.favorites = local.favorites || {};
-    state.progress = local.progress || {};
-    state.comments = local.comments || {};
-  }
-
-  // Fetch latest videos from GitHub Cloud
-  await loadVideosFromGitHub();
+  const saved = localStorage.getItem(STORE_KEY);
+  if (saved) state = { ...state, ...JSON.parse(saved) };
 
   if (Number(user.id) === ADMIN_ID) {
     document.getElementById('nav-admin').classList.remove('hidden');
@@ -461,13 +421,8 @@ async function initApp() {
   document.getElementById('app-loader').style.display = 'none';
 }
 
-function saveLocalState() {
-  localStorage.setItem("VidUnlock_User_State", JSON.stringify({
-    unlocked: state.unlocked,
-    favorites: state.favorites,
-    progress: state.progress,
-    comments: state.comments
-  }));
+function saveState() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
 }
 
 /* =======================================================
@@ -537,7 +492,7 @@ function renderUnlocked() {
 }
 
 /* =======================================================
-   5. VIDEO ACTIONS & AD SYSTEM
+   5. VIDEO ACTIONS & AD SYSTEM (FIXED)
    ======================================================= */
 let currentActiveVid = null;
 
@@ -548,7 +503,7 @@ async function openDetail(id) {
 
   if (!v.views) v.views = {};
   v.views[user.id] = true;
-  saveLocalState();
+  saveState();
 
   updateDetailUI(v);
   document.getElementById('modal-detail').classList.add('open');
@@ -566,14 +521,19 @@ async function updateDetailUI(v) {
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
 
   const mediaCont = document.getElementById('md-media-container');
-  mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
+  if (isUnlocked && v.source === 'file') {
+    const blob = await getFile(v.fileId);
+    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
+  } else {
+    mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
+  }
 
   const actionArea = document.getElementById('md-action-area');
   if (isUnlocked) {
     actionArea.innerHTML = `
       <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
         <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
-        <button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>
+        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">প্লেয়ারে ভিডিও চালু করুন।</p>`}
       </div>`;
   } else {
     actionArea.innerHTML = `
@@ -601,8 +561,12 @@ async function watchAd() {
   btn.textContent = "⏳ লোড হচ্ছে...";
 
   try {
+    // Calling SDK and waiting for completion
     await show_11404425(); 
+    
+    // If we reach here, it means Ad was closed/completed
     handleAdSuccess(v.id);
+    
   } catch (err) {
     console.error("Ad failed:", err);
     showToast("Ad display failed. Try again.", "danger");
@@ -631,9 +595,9 @@ function handleAdSuccess(vidId) {
     showToast(`অ্যাড দেখা সফল! বাকি: ${v.requiredAds - state.progress[vidId]}`, "info");
   }
   
-  saveLocalState();
-  renderAll();
-  updateDetailUI(v);
+  saveState();
+  renderAll(); // Updates background grids
+  updateDetailUI(v); // Updates current modal UI immediately
 }
 
 function watchExternal(link) {
@@ -642,47 +606,31 @@ function watchExternal(link) {
 }
 
 /* =======================================================
-   6. ADMIN ACTIONS (SAVING TO GITHUB)
+   6. ADMIN ACTIONS
    ======================================================= */
-async function saveVideoToGitHub() {
+function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
+  const source = document.getElementById('av-source').value;
   const link = document.getElementById('av-link').value;
   const ads = parseInt(document.getElementById('av-ads').value) || 1;
   const thumbBase64 = document.getElementById('av-thumb-prev')._data;
+  const videoFile = document.getElementById('av-file').files[0];
 
   if (!title) return showToast("শিরোনাম দিন");
-  if (!link) return showToast("ভিডিও লিঙ্ক দিন");
-  if (!thumbBase64) return showToast("থাম্বনেইল ছবি দিন");
-
-  showToast("গিটহাবে সেভ হচ্ছে...", "info");
 
   const vidId = 'v' + Date.now();
-  const vidData = { 
-    id: vidId, 
-    title, 
-    categoryId: catId, 
-    source: 'link', 
-    link, 
-    requiredAds: ads, 
-    thumb: thumbBase64, 
-    views: {} 
-  };
+  const vidData = { id: vidId, title, categoryId: catId, source, link, requiredAds: ads, thumb: thumbBase64, views: {}, serial: state.videos.length + 1 };
+
+  if (source === 'file' && videoFile) {
+    vidData.fileId = 'file_' + vidId;
+    saveFile(vidData.fileId, videoFile);
+  }
 
   state.videos.push(vidData);
-
-  const success = await saveVideosToGitHub();
-  if (success) {
-    showToast("সফলভাবে ভিডিও ক্লাউডে সেভ হয়েছে! ✅", "success");
-    document.getElementById('av-title').value = '';
-    document.getElementById('av-link').value = '';
-    document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
-    document.getElementById('av-thumb-prev')._data = null;
-    renderAll();
-  } else {
-    showToast("গিটহাবে সেভ করতে সমস্যা হয়েছে। টোকেন চেক করুন।", "danger");
-    state.videos.pop(); // Revert on failure
-  }
+  saveState();
+  renderAll();
+  showToast("ভিডিও সেভ হয়েছে");
 }
 
 function renderAdmin() {
@@ -699,6 +647,11 @@ function switchAdminSubView(id, btn) {
   const tabs = btn.parentElement.querySelectorAll('.tab');
   tabs.forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
+}
+
+function toggleSourceType(type) {
+  document.getElementById('source-link-wrap').classList.toggle('hidden', type === 'file');
+  document.getElementById('source-file-wrap').classList.toggle('hidden', type === 'link');
 }
 
 /* =======================================================
@@ -726,7 +679,7 @@ function handleSearch() {
 
 function toggleFav(id) {
   state.favorites[id] = !state.favorites[id];
-  saveLocalState();
+  saveState();
   renderAll();
   document.getElementById('md-fav-btn').textContent = state.favorites[id] ? "❤️" : "🤍";
 }
@@ -788,7 +741,7 @@ function postComment() {
   if(!state.comments[currentActiveVid.id]) state.comments[currentActiveVid.id] = [];
   state.comments[currentActiveVid.id].unshift({ user: user.first_name, text: input.value });
   input.value = '';
-  saveLocalState();
+  saveState();
   renderComments(currentActiveVid.id);
 }
 
@@ -801,8 +754,8 @@ function exportData() {
 }
 
 function clearAppData() {
-  if (confirm("Clear local cache?")) {
-    localStorage.removeItem("VidUnlock_User_State");
+  if (confirm("Clear everything?")) {
+    localStorage.clear();
     location.reload();
   }
 }
