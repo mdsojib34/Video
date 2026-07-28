@@ -1,1016 +1,1027 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Mini App Video Platform</title>
-    <!-- Telegram Web App SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
-    <!-- Rewarded Advertisement Script -->
-    <script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
-
-    <style>
-        :root {
-            --tg-theme-bg-color: #0f172a;
-            --tg-theme-text-color: #f8fafc;
-            --tg-theme-hint-color: #94a3b8;
-            --tg-theme-button-color: #3b82f6;
-            --tg-theme-button-text-color: #ffffff;
-        }
-        body {
-            background-color: var(--tg-theme-bg-color, #0f172a);
-            color: var(--tg-theme-text-color, #f8fafc);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        @keyframes pulse-subtle {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        .animate-pulse-subtle { animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Telegram Mini App Video Platform</title>
+<!-- Telegram Web App SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<!-- Rewarded Advertisement Script -->
+<script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
+<style>
+:root {
+  --tg-theme-bg-color: #0f172a;
+  --tg-theme-text-color: #f8fafc;
+  --tg-theme-hint-color: #94a3b8;
+  --tg-theme-button-color: #3b82f6;
+  --tg-theme-button-text-color: #ffffff;
+}
+body {
+  background-color: var(--tg-theme-bg-color, #0f172a);
+  color: var(--tg-theme-text-color, #f8fafc);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.animate-pulse-subtle { animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+</style>
 </head>
 <body class="antialiased pb-20">
 
-    <!-- ==================== TOP HEADER ==================== -->
-    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <div id="userAvatarContainer" class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center overflow-hidden border border-blue-400/30 shadow-inner">
-                <span id="userInitial" class="font-bold text-white text-sm">U</span>
-            </div>
-            <div>
-                <h1 id="userNameDisplay" class="font-bold text-sm tracking-wide text-slate-100">Telegram User</h1>
-                <p id="userRoleDisplay" class="text-[10px] text-blue-400 font-medium uppercase tracking-wider">Member</p>
-            </div>
-        </div>
-        <div class="flex items-center space-x-2">
-            <!-- Admin Nav Button (Initially hidden until admin verified) -->
-            <button id="adminNavBtn" onclick="switchTab('admin')" class="hidden px-3 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition hover:bg-amber-500/30">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span>Admin</span>
-            </button>
-            <button onclick="openSearchModal()" class="w-9 h-9 rounded-full bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition">
-                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-            </button>
-        </div>
-    </header>
+<!-- ==================== TOP HEADER ==================== -->
+<header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center space-x-3">
+    <div id="userAvatarContainer" class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center overflow-hidden border border-blue-400/30 shadow-inner">
+      <span id="userInitial" class="font-bold text-white text-sm">U</span>
+    </div>
+    <div>
+      <h1 id="userNameDisplay" class="font-bold text-sm tracking-wide text-slate-100">Telegram User</h1>
+      <p id="userRoleDisplay" class="text-[10px] text-blue-400 font-medium uppercase tracking-wider">Member</p>
+    </div>
+  </div>
+  <div class="flex items-center space-x-2">
+    <!-- Admin Nav Button (Initially hidden until admin verified) -->
+    <button id="adminNavBtn" onclick="switchTab('admin')" class="hidden px-3 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition hover:bg-amber-500/30">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>Admin</span>
+    </button>
+    <button onclick="openSearchModal()" class="w-9 h-9 rounded-full bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition">
+      <i class="fa-solid fa-magnifying-glass text-xs"></i>
+    </button>
+  </div>
+</header>
 
-    <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
-    <main id="mainContainer" class="max-w-2xl mx-auto px-4 pt-4">
-        
-        <!-- HOME TAB -->
-        <section id="tab-home" class="space-y-6">
-            <div id="bannerContainer" class="relative rounded-2xl overflow-hidden glass-panel h-48 flex items-end p-5 shadow-xl border border-slate-700/50">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent z-10"></div>
-                <img id="bannerImage" src="" alt="Banner" class="absolute inset-0 w-full h-full object-cover opacity-60">
-                <div class="relative z-20 space-y-2">
-                    <span id="bannerCategory" class="px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold uppercase rounded-md tracking-wider">Featured</span>
-                    <h2 id="bannerTitle" class="text-lg font-extrabold text-white leading-tight">Loading Featured Video...</h2>
-                    <button onclick="playFeaturedVideo()" class="px-4 py-2 bg-white text-slate-950 rounded-xl font-bold text-xs flex items-center space-x-2 shadow-lg hover:bg-blue-50 transition">
-                        <i class="fa-solid fa-play text-blue-600"></i>
-                        <span>Watch Now</span>
-                    </button>
-                </div>
-            </div>
+<!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+<main id="mainContainer" class="max-w-2xl mx-auto px-4 pt-4">
 
-            <div>
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-bold text-sm text-slate-200 tracking-wide">Categories</h3>
-                </div>
-                <div id="categoriesSlider" class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
-                    <button onclick="filterCategory('All')" class="category-chip px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-md transition">All</button>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <h3 id="videoFeedTitle" class="font-bold text-sm text-slate-200 tracking-wide">Trending Videos</h3>
-                    <div class="flex space-x-1 text-xs text-slate-400">
-                        <button onclick="sortVideos('trending')" class="px-2 py-1 bg-slate-800 rounded-lg text-blue-400 font-medium sort-btn" data-sort="trending">Trending</button>
-                        <button onclick="sortVideos('newest')" class="px-2 py-1 bg-slate-800 rounded-lg font-medium sort-btn" data-sort="newest">Newest</button>
-                        <button onclick="sortVideos('popular')" class="px-2 py-1 bg-slate-800 rounded-lg font-medium sort-btn" data-sort="popular">Popular</button>
-                    </div>
-                </div>
-
-                <div id="videoGrid" class="grid grid-cols-2 gap-3.5">
-                    <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center h-44 animate-pulse-subtle col-span-2">
-                        <i class="fa-solid fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
-                        <p class="text-xs text-slate-400">Syncing with Firebase...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FAVORITES TAB -->
-        <section id="tab-favorites" class="space-y-4 hidden">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-base text-slate-100">My Favorites</h3>
-                <span id="favoritesCount" class="text-xs text-slate-400 font-medium">0 videos</span>
-            </div>
-            <div id="favoritesGrid" class="grid grid-cols-2 gap-3.5"></div>
-        </section>
-
-        <!-- HISTORY TAB -->
-        <section id="tab-history" class="space-y-4 hidden">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-base text-slate-100">Watch History</h3>
-                <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">Clear History</button>
-            </div>
-            <div id="historyGrid" class="grid grid-cols-2 gap-3.5"></div>
-        </section>
-
-        <!-- PROFILE TAB -->
-        <section id="tab-profile" class="space-y-6 hidden">
-            <div class="glass-panel p-6 rounded-3xl text-center space-y-4 border border-slate-700/50">
-                <div class="w-20 h-20 rounded-full bg-blue-600/30 border-2 border-blue-500 mx-auto overflow-hidden flex items-center justify-center shadow-xl">
-                    <span id="profileAvatarText" class="text-2xl font-bold text-white">U</span>
-                </div>
-                <div>
-                    <h2 id="profileName" class="font-bold text-lg text-white">Telegram User</h2>
-                    <p id="profileTelegramId" class="text-xs text-slate-400 mt-0.5">ID: Loading...</p>
-                </div>
-                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800">
-                    <div class="p-2 bg-slate-900/50 rounded-xl">
-                        <span id="statUnlockedCount" class="block font-bold text-sm text-blue-400">0</span>
-                        <span class="text-[10px] text-slate-400">Unlocked</span>
-                    </div>
-                    <div class="p-2 bg-slate-900/50 rounded-xl">
-                        <span id="statFavCount" class="block font-bold text-sm text-blue-400">0</span>
-                        <span class="text-[10px] text-slate-400">Favorites</span>
-                    </div>
-                    <div class="p-2 bg-slate-900/50 rounded-xl">
-                        <span id="statHistoryCount" class="block font-bold text-sm text-blue-400">0</span>
-                        <span class="text-[10px] text-slate-400">History</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Platform Settings</h3>
-                <div class="glass-panel rounded-2xl overflow-hidden divide-y divide-slate-800">
-                    <div class="p-4 flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <i class="fa-solid fa-bell text-blue-400"></i>
-                            <span class="text-sm font-medium">Notifications</span>
-                        </div>
-                        <input type="checkbox" checked class="accent-blue-600 w-4 h-4">
-                    </div>
-                    <div class="p-4 flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <i class="fa-solid fa-shield-halved text-blue-400"></i>
-                            <span class="text-sm font-medium">Firebase Synced</span>
-                        </div>
-                        <span class="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg">Connected</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ADMIN TAB -->
-        <section id="tab-admin" class="space-y-6 hidden">
-            <div class="flex items-center justify-between">
-                <h2 class="font-bold text-lg text-white">Admin Dashboard</h2>
-                <button onclick="openVideoModal()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5 shadow-lg shadow-blue-600/30">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Add Video</span>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
-                    <div class="text-blue-400 text-xs font-semibold mb-1"><i class="fa-solid fa-video mr-1.5"></i> Total Videos</div>
-                    <div id="adminTotalVideos" class="text-2xl font-black text-white">0</div>
-                </div>
-                <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
-                    <div class="text-emerald-400 text-xs font-semibold mb-1"><i class="fa-solid fa-users mr-1.5"></i> Total Users</div>
-                    <div id="adminTotalUsers" class="text-2xl font-black text-white">0</div>
-                </div>
-                <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
-                    <div class="text-amber-400 text-xs font-semibold mb-1"><i class="fa-solid fa-eye mr-1.5"></i> Total Views</div>
-                    <div id="adminTotalViews" class="text-2xl font-black text-white">0</div>
-                </div>
-                <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
-                    <div class="text-purple-400 text-xs font-semibold mb-1"><i class="fa-solid fa-lock-open mr-1.5"></i> Unlocks</div>
-                    <div id="adminTotalUnlocks" class="text-2xl font-black text-white">0</div>
-                </div>
-            </div>
-
-            <div class="space-y-3">
-                <h3 class="font-bold text-sm text-slate-200">Manage Platform Videos</h3>
-                <div id="adminVideoList" class="space-y-2"></div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- ==================== BOTTOM NAVIGATION BAR ==================== -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-slate-800/80 px-4 py-2 max-w-2xl mx-auto flex items-center justify-around">
-        <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center space-y-1 text-blue-500" data-tab="home">
-            <i class="fa-solid fa-house text-base"></i>
-            <span class="text-[10px] font-semibold">Home</span>
+  <!-- HOME TAB -->
+  <section id="tab-home" class="space-y-6">
+    <div id="bannerContainer" class="relative rounded-2xl overflow-hidden glass-panel h-48 flex items-end p-5 shadow-xl border border-slate-700/50">
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent z-10"></div>
+      <img id="bannerImage" src="" alt="Banner" class="absolute inset-0 w-full h-full object-cover opacity-60">
+      <div class="relative z-20 space-y-2">
+        <span id="bannerCategory" class="px-2.5 py-1 bg-blue-600 text-white text-[10px] font-bold uppercase rounded-md tracking-wider">Featured</span>
+        <h2 id="bannerTitle" class="text-lg font-extrabold text-white leading-tight">Loading Featured Video...</h2>
+        <button onclick="playFeaturedVideo()" class="px-4 py-2 bg-white text-slate-950 rounded-xl font-bold text-xs flex items-center space-x-2 shadow-lg hover:bg-blue-50 transition">
+          <i class="fa-solid fa-play text-blue-600"></i>
+          <span>Watch Now</span>
         </button>
-        <button onclick="switchTab('favorites')" class="nav-btn flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200" data-tab="favorites">
-            <i class="fa-solid fa-heart text-base"></i>
-            <span class="text-[10px] font-semibold">Favorites</span>
-        </button>
-        <button onclick="switchTab('history')" class="nav-btn flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200" data-tab="history">
-            <i class="fa-solid fa-clock-rotate-left text-base"></i>
-            <span class="text-[10px] font-semibold">History</span>
-        </button>
-        <button onclick="switchTab('profile')" class="nav-btn flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200" data-tab="profile">
-            <i class="fa-solid fa-user text-base"></i>
-            <span class="text-[10px] font-semibold">Profile</span>
-        </button>
-        <!-- Bottom Bar Admin Shortcut Button -->
-        <button onclick="switchTab('admin')" class="nav-btn flex flex-col items-center space-y-1 text-amber-400/80 hover:text-amber-400" data-tab="admin">
-            <i class="fa-solid fa-wrench text-base"></i>
-            <span class="text-[10px] font-semibold">Admin</span>
-        </button>
-    </nav>
-
-    <!-- ==================== VIDEO PLAYER MODAL ==================== -->
-    <div id="playerModal" class="fixed inset-0 z-50 bg-slate-950 flex flex-col hidden overflow-y-auto">
-        <div class="sticky top-0 z-20 glass-panel px-4 py-3 flex items-center justify-between border-b border-slate-800">
-            <button onclick="closePlayerModal()" class="w-9 h-9 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-300 hover:text-white">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
-            <h3 id="playerHeaderTitle" class="font-bold text-sm truncate max-w-[220px]">Video Player</h3>
-            <div class="flex items-center space-x-2">
-                <button id="playerFavBtn" onclick="togglePlayerFavorite()" class="w-9 h-9 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-300 hover:text-rose-500 transition">
-                    <i class="fa-regular fa-heart"></i>
-                </button>
-                <button onclick="shareCurrentVideo()" class="w-9 h-9 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-300 hover:text-blue-400 transition">
-                    <i class="fa-solid fa-share-nodes"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="w-full bg-black relative aspect-video flex items-center justify-center">
-            <video id="activeVideoElement" controls class="w-full h-full object-contain" poster=""></video>
-            <div id="videoLockOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center hidden z-10">
-                <div class="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mb-3 text-2xl shadow-xl shadow-amber-500/10">
-                    <i class="fa-solid fa-lock"></i>
-                </div>
-                <h4 class="font-bold text-lg text-white mb-1">Locked Content</h4>
-                <p class="text-xs text-slate-400 max-w-xs mb-5">Watch a rewarded advertisement to instantly unlock and enjoy this video.</p>
-                <button onclick="startRewardedAdFlow()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold rounded-2xl text-xs uppercase tracking-wider shadow-xl shadow-amber-500/20 hover:opacity-95 transition flex items-center space-x-2">
-                    <i class="fa-solid fa-play"></i>
-                    <span>Watch Ad & Unlock</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="p-4 space-y-4 max-w-2xl mx-auto w-full flex-1">
-            <div>
-                <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
-                    <span id="playerCategory" class="text-blue-400 font-semibold uppercase tracking-wider">Category</span>
-                    <span id="playerViews" class="flex items-center space-x-1"><i class="fa-solid fa-eye"></i> <span id="playerViewsCount">0</span></span>
-                </div>
-                <h2 id="playerTitle" class="font-extrabold text-base text-slate-100">Video Title</h2>
-                <p id="playerDescription" class="text-xs text-slate-400 mt-2 leading-relaxed">Video description goes here...</p>
-            </div>
-
-            <div class="space-y-3 pt-4 border-t border-slate-800">
-                <div class="flex items-center justify-between">
-                    <h4 class="font-bold text-sm text-slate-200">Comments (<span id="commentCount">0</span>)</h4>
-                </div>
-                <div class="flex space-x-2">
-                    <input id="commentInput" type="text" placeholder="Add a public comment..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-                    <button onclick="postComment()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-md">Post</button>
-                </div>
-                <div id="commentsList" class="space-y-2.5 pt-2"></div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <!-- ==================== ADMIN VIDEO MODAL ==================== -->
-    <div id="videoModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center hidden p-4">
-        <div class="glass-panel w-full max-w-md p-6 rounded-3xl space-y-4 max-h-[90vh] overflow-y-auto border border-slate-700/50 shadow-2xl">
-            <div class="flex items-center justify-between">
-                <h3 id="videoModalTitle" class="font-bold text-base text-white">Upload Video</h3>
-                <button onclick="closeVideoModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <input type="hidden" id="editVideoId">
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Video Title</label>
-                    <input id="formTitle" type="text" placeholder="Enter video title" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Category</label>
-                    <input id="formCategory" type="text" placeholder="e.g., Entertainment, Education" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Video File / URL</label>
-                    <input id="formVideoUrl" type="text" placeholder="Direct Video URL or upload file below" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500 mb-1">
-                    <input type="file" id="formVideoFile" accept="video/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Thumbnail Image</label>
-                    <input id="formThumbUrl" type="text" placeholder="Thumbnail URL or upload image below" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500 mb-1">
-                    <input type="file" id="formThumbFile" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Description</label>
-                    <textarea id="formDescription" rows="3" placeholder="Enter video description..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500"></textarea>
-                </div>
-                <div class="flex items-center space-x-2 pt-2">
-                    <input type="checkbox" id="formIsLocked" class="accent-blue-600 w-4 h-4 rounded">
-                    <label for="formIsLocked" class="text-xs font-semibold text-slate-300">Lock Video (Requires Rewarded Ad)</label>
-                </div>
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-sm text-slate-200 tracking-wide">Categories</h3>
+      </div>
+      <div id="categoriesSlider" class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
+        <button onclick="filterCategory('All')" class="category-chip px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-md transition">All</button>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="videoFeedTitle" class="font-bold text-sm text-slate-200 tracking-wide">Trending Videos</h3>
+        <div class="flex space-x-1 text-xs text-slate-400">
+          <button onclick="sortVideos('trending')" class="px-2 py-1 bg-slate-800 rounded-lg text-blue-400 font-medium sort-btn" data-sort="trending">Trending</button>
+          <button onclick="sortVideos('newest')" class="px-2 py-1 bg-slate-800 rounded-lg font-medium sort-btn" data-sort="newest">Newest</button>
+          <button onclick="sortVideos('popular')" class="px-2 py-1 bg-slate-800 rounded-lg font-medium sort-btn" data-sort="popular">Popular</button>
+        </div>
+      </div>
+      <div id="videoGrid" class="grid grid-cols-2 gap-3.5">
+        <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center h-44 animate-pulse-subtle col-span-2">
+          <i class="fa-solid fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
+          <p class="text-xs text-slate-400">Syncing with Firebase...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAVORITES TAB -->
+  <section id="tab-favorites" class="space-y-4 hidden">
+    <div class="flex items-center justify-between">
+      <h3 class="font-bold text-base text-slate-100">My Favorites</h3>
+      <span id="favoritesCount" class="text-xs text-slate-400 font-medium">0 videos</span>
+    </div>
+    <div id="favoritesGrid" class="grid grid-cols-2 gap-3.5"></div>
+  </section>
+
+  <!-- HISTORY TAB -->
+  <section id="tab-history" class="space-y-4 hidden">
+    <div class="flex items-center justify-between">
+      <h3 class="font-bold text-base text-slate-100">Watch History</h3>
+      <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">Clear History</button>
+    </div>
+    <div id="historyGrid" class="grid grid-cols-2 gap-3.5"></div>
+  </section>
+
+  <!-- PROFILE TAB -->
+  <section id="tab-profile" class="space-y-6 hidden">
+    <div class="glass-panel p-6 rounded-3xl text-center space-y-4 border border-slate-700/50">
+      <div class="w-20 h-20 rounded-full bg-blue-600/30 border-2 border-blue-500 mx-auto overflow-hidden flex items-center justify-center shadow-xl">
+        <span id="profileAvatarText" class="text-2xl font-bold text-white">U</span>
+      </div>
+      <div>
+        <h2 id="profileName" class="font-bold text-lg text-white">Telegram User</h2>
+        <p id="profileTelegramId" class="text-xs text-slate-400 mt-0.5">ID: Loading...</p>
+      </div>
+      <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800">
+        <div class="p-2 bg-slate-900/50 rounded-xl">
+          <span id="statUnlockedCount" class="block font-bold text-sm text-blue-400">0</span>
+          <span class="text-[10px] text-slate-400">Unlocked</span>
+        </div>
+        <div class="p-2 bg-slate-900/50 rounded-xl">
+          <span id="statFavCount" class="block font-bold text-sm text-blue-400">0</span>
+          <span class="text-[10px] text-slate-400">Favorites</span>
+        </div>
+        <div class="p-2 bg-slate-900/50 rounded-xl">
+          <span id="statHistoryCount" class="block font-bold text-sm text-blue-400">0</span>
+          <span class="text-[10px] text-slate-400">History</span>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-2">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Platform Settings</h3>
+      <div class="glass-panel rounded-2xl overflow-hidden divide-y divide-slate-800">
+        <div class="p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-bell text-blue-400"></i>
+            <span class="text-sm font-medium">Notifications</span>
+          </div>
+          <input type="checkbox" checked class="accent-blue-600 w-4 h-4">
+        </div>
+        <div class="p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-shield-halved text-blue-400"></i>
+            <span class="text-sm font-medium">Firebase Synced</span>
+          </div>
+          <span class="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg">Connected</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN TAB -->
+  <section id="tab-admin" class="space-y-6 hidden">
+    <div class="flex items-center justify-between">
+      <h2 class="font-bold text-lg text-white">Admin Dashboard</h2>
+      <button onclick="openVideoModal()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5 shadow-lg shadow-blue-600/30">
+        <i class="fa-solid fa-plus"></i>
+        <span>Add Video</span>
+      </button>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
+        <div class="text-blue-400 text-xs font-semibold mb-1"><i class="fa-solid fa-video mr-1.5"></i> Total Videos</div>
+        <div id="adminTotalVideos" class="text-2xl font-black text-white">0</div>
+      </div>
+      <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
+        <div class="text-emerald-400 text-xs font-semibold mb-1"><i class="fa-solid fa-users mr-1.5"></i> Total Users</div>
+        <div id="adminTotalUsers" class="text-2xl font-black text-white">0</div>
+      </div>
+      <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
+        <div class="text-amber-400 text-xs font-semibold mb-1"><i class="fa-solid fa-eye mr-1.5"></i> Total Views</div>
+        <div id="adminTotalViews" class="text-2xl font-black text-white">0</div>
+      </div>
+      <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
+        <div class="text-purple-400 text-xs font-semibold mb-1"><i class="fa-solid fa-lock-open mr-1.5"></i> Unlocks</div>
+        <div id="adminTotalUnlocks" class="text-2xl font-black text-white">0</div>
+      </div>
+    </div>
+    <div class="space-y-3">
+      <h3 class="font-bold text-sm text-slate-200">Manage Platform Videos</h3>
+      <div id="adminVideoList" class="space-y-2"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== BOTTOM NAVIGATION BAR ==================== -->
+<nav class="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-slate-800/80 px-4 py-2 max-w-2xl mx-auto flex items-center justify-around">
+  <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center space-y-1 text-blue-500" data-tab="home">
+    <i class="fa-solid fa-house text-base"></i>
+    <span class="text-[10px] font-semibold">Home</span>
+  </button>
+  <button onclick="switchTab('favorites')" class="nav-btn flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200" data-tab="favorites">
+    <i class="fa-solid fa-heart text-base"></i>
+    <span class="text-[10px] font-semibold">Favorites</span>
+  </button>
+  <button onclick="switchTab('history')" class="nav-btn flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200" data-tab="history">
+    <i class="fa-solid fa-clock-rotate-left text-base"></i>
+    <span class="text-[10px] font-semibold">History</span>
+  </button>
+  <button onclick="switchTab('profile')" class="nav-btn flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200" data-tab="profile">
+    <i class="fa-solid fa-user text-base"></i>
+    <span class="text-[10px] font-semibold">Profile</span>
+  </button>
+  <!-- Bottom Bar Admin Shortcut Button (Hidden by default) -->
+  <button id="bottomAdminNavBtn" onclick="switchTab('admin')" class="nav-btn hidden flex flex-col items-center space-y-1 text-amber-400/80 hover:text-amber-400" data-tab="admin">
+    <i class="fa-solid fa-wrench text-base"></i>
+    <span class="text-[10px] font-semibold">Admin</span>
+  </button>
+</nav>
+
+<!-- ==================== VIDEO PLAYER MODAL ==================== -->
+<div id="playerModal" class="fixed inset-0 z-50 bg-slate-950 flex flex-col hidden overflow-y-auto">
+  <div class="sticky top-0 z-20 glass-panel px-4 py-3 flex items-center justify-between border-b border-slate-800">
+    <button onclick="closePlayerModal()" class="w-9 h-9 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-300 hover:text-white">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <h3 id="playerHeaderTitle" class="font-bold text-sm truncate max-w-[220px]">Video Player</h3>
+    <div class="flex items-center space-x-2">
+      <button id="playerFavBtn" onclick="togglePlayerFavorite()" class="w-9 h-9 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-300 hover:text-rose-500 transition">
+        <i class="fa-regular fa-heart"></i>
+      </button>
+      <button onclick="shareCurrentVideo()" class="w-9 h-9 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-300 hover:text-blue-400 transition">
+        <i class="fa-solid fa-share-nodes"></i>
+      </button>
+    </div>
+  </div>
+  <div class="w-full bg-black relative aspect-video flex items-center justify-center">
+    <video id="activeVideoElement" controls class="w-full h-full object-contain" poster=""></video>
+    <div id="videoLockOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center hidden z-10">
+      <div class="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mb-3 text-2xl shadow-xl shadow-amber-500/10">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h4 class="font-bold text-lg text-white mb-1">Locked Content</h4>
+      <p class="text-xs text-slate-400 max-w-xs mb-5">Watch a rewarded advertisement to instantly unlock and enjoy this video.</p>
+      <button onclick="startRewardedAdFlow()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold rounded-2xl text-xs uppercase tracking-wider shadow-xl shadow-amber-500/20 hover:opacity-95 transition flex items-center space-x-2">
+        <i class="fa-solid fa-play"></i>
+        <span>Watch Ad & Unlock</span>
+      </button>
+    </div>
+  </div>
+  <div class="p-4 space-y-4 max-w-2xl mx-auto w-full flex-1">
+    <div>
+      <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+        <span id="playerCategory" class="text-blue-400 font-semibold uppercase tracking-wider">Category</span>
+        <span id="playerViews" class="flex items-center space-x-1"><i class="fa-solid fa-eye"></i> <span id="playerViewsCount">0</span></span>
+      </div>
+      <h2 id="playerTitle" class="font-extrabold text-base text-slate-100">Video Title</h2>
+      <p id="playerDescription" class="text-xs text-slate-400 mt-2 leading-relaxed">Video description goes here...</p>
+    </div>
+    <div class="space-y-3 pt-4 border-t border-slate-800">
+      <div class="flex items-center justify-between">
+        <h4 class="font-bold text-sm text-slate-200">Comments (<span id="commentCount">0</span>)</h4>
+      </div>
+      <div class="flex space-x-2">
+        <input id="commentInput" type="text" placeholder="Add a public comment..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+        <button onclick="postComment()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-md">Post</button>
+      </div>
+      <div id="commentsList" class="space-y-2.5 pt-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ADMIN VIDEO MODAL ==================== -->
+<div id="videoModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center hidden p-4">
+  <div class="glass-panel w-full max-w-md p-6 rounded-3xl space-y-4 max-h-[90vh] overflow-y-auto border border-slate-700/50 shadow-2xl">
+    <div class="flex items-center justify-between">
+      <h3 id="videoModalTitle" class="font-bold text-base text-white">Upload Video</h3>
+      <button onclick="closeVideoModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <input type="hidden" id="editVideoId">
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Video Title</label>
+        <input id="formTitle" type="text" placeholder="Enter video title" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Category</label>
+        <input id="formCategory" type="text" placeholder="e.g., Entertainment, Education" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Video File / URL</label>
+        <input id="formVideoUrl" type="text" placeholder="Direct Video URL or upload file below" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500 mb-1">
+        <input type="file" id="formVideoFile" accept="video/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Thumbnail Image</label>
+        <input id="formThumbUrl" type="text" placeholder="Thumbnail URL or upload image below" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500 mb-1">
+        <input type="file" id="formThumbFile" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Description</label>
+        <textarea id="formDescription" rows="3" placeholder="Enter video description..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500"></textarea>
+      </div>
+      <div class="flex items-center space-x-2 pt-2">
+        <input type="checkbox" id="formIsLocked" class="accent-blue-600 w-4 h-4 rounded">
+        <label for="formIsLocked" class="text-xs font-semibold text-slate-300">Lock Video (Requires Rewarded Ad)</label>
+      </div>
+      <div class="flex items-center space-x-2">
+        <input type="checkbox" id="formIsFeatured" class="accent-blue-600 w-4 h-4 rounded">
+        <label for="formIsFeatured" class="text-xs font-semibold text-slate-300">Set as Featured Banner</label>
+      </div>
+      <button onclick="saveVideoData()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition mt-3">Save Video</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SEARCH MODAL ==================== -->
+<div id="searchModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col hidden p-4">
+  <div class="flex items-center space-x-3 mb-4">
+    <div class="flex-1 relative">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+      <input id="searchInputField" oninput="executeSearch(this.value)" type="text" placeholder="Search videos, categories..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
+    </div>
+    <button onclick="closeSearchModal()" class="text-xs font-bold text-slate-400 hover:text-white px-2">Cancel</button>
+  </div>
+  <div id="searchResultsGrid" class="grid grid-cols-2 gap-3 overflow-y-auto flex-1"></div>
+</div>
+
+<!-- ==================== APPLICATION SCRIPT ==================== -->
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD02il4iKbRsYv45KGPGr8PQplF5wawgls",
+  authDomain: "telegram-bot-80f03.firebaseapp.com",
+  databaseURL: "https://telegram-bot-80f03-default-rtdb.firebaseio.com",
+  projectId: "telegram-bot-80f03",
+  storageBucket: "telegram-bot-80f03.firebasestorage.app",
+  messagingSenderId: "735419091756",
+  appId: "1:735419091756:web:4b8224b4d323d71c9e7a89",
+  measurementId: "G-V1E9LZSF0W"
+};
+
+let db, auth, storage;
+let currentUser = { uid: 'guest_' + Math.random().toString(36).substring(2, 9), telegramId: '', displayName: 'Telegram User', photoURL: '', isAdmin: false };
+let allVideos = [];
+let categories = ['All', 'Entertainment', 'Education', 'Gaming', 'Music', 'Tech'];
+let activeVideo = null;
+let currentFilter = 'All';
+let currentSort = 'trending';
+let currentOpenVideoId = null;
+let unsubscribeComments = null;
+
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.expand();
+  if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    const tgUser = tg.initDataUnsafe.user;
+    currentUser.telegramId = String(tgUser.id || '');
+    currentUser.uid = 'tg_' + tgUser.id;
+    currentUser.displayName = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || 'Telegram User';
+    currentUser.photoURL = tgUser.photo_url || '';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initFirebase(firebaseConfig);
+  updateUserProfileUI();
+});
+
+function initFirebase(config) {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(config);
+  }
+  db = firebase.firestore();
+  auth = firebase.auth();
+  storage = firebase.storage();
+
+  auth.signInAnonymously().then((userCredential) => {
+    const firebaseUser = userCredential.user;
+    if (!tg || !tg.initDataUnsafe?.user?.id) {
+      currentUser.uid = firebaseUser.uid;
+    }
+    checkAdminPermissions();
+    syncUserData();
+    startRealtimeListeners();
+  }).catch((err) => {
+    console.error("Firebase Auth Error:", err);
+    checkAdminPermissions();
+    syncUserData();
+    startRealtimeListeners();
+  });
+}
+
+function checkAdminPermissions() {
+  // নির্দিষ্ট অ্যাডমিন আইডি (7904568371) চেক করা হচ্ছে
+  const specificAdminId = '7904568371';
+  
+  if (currentUser.telegramId === specificAdminId || currentUser.uid.includes(specificAdminId)) {
+    grantAdminAccess();
+  } else {
+    // ফায়ারবেজ ডাটাবেজ থেকেও চেক করা যেতে পারে
+    db.collection('settings').doc('adminConfig').get().then(doc => {
+      if (doc.exists && (doc.data().adminUid === currentUser.uid || doc.data().adminTelegramId === currentUser.telegramId)) {
+        grantAdminAccess();
+      } else {
+        revokeAdminAccess();
+      }
+    }).catch(() => {
+      revokeAdminAccess();
+    });
+  }
+}
+
+function grantAdminAccess() {
+  currentUser.isAdmin = true;
+  document.getElementById('adminNavBtn').classList.remove('hidden');
+  document.getElementById('bottomAdminNavBtn').classList.remove('hidden');
+  document.getElementById('userRoleDisplay').innerText = 'Administrator';
+}
+
+function revokeAdminAccess() {
+  currentUser.isAdmin = false;
+  document.getElementById('adminNavBtn').classList.add('hidden');
+  document.getElementById('bottomAdminNavBtn').classList.add('hidden');
+  document.getElementById('userRoleDisplay').innerText = 'Member';
+}
+
+function syncUserData() {
+  db.collection('users').doc(currentUser.uid).set({
+    displayName: currentUser.displayName,
+    photoURL: currentUser.photoURL,
+    telegramId: currentUser.telegramId,
+    lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+    isAdmin: currentUser.isAdmin
+  }, { merge: true }).catch(() => {});
+}
+
+function updateUserProfileUI() {
+  document.getElementById('userNameDisplay').innerText = currentUser.displayName;
+  document.getElementById('profileName').innerText = currentUser.displayName;
+  document.getElementById('profileTelegramId').innerText = `ID: ${currentUser.telegramId || currentUser.uid}`;
+  document.getElementById('userInitial').innerText = currentUser.displayName.charAt(0).toUpperCase();
+  document.getElementById('profileAvatarText').innerText = currentUser.displayName.charAt(0).toUpperCase();
+  if (currentUser.photoURL) {
+    document.getElementById('userAvatarContainer').innerHTML = `<img src="${currentUser.photoURL}" class="w-full h-full object-cover">`;
+    document.getElementById('profileAvatarText').parentElement.innerHTML = `<img src="${currentUser.photoURL}" class="w-full h-full object-cover">`;
+  }
+}
+
+function startRealtimeListeners() {
+  db.collection('videos').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+    allVideos = [];
+    snapshot.forEach(doc => {
+      allVideos.push({ id: doc.id, ...doc.data() });
+    });
+    renderVideos();
+    renderFeaturedBanner();
+    updateAdminStats();
+    renderAdminVideos();
+  }, err => {
+    console.error("Videos Sync Error:", err);
+  });
+
+  db.collection('categories').onSnapshot(snapshot => {
+    const customCats = ['All'];
+    snapshot.forEach(doc => {
+      if (doc.data().name && !customCats.includes(doc.data().name)) {
+        customCats.push(doc.data().name);
+      }
+    });
+    if (customCats.length > 1) {
+      categories = customCats;
+      renderCategories();
+    }
+  });
+}
+
+function switchTab(tabId) {
+  if (tabId === 'admin' && !currentUser.isAdmin) {
+    alert('Access Denied: Admins only.');
+    return;
+  }
+
+  ['home', 'favorites', 'history', 'profile', 'admin'].forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if (el) el.classList.add('hidden');
+  });
+  
+  const targetTab = document.getElementById(`tab-${tabId}`);
+  if (targetTab) targetTab.classList.remove('hidden');
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.remove('text-blue-500', 'text-amber-400');
+    btn.classList.add('text-slate-400');
+  });
+
+  const activeNav = document.querySelector(`[data-tab="${tabId}"]`);
+  if (activeNav) {
+    activeNav.classList.remove('text-slate-400');
+    if(tabId === 'admin') {
+      activeNav.classList.add('text-amber-400');
+    } else {
+      activeNav.classList.add('text-blue-500');
+    }
+  }
+
+  if (tabId === 'favorites') renderFavorites();
+  if (tabId === 'history') renderHistory();
+  if (tabId === 'profile') updateProfileStats();
+  if (tabId === 'admin') updateAdminStats();
+}
+
+function renderCategories() {
+  const container = document.getElementById('categoriesSlider');
+  container.innerHTML = categories.map(cat => `
+    <button onclick="filterCategory('${cat}')" class="category-chip px-4 py-2 ${currentFilter === cat ? 'bg-blue-600 text-white' : 'glass-panel text-slate-300'} rounded-xl text-xs font-semibold whitespace-nowrap shadow-md transition">${cat}</button>
+  `).join('');
+}
+
+function filterCategory(cat) {
+  currentFilter = cat;
+  renderCategories();
+  renderVideos();
+}
+
+function sortVideos(sortType) {
+  currentSort = sortType;
+  document.querySelectorAll('.sort-btn').forEach(b => {
+    b.classList.remove('text-blue-400', 'bg-slate-800');
+    if (b.dataset.sort === sortType) b.classList.add('text-blue-400');
+  });
+  renderVideos();
+}
+
+function renderVideos() {
+  let filtered = [...allVideos];
+  if (currentFilter !== 'All') {
+    filtered = filtered.filter(v => v.category === currentFilter);
+  }
+  if (currentSort === 'newest') {
+    filtered.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  } else if (currentSort === 'popular') {
+    filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+  } else {
+    filtered.sort((a, b) => ((b.views || 0) * 2 + (b.createdAt?.toMillis?.() || 0)) - ((a.views || 0) * 2 + (a.createdAt?.toMillis?.() || 0)));
+  }
+
+  const grid = document.getElementById('videoGrid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No videos found in this category.</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(video => `
+    <div onclick="openPlayer('${video.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 group active:scale-95 transition cursor-pointer flex flex-col">
+      <div class="relative aspect-video bg-slate-900 overflow-hidden">
+        <img src="${video.thumbnailUrl || 'https://via.placeholder.com/300x169'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+        ${video.isLocked ? `<div class="absolute top-2 right-2 px-2 py-1 bg-amber-500/90 text-slate-950 font-bold rounded-lg text-[10px] flex items-center space-x-1 shadow-md"><i class="fa-solid fa-lock"></i><span>Locked</span></div>` : ''}
+        <div class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/75 rounded text-[10px] text-white font-medium">${video.duration || '03:45'}</div>
+      </div>
+      <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
+        <h4 class="font-bold text-xs text-slate-100 line-clamp-2 leading-snug">${video.title}</h4>
+        <div class="flex items-center justify-between text-[10px] text-slate-400">
+          <span><i class="fa-solid fa-eye mr-1"></i>${video.views || 0}</span>
+          <span>${video.category}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFeaturedBanner() {
+  const featured = allVideos.find(v => v.isFeatured) || allVideos[0];
+  if (!featured) return;
+  document.getElementById('bannerImage').src = featured.thumbnailUrl || '';
+  document.getElementById('bannerCategory').innerText = featured.category || 'Featured';
+  document.getElementById('bannerTitle').innerText = featured.title;
+  window.currentFeaturedId = featured.id;
+}
+
+function playFeaturedVideo() {
+  if (window.currentFeaturedId) openPlayer(window.currentFeaturedId);
+}
+
+function openPlayer(videoId) {
+  const video = allVideos.find(v => v.id === videoId);
+  if (!video) return;
+  currentOpenVideoId = videoId;
+  activeVideo = video;
+  document.getElementById('playerHeaderTitle').innerText = video.title;
+  document.getElementById('playerTitle').innerText = video.title;
+  document.getElementById('playerDescription').innerText = video.description || 'No description available.';
+  document.getElementById('playerCategory').innerText = video.category;
+  document.getElementById('playerViewsCount').innerText = video.views || 0;
+
+  const videoEl = document.getElementById('activeVideoElement');
+  videoEl.poster = video.thumbnailUrl || '';
+  videoEl.src = video.videoUrl || '';
+
+  if (video.isLocked) {
+    db.collection('unlocks').doc(`${currentUser.uid}_${videoId}`).get().then(doc => {
+      if (doc.exists || currentUser.isAdmin) {
+        document.getElementById('videoLockOverlay').classList.add('hidden');
+        videoEl.play().catch(() => {});
+      } else {
+        document.getElementById('videoLockOverlay').classList.remove('hidden');
+        videoEl.pause();
+      }
+    }).catch(() => {
+      document.getElementById('videoLockOverlay').classList.remove('hidden');
+    });
+  } else {
+    document.getElementById('videoLockOverlay').classList.add('hidden');
+    videoEl.play().catch(() => {});
+  }
+
+  db.collection('videos').doc(videoId).update({ views: firebase.firestore.FieldValue.increment(1) }).catch(() => {});
+  addToHistory(video);
+  checkPlayerFavoriteStatus();
+  loadComments(videoId);
+  document.getElementById('playerModal').classList.remove('hidden');
+}
+
+function closePlayerModal() {
+  document.getElementById('playerModal').classList.add('hidden');
+  const videoEl = document.getElementById('activeVideoElement');
+  videoEl.pause();
+  videoEl.src = '';
+  if (unsubscribeComments) unsubscribeComments();
+}
+
+function startRewardedAdFlow() {
+  if (typeof show_11404425 === 'function') {
+    show_11404425().then(() => {
+      completeAdUnlock();
+    }).catch((err) => {
+      console.log("Ad closed or failed:", err);
+      alert('Advertisement was closed or failed to load. Video remains locked.');
+    });
+  } else {
+    if (confirm("Simulate Ad Complete? (Click OK to unlock video)")) {
+      completeAdUnlock();
+    } else {
+      alert('Ad cancelled.');
+    }
+  }
+}
+
+function completeAdUnlock() {
+  if (!currentOpenVideoId) return;
+  db.collection('unlocks').doc(`${currentUser.uid}_${currentOpenVideoId}`).set({
+    userId: currentUser.uid,
+    videoId: currentOpenVideoId,
+    unlockedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    document.getElementById('videoLockOverlay').classList.add('hidden');
+    const videoEl = document.getElementById('activeVideoElement');
+    videoEl.play().catch(() => {});
+    db.collection('settings').doc('platformStats').set({
+      totalUnlocks: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true }).catch(() => {});
+  });
+}
+
+function loadComments(videoId) {
+  if (unsubscribeComments) unsubscribeComments();
+  unsubscribeComments = db.collection('videos').doc(videoId).collection('comments')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(snapshot => {
+      const commentsList = document.getElementById('commentsList');
+      document.getElementById('commentCount').innerText = snapshot.size;
+      if (snapshot.empty) {
+        commentsList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No comments yet. Be the first!</p>`;
+        return;
+      }
+      let html = '';
+      snapshot.forEach(doc => {
+        const comment = doc.data();
+        const isOwner = comment.userId === currentUser.uid || currentUser.isAdmin;
+        html += `
+          <div class="glass-panel p-3 rounded-xl flex items-start justify-between space-x-2">
+            <div class="flex items-start space-x-2.5">
+              <div class="w-7 h-7 rounded-full bg-blue-600/30 text-blue-400 font-bold flex items-center justify-center text-xs shrink-0">
+                ${(comment.userName || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div>
                 <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="formIsFeatured" class="accent-blue-600 w-4 h-4 rounded">
-                    <label for="formIsFeatured" class="text-xs font-semibold text-slate-300">Set as Featured Banner</label>
+                  <span class="font-bold text-xs text-slate-200">${comment.userName || 'User'}</span>
+                  <span class="text-[9px] text-slate-500">${formatTimeAgo(comment.createdAt)}</span>
                 </div>
-                <button onclick="saveVideoData()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition mt-3">Save Video</button>
+                <p class="text-xs text-slate-300 mt-1">${comment.text}</p>
+              </div>
             </div>
+            ${isOwner ? `<button onclick="deleteComment('${videoId}', '${doc.id}')" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+          </div>
+        `;
+      });
+      commentsList.innerHTML = html;
+    });
+}
+
+function postComment() {
+  const input = document.getElementById('commentInput');
+  const text = input.value.trim();
+  if (!text || !currentOpenVideoId) return;
+  db.collection('videos').doc(currentOpenVideoId).collection('comments').add({
+    userId: currentUser.uid,
+    userName: currentUser.displayName,
+    text: text,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    input.value = '';
+  });
+}
+
+function deleteComment(videoId, commentId) {
+  db.collection('videos').doc(videoId).collection('comments').doc(commentId).delete();
+}
+
+function togglePlayerFavorite() {
+  if (!activeVideo) return;
+  const favRef = db.collection('favorites').doc(`${currentUser.uid}_${activeVideo.id}`);
+  favRef.get().then(doc => {
+    if (doc.exists) {
+      favRef.delete().then(() => {
+        document.getElementById('playerFavBtn').innerHTML = `<i class="fa-regular fa-heart"></i>`;
+        document.getElementById('playerFavBtn').classList.remove('text-rose-500');
+      });
+    } else {
+      favRef.set({
+        userId: currentUser.uid,
+        videoId: activeVideo.id,
+        videoData: activeVideo,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        document.getElementById('playerFavBtn').innerHTML = `<i class="fa-solid fa-heart"></i>`;
+        document.getElementById('playerFavBtn').classList.add('text-rose-500');
+      });
+    }
+  });
+}
+
+function checkPlayerFavoriteStatus() {
+  if (!activeVideo) return;
+  db.collection('favorites').doc(`${currentUser.uid}_${activeVideo.id}`).get().then(doc => {
+    const favBtn = document.getElementById('playerFavBtn');
+    if (doc.exists) {
+      favBtn.innerHTML = `<i class="fa-solid fa-heart"></i>`;
+      favBtn.classList.add('text-rose-500');
+    } else {
+      favBtn.innerHTML = `<i class="fa-regular fa-heart"></i>`;
+      favBtn.classList.remove('text-rose-500');
+    }
+  }).catch(() => {});
+}
+
+function renderFavorites() {
+  db.collection('favorites').where('userId', '==', currentUser.uid).get().then(snapshot => {
+    const grid = document.getElementById('favoritesGrid');
+    document.getElementById('favoritesCount').innerText = `${snapshot.size} videos`;
+    if (snapshot.empty) {
+      grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No favorite videos saved yet.</div>`;
+      return;
+    }
+    let html = '';
+    snapshot.forEach(doc => {
+      const v = doc.data().videoData;
+      if (!v) return;
+      html += `
+        <div onclick="openPlayer('${v.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 cursor-pointer">
+          <div class="aspect-video relative bg-slate-900"><img src="${v.thumbnailUrl}" class="w-full h-full object-cover"></div>
+          <div class="p-3"><h4 class="font-bold text-xs text-slate-100 line-clamp-1">${v.title}</h4></div>
         </div>
-    </div>
+      `;
+    });
+    grid.innerHTML = html;
+  }).catch(() => {});
+}
 
-    <!-- ==================== SEARCH MODAL ==================== -->
-    <div id="searchModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col hidden p-4">
-        <div class="flex items-center space-x-3 mb-4">
-            <div class="flex-1 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                <input id="searchInputField" oninput="executeSearch(this.value)" type="text" placeholder="Search videos, categories..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
-            </div>
-            <button onclick="closeSearchModal()" class="text-xs font-bold text-slate-400 hover:text-white px-2">Cancel</button>
+function addToHistory(video) {
+  db.collection('history').doc(`${currentUser.uid}_${video.id}`).set({
+    userId: currentUser.uid,
+    videoId: video.id,
+    videoData: video,
+    watchedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).catch(() => {});
+}
+
+function renderHistory() {
+  db.collection('history').where('userId', '==', currentUser.uid).get().then(snapshot => {
+    const grid = document.getElementById('historyGrid');
+    if (snapshot.empty) {
+      grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No watch history available.</div>`;
+      return;
+    }
+    let html = '';
+    snapshot.forEach(doc => {
+      const v = doc.data().videoData;
+      if (!v) return;
+      html += `
+        <div onclick="openPlayer('${v.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 cursor-pointer">
+          <div class="aspect-video relative bg-slate-900"><img src="${v.thumbnailUrl}" class="w-full h-full object-cover"></div>
+          <div class="p-3"><h4 class="font-bold text-xs text-slate-100 line-clamp-1">${v.title}</h4></div>
         </div>
-        <div id="searchResultsGrid" class="grid grid-cols-2 gap-3 overflow-y-auto flex-1"></div>
+      `;
+    });
+    grid.innerHTML = html;
+  }).catch(() => {});
+}
+
+function clearHistory() {
+  db.collection('history').where('userId', '==', currentUser.uid).get().then(snapshot => {
+    const batch = db.batch();
+    snapshot.docs.forEach(d => batch.delete(d.ref));
+    batch.commit().then(() => renderHistory());
+  }).catch(() => {});
+}
+
+function updateProfileStats() {
+  db.collection('favorites').where('userId', '==', currentUser.uid).get().then(s => {
+    document.getElementById('statFavCount').innerText = s.size;
+  }).catch(() => {});
+  db.collection('history').where('userId', '==', currentUser.uid).get().then(s => {
+    document.getElementById('statHistoryCount').innerText = s.size;
+  }).catch(() => {});
+  db.collection('unlocks').where('userId', '==', currentUser.uid).get().then(s => {
+    document.getElementById('statUnlockedCount').innerText = s.size;
+  }).catch(() => {});
+}
+
+function openSearchModal() {
+  document.getElementById('searchModal').classList.remove('hidden');
+  document.getElementById('searchInputField').focus();
+}
+
+function closeSearchModal() {
+  document.getElementById('searchModal').classList.add('hidden');
+}
+
+function executeSearch(query) {
+  const q = query.toLowerCase().trim();
+  const grid = document.getElementById('searchResultsGrid');
+  if (!q) {
+    grid.innerHTML = '';
+    return;
+  }
+  const results = allVideos.filter(v => v.title.toLowerCase().includes(q) || v.category.toLowerCase().includes(q));
+  if (results.length === 0) {
+    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No results found for "${q}"</div>`;
+    return;
+  }
+  grid.innerHTML = results.map(v => `
+    <div onclick="closeSearchModal(); openPlayer('${v.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 cursor-pointer">
+      <div class="aspect-video bg-slate-900"><img src="${v.thumbnailUrl}" class="w-full h-full object-cover"></div>
+      <div class="p-3"><h4 class="font-bold text-xs text-slate-100 line-clamp-1">${v.title}</h4></div>
     </div>
-
-    <!-- ==================== APPLICATION SCRIPT ==================== -->
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD02il4iKbRsYv45KGPGr8PQplF5wawgls",
-            authDomain: "telegram-bot-80f03.firebaseapp.com",
-            databaseURL: "https://telegram-bot-80f03-default-rtdb.firebaseio.com",
-            projectId: "telegram-bot-80f03",
-            storageBucket: "telegram-bot-80f03.firebasestorage.app",
-            messagingSenderId: "735419091756",
-            appId: "1:735419091756:web:4b8224b4d323d71c9e7a89",
-            measurementId: "G-V1E9LZSF0W"
-        };
-
-        let db, auth, storage;
-        let currentUser = {
-            uid: 'guest_' + Math.random().toString(36).substring(2, 9),
-            displayName: 'Telegram User',
-            photoURL: '',
-            isAdmin: false
-        };
-        
-        let allVideos = [];
-        let categories = ['All', 'Entertainment', 'Education', 'Gaming', 'Music', 'Tech'];
-        let activeVideo = null;
-        let currentFilter = 'All';
-        let currentSort = 'trending';
-        let currentOpenVideoId = null;
-        let unsubscribeComments = null;
-
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.expand();
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const tgUser = tg.initDataUnsafe.user;
-                currentUser.uid = 'tg_' + tgUser.id;
-                currentUser.displayName = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || 'Telegram User';
-                currentUser.photoURL = tgUser.photo_url || '';
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            initFirebase(firebaseConfig);
-            updateUserProfileUI();
-        });
-
-        function initFirebase(config) {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(config);
-            }
-            db = firebase.firestore();
-            auth = firebase.auth();
-            storage = firebase.storage();
-
-            auth.signInAnonymously().then((userCredential) => {
-                const firebaseUser = userCredential.user;
-                if (!tg || !tg.initDataUnsafe?.user?.id) {
-                    currentUser.uid = firebaseUser.uid;
-                }
-                checkAdminPermissions();
-                syncUserData();
-                startRealtimeListeners();
-            }).catch((err) => {
-                console.error("Firebase Auth Error:", err);
-                checkAdminPermissions();
-                syncUserData();
-                startRealtimeListeners();
-            });
-        }
-
-        function checkAdminPermissions() {
-            // নির্দিষ্ট টেলিগ্রাম আইডি (7904568371) এবং বর্তমান যেকোনো টেস্ট অ্যাকাউন্টকে অ্যাডমিন পারমিশন দেওয়ার লজিক
-            const adminIds = ['7904568371', 'tg_7904568371', currentUser.uid];
-
-            if (adminIds.includes(currentUser.uid) || currentUser.uid.includes('7904568371') || true) {
-                // সরাসরি অ্যাডমিন পারমিশন এনাবল করা হলো যাতে আপনি যেকোনো সময় অ্যাডমিন প্যানেল ব্যবহার করতে পারেন
-                currentUser.isAdmin = true;
-                document.getElementById('adminNavBtn').classList.remove('hidden');
-                document.getElementById('userRoleDisplay').innerText = 'Administrator';
-            }
-
-            db.collection('settings').doc('adminConfig').get().then(doc => {
-                if (doc.exists && doc.data().adminUid === currentUser.uid) {
-                    currentUser.isAdmin = true;
-                    document.getElementById('adminNavBtn').classList.remove('hidden');
-                    document.getElementById('userRoleDisplay').innerText = 'Administrator';
-                }
-            }).catch(() => {});
-        }
-
-        function syncUserData() {
-            db.collection('users').doc(currentUser.uid).set({
-                displayName: currentUser.displayName,
-                photoURL: currentUser.photoURL,
-                lastActive: firebase.firestore.FieldValue.serverTimestamp(),
-                isAdmin: currentUser.isAdmin
-            }, { merge: true }).catch(() => {});
-        }
-
-        function updateUserProfileUI() {
-            document.getElementById('userNameDisplay').innerText = currentUser.displayName;
-            document.getElementById('profileName').innerText = currentUser.displayName;
-            document.getElementById('profileTelegramId').innerText = `ID: ${currentUser.uid}`;
-            document.getElementById('userInitial').innerText = currentUser.displayName.charAt(0).toUpperCase();
-            document.getElementById('profileAvatarText').innerText = currentUser.displayName.charAt(0).toUpperCase();
-            if (currentUser.photoURL) {
-                document.getElementById('userAvatarContainer').innerHTML = `<img src="${currentUser.photoURL}" class="w-full h-full object-cover">`;
-                document.getElementById('profileAvatarText').parentElement.innerHTML = `<img src="${currentUser.photoURL}" class="w-full h-full object-cover">`;
-            }
-        }
-
-        function startRealtimeListeners() {
-            // Real-time synchronization for videos
-            db.collection('videos').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-                allVideos = [];
-                snapshot.forEach(doc => {
-                    allVideos.push({ id: doc.id, ...doc.data() });
-                });
-                renderVideos();
-                renderFeaturedBanner();
-                updateAdminStats();
-                renderAdminVideos();
-            }, err => {
-                console.error("Videos Sync Error:", err);
-            });
-
-            db.collection('categories').onSnapshot(snapshot => {
-                const customCats = ['All'];
-                snapshot.forEach(doc => {
-                    if (doc.data().name && !customCats.includes(doc.data().name)) {
-                        customCats.push(doc.data().name);
-                    }
-                });
-                if (customCats.length > 1) {
-                    categories = customCats;
-                    renderCategories();
-                }
-            });
-        }
-
-        function switchTab(tabId) {
-            ['home', 'favorites', 'history', 'profile', 'admin'].forEach(t => {
-                const el = document.getElementById(`tab-${t}`);
-                if (el) el.classList.add('hidden');
-            });
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-blue-500');
-                if(!btn.classList.contains('text-amber-400/80')) btn.classList.add('text-slate-400');
-            });
-            const activeNav = document.querySelector(`[data-tab="${tabId}"]`);
-            if (activeNav) {
-                activeNav.classList.remove('text-slate-400');
-                if(tabId === 'admin') {
-                    activeNav.classList.add('text-amber-400');
-                } else {
-                    activeNav.classList.add('text-blue-500');
-                }
-            }
-
-            if (tabId === 'favorites') renderFavorites();
-            if (tabId === 'history') renderHistory();
-            if (tabId === 'profile') updateProfileStats();
-            if (tabId === 'admin') updateAdminStats();
-        }
-
-        function renderCategories() {
-            const container = document.getElementById('categoriesSlider');
-            container.innerHTML = categories.map(cat => `
-                <button onclick="filterCategory('${cat}')" class="category-chip px-4 py-2 ${currentFilter === cat ? 'bg-blue-600 text-white' : 'glass-panel text-slate-300'} rounded-xl text-xs font-semibold whitespace-nowrap shadow-md transition">${cat}</button>
-            `).join('');
-        }
-
-        function filterCategory(cat) {
-            currentFilter = cat;
-            renderCategories();
-            renderVideos();
-        }
-
-        function sortVideos(sortType) {
-            currentSort = sortType;
-            document.querySelectorAll('.sort-btn').forEach(b => {
-                b.classList.remove('text-blue-400', 'bg-slate-800');
-                if (b.dataset.sort === sortType) b.classList.add('text-blue-400');
-            });
-            renderVideos();
-        }
-
-        function renderVideos() {
-            let filtered = [...allVideos];
-            if (currentFilter !== 'All') {
-                filtered = filtered.filter(v => v.category === currentFilter);
-            }
-
-            if (currentSort === 'newest') {
-                filtered.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-            } else if (currentSort === 'popular') {
-                filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
-            } else {
-                filtered.sort((a, b) => ((b.views || 0) * 2 + (b.createdAt?.toMillis?.() || 0)) - ((a.views || 0) * 2 + (a.createdAt?.toMillis?.() || 0)));
-            }
-
-            const grid = document.getElementById('videoGrid');
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No videos found in this category.</div>`;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(video => `
-                <div onclick="openPlayer('${video.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 group active:scale-95 transition cursor-pointer flex flex-col">
-                    <div class="relative aspect-video bg-slate-900 overflow-hidden">
-                        <img src="${video.thumbnailUrl || 'https://via.placeholder.com/300x169'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                        ${video.isLocked ? `<div class="absolute top-2 right-2 px-2 py-1 bg-amber-500/90 text-slate-950 font-bold rounded-lg text-[10px] flex items-center space-x-1 shadow-md"><i class="fa-solid fa-lock"></i><span>Locked</span></div>` : ''}
-                        <div class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/75 rounded text-[10px] text-white font-medium">${video.duration || '03:45'}</div>
-                    </div>
-                    <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
-                        <h4 class="font-bold text-xs text-slate-100 line-clamp-2 leading-snug">${video.title}</h4>
-                        <div class="flex items-center justify-between text-[10px] text-slate-400">
-                            <span><i class="fa-solid fa-eye mr-1"></i>${video.views || 0}</span>
-                            <span>${video.category}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderFeaturedBanner() {
-            const featured = allVideos.find(v => v.isFeatured) || allVideos[0];
-            if (!featured) return;
-            document.getElementById('bannerImage').src = featured.thumbnailUrl || '';
-            document.getElementById('bannerCategory').innerText = featured.category || 'Featured';
-            document.getElementById('bannerTitle').innerText = featured.title;
-            window.currentFeaturedId = featured.id;
-        }
-
-        function playFeaturedVideo() {
-            if (window.currentFeaturedId) openPlayer(window.currentFeaturedId);
-        }
-
-        function openPlayer(videoId) {
-            const video = allVideos.find(v => v.id === videoId);
-            if (!video) return;
-            currentOpenVideoId = videoId;
-            activeVideo = video;
-
-            document.getElementById('playerHeaderTitle').innerText = video.title;
-            document.getElementById('playerTitle').innerText = video.title;
-            document.getElementById('playerDescription').innerText = video.description || 'No description available.';
-            document.getElementById('playerCategory').innerText = video.category;
-            document.getElementById('playerViewsCount').innerText = video.views || 0;
-
-            const videoEl = document.getElementById('activeVideoElement');
-            videoEl.poster = video.thumbnailUrl || '';
-            videoEl.src = video.videoUrl || '';
-
-            if (video.isLocked) {
-                db.collection('unlocks').doc(`${currentUser.uid}_${videoId}`).get().then(doc => {
-                    if (doc.exists || currentUser.isAdmin) {
-                        document.getElementById('videoLockOverlay').classList.add('hidden');
-                        videoEl.play().catch(() => {});
-                    } else {
-                        document.getElementById('videoLockOverlay').classList.remove('hidden');
-                        videoEl.pause();
-                    }
-                }).catch(() => {
-                    document.getElementById('videoLockOverlay').classList.remove('hidden');
-                });
-            } else {
-                document.getElementById('videoLockOverlay').classList.add('hidden');
-                videoEl.play().catch(() => {});
-            }
-
-            db.collection('videos').doc(videoId).update({
-                views: firebase.firestore.FieldValue.increment(1)
-            }).catch(() => {});
-
-            addToHistory(video);
-            checkPlayerFavoriteStatus();
-            loadComments(videoId);
-
-            document.getElementById('playerModal').classList.remove('hidden');
-        }
-
-        function closePlayerModal() {
-            document.getElementById('playerModal').classList.add('hidden');
-            const videoEl = document.getElementById('activeVideoElement');
-            videoEl.pause();
-            videoEl.src = '';
-            if (unsubscribeComments) unsubscribeComments();
-        }
-
-        // Rewarded Ad Integration using Provided SDK Script
-        function startRewardedAdFlow() {
-            if (typeof show_11404425 === 'function') {
-                show_11404425().then(() => {
-                    completeAdUnlock();
-                }).catch((err) => {
-                    console.log("Ad closed or failed:", err);
-                    alert('Advertisement was closed or failed to load. Video remains locked.');
-                });
-            } else {
-                if (confirm("Simulate Ad Complete? (Click OK to unlock video)")) {
-                    completeAdUnlock();
-                } else {
-                    alert('Ad cancelled.');
-                }
-            }
-        }
-
-        function completeAdUnlock() {
-            if (!currentOpenVideoId) return;
-
-            db.collection('unlocks').doc(`${currentUser.uid}_${currentOpenVideoId}`).set({
-                userId: currentUser.uid,
-                videoId: currentOpenVideoId,
-                unlockedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                document.getElementById('videoLockOverlay').classList.add('hidden');
-                const videoEl = document.getElementById('activeVideoElement');
-                videoEl.play().catch(() => {});
-                
-                db.collection('settings').doc('platformStats').set({
-                    totalUnlocks: firebase.firestore.FieldValue.increment(1)
-                }, { merge: true }).catch(() => {});
-            });
-        }
-
-        function loadComments(videoId) {
-            if (unsubscribeComments) unsubscribeComments();
-
-            unsubscribeComments = db.collection('videos').doc(videoId).collection('comments')
-                .orderBy('createdAt', 'desc')
-                .onSnapshot(snapshot => {
-                    const commentsList = document.getElementById('commentsList');
-                    document.getElementById('commentCount').innerText = snapshot.size;
-
-                    if (snapshot.empty) {
-                        commentsList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No comments yet. Be the first!</p>`;
-                        return;
-                    }
-
-                    let html = '';
-                    snapshot.forEach(doc => {
-                        const comment = doc.data();
-                        const isOwner = comment.userId === currentUser.uid || currentUser.isAdmin;
-                        html += `
-                            <div class="glass-panel p-3 rounded-xl flex items-start justify-between space-x-2">
-                                <div class="flex items-start space-x-2.5">
-                                    <div class="w-7 h-7 rounded-full bg-blue-600/30 text-blue-400 font-bold flex items-center justify-center text-xs shrink-0">
-                                        ${(comment.userName || 'U').charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center space-x-2">
-                                            <span class="font-bold text-xs text-slate-200">${comment.userName || 'User'}</span>
-                                            <span class="text-[9px] text-slate-500">${formatTimeAgo(comment.createdAt)}</span>
-                                        </div>
-                                        <p class="text-xs text-slate-300 mt-1">${comment.text}</p>
-                                    </div>
-                                </div>
-                                ${isOwner ? `<button onclick="deleteComment('${videoId}', '${doc.id}')" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>` : ''}
-                            </div>
-                        `;
-                    });
-                    commentsList.innerHTML = html;
-                });
-        }
-
-        function postComment() {
-            const input = document.getElementById('commentInput');
-            const text = input.value.trim();
-            if (!text || !currentOpenVideoId) return;
-
-            db.collection('videos').doc(currentOpenVideoId).collection('comments').add({
-                userId: currentUser.uid,
-                userName: currentUser.displayName,
-                text: text,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                input.value = '';
-            });
-        }
-
-        function deleteComment(videoId, commentId) {
-            db.collection('videos').doc(videoId).collection('comments').doc(commentId).delete();
-        }
-
-        function togglePlayerFavorite() {
-            if (!activeVideo) return;
-            const favRef = db.collection('favorites').doc(`${currentUser.uid}_${activeVideo.id}`);
-            favRef.get().then(doc => {
-                if (doc.exists) {
-                    favRef.delete().then(() => {
-                        document.getElementById('playerFavBtn').innerHTML = `<i class="fa-regular fa-heart"></i>`;
-                        document.getElementById('playerFavBtn').classList.remove('text-rose-500');
-                    });
-                } else {
-                    favRef.set({
-                        userId: currentUser.uid,
-                        videoId: activeVideo.id,
-                        videoData: activeVideo,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        document.getElementById('playerFavBtn').innerHTML = `<i class="fa-solid fa-heart"></i>`;
-                        document.getElementById('playerFavBtn').classList.add('text-rose-500');
-                    });
-                }
-            });
-        }
-
-        function checkPlayerFavoriteStatus() {
-            if (!activeVideo) return;
-            db.collection('favorites').doc(`${currentUser.uid}_${activeVideo.id}`).get().then(doc => {
-                const favBtn = document.getElementById('playerFavBtn');
-                if (doc.exists) {
-                    favBtn.innerHTML = `<i class="fa-solid fa-heart"></i>`;
-                    favBtn.classList.add('text-rose-500');
-                } else {
-                    favBtn.innerHTML = `<i class="fa-regular fa-heart"></i>`;
-                    favBtn.classList.remove('text-rose-500');
-                }
-            }).catch(() => {});
-        }
-
-        function renderFavorites() {
-            db.collection('favorites').where('userId', '==', currentUser.uid).get().then(snapshot => {
-                const grid = document.getElementById('favoritesGrid');
-                document.getElementById('favoritesCount').innerText = `${snapshot.size} videos`;
-                if (snapshot.empty) {
-                    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No favorite videos saved yet.</div>`;
-                    return;
-                }
-                let html = '';
-                snapshot.forEach(doc => {
-                    const v = doc.data().videoData;
-                    if (!v) return;
-                    html += `
-                        <div onclick="openPlayer('${v.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 cursor-pointer">
-                            <div class="aspect-video relative bg-slate-900"><img src="${v.thumbnailUrl}" class="w-full h-full object-cover"></div>
-                            <div class="p-3"><h4 class="font-bold text-xs text-slate-100 line-clamp-1">${v.title}</h4></div>
-                        </div>
-                    `;
-                });
-                grid.innerHTML = html;
-            }).catch(() => {});
-        }
-
-        function addToHistory(video) {
-            db.collection('history').doc(`${currentUser.uid}_${video.id}`).set({
-                userId: currentUser.uid,
-                videoId: video.id,
-                videoData: video,
-                watchedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).catch(() => {});
-        }
-
-        function renderHistory() {
-            db.collection('history').where('userId', '==', currentUser.uid).get().then(snapshot => {
-                const grid = document.getElementById('historyGrid');
-                if (snapshot.empty) {
-                    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No watch history available.</div>`;
-                    return;
-                }
-                let html = '';
-                snapshot.forEach(doc => {
-                    const v = doc.data().videoData;
-                    if (!v) return;
-                    html += `
-                        <div onclick="openPlayer('${v.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 cursor-pointer">
-                            <div class="aspect-video relative bg-slate-900"><img src="${v.thumbnailUrl}" class="w-full h-full object-cover"></div>
-                            <div class="p-3"><h4 class="font-bold text-xs text-slate-100 line-clamp-1">${v.title}</h4></div>
-                        </div>
-                    `;
-                });
-                grid.innerHTML = html;
-            }).catch(() => {});
-        }
-
-        function clearHistory() {
-            db.collection('history').where('userId', '==', currentUser.uid).get().then(snapshot => {
-                const batch = db.batch();
-                snapshot.docs.forEach(d => batch.delete(d.ref));
-                batch.commit().then(() => renderHistory());
-            }).catch(() => {});
-        }
-
-        function updateProfileStats() {
-            db.collection('favorites').where('userId', '==', currentUser.uid).get().then(s => {
-                document.getElementById('statFavCount').innerText = s.size;
-            }).catch(() => {});
-            db.collection('history').where('userId', '==', currentUser.uid).get().then(s => {
-                document.getElementById('statHistoryCount').innerText = s.size;
-            }).catch(() => {});
-            db.collection('unlocks').where('userId', '==', currentUser.uid).get().then(s => {
-                document.getElementById('statUnlockedCount').innerText = s.size;
-            }).catch(() => {});
-        }
-
-        function openSearchModal() { document.getElementById('searchModal').classList.remove('hidden'); document.getElementById('searchInputField').focus(); }
-        function closeSearchModal() { document.getElementById('searchModal').classList.add('hidden'); }
-
-        function executeSearch(query) {
-            const q = query.toLowerCase().trim();
-            const grid = document.getElementById('searchResultsGrid');
-            if (!q) { grid.innerHTML = ''; return; }
-
-            const results = allVideos.filter(v => v.title.toLowerCase().includes(q) || v.category.toLowerCase().includes(q));
-            if (results.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-10 text-slate-500 text-xs">No results found for "${q}"</div>`;
-                return;
-            }
-
-            grid.innerHTML = results.map(v => `
-                <div onclick="closeSearchModal(); openPlayer('${v.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-700/40 cursor-pointer">
-                    <div class="aspect-video bg-slate-900"><img src="${v.thumbnailUrl}" class="w-full h-full object-cover"></div>
-                    <div class="p-3"><h4 class="font-bold text-xs text-slate-100 line-clamp-1">${v.title}</h4></div>
-                </div>
-            `).join('');
-        }
-
-        function openVideoModal(videoId = null) {
-            document.getElementById('videoModal').classList.remove('hidden');
-            if (videoId) {
-                const v = allVideos.find(item => item.id === videoId);
-                if (v) {
-                    document.getElementById('videoModalTitle').innerText = 'Edit Video';
-                    document.getElementById('editVideoId').value = v.id;
-                    document.getElementById('formTitle').value = v.title || '';
-                    document.getElementById('formCategory').value = v.category || '';
-                    document.getElementById('formVideoUrl').value = v.videoUrl || '';
-                    document.getElementById('formThumbUrl').value = v.thumbnailUrl || '';
-                    document.getElementById('formDescription').value = v.description || '';
-                    document.getElementById('formIsLocked').checked = !!v.isLocked;
-                    document.getElementById('formIsFeatured').checked = !!v.isFeatured;
-                }
-            } else {
-                document.getElementById('videoModalTitle').innerText = 'Upload Video';
-                document.getElementById('editVideoId').value = '';
-                document.getElementById('formTitle').value = '';
-                document.getElementById('formCategory').value = '';
-                document.getElementById('formVideoUrl').value = '';
-                document.getElementById('formThumbUrl').value = '';
-                document.getElementById('formDescription').value = '';
-                document.getElementById('formIsLocked').checked = false;
-                document.getElementById('formIsFeatured').checked = false;
-            }
-        }
-
-        function closeVideoModal() { document.getElementById('videoModal').classList.add('hidden'); }
-
-        async function saveVideoData() {
-            const id = document.getElementById('editVideoId').value;
-            const title = document.getElementById('formTitle').value.trim();
-            const category = document.getElementById('formCategory').value.trim() || 'Entertainment';
-            let videoUrl = document.getElementById('formVideoUrl').value.trim();
-            let thumbnailUrl = document.getElementById('formThumbUrl').value.trim();
-            const description = document.getElementById('formDescription').value.trim();
-            const isLocked = document.getElementById('formIsLocked').checked;
-            const isFeatured = document.getElementById('formIsFeatured').checked;
-
-            if (!title) { alert('Please enter a video title.'); return; }
-
-            const videoFile = document.getElementById('formVideoFile').files[0];
-            const thumbFile = document.getElementById('formThumbFile').files[0];
-
-            if (videoFile) {
-                const storageRef = storage.ref(`videos/${Date.now()}_${videoFile.name}`);
-                const snapshot = await storageRef.put(videoFile);
-                videoUrl = await snapshot.ref.getDownloadURL();
-            }
-
-            if (thumbFile) {
-                const storageRef = storage.ref(`thumbnails/${Date.now()}_${thumbFile.name}`);
-                const snapshot = await storageRef.put(thumbFile);
-                thumbnailUrl = await snapshot.ref.getDownloadURL();
-            }
-
-            const videoPayload = {
-                title,
-                category,
-                videoUrl: videoUrl || 'https://www.w3schools.com/html/mov_bbb.mp4',
-                thumbnailUrl: thumbnailUrl || 'https://via.placeholder.com/640x360',
-                description,
-                isLocked,
-                isFeatured,
-                duration: '03:45',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            if (id) {
-                db.collection('videos').doc(id).update(videoPayload).then(() => {
-                    closeVideoModal();
-                });
-            } else {
-                videoPayload.views = 0;
-                videoPayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                db.collection('videos').add(videoPayload).then(() => {
-                    closeVideoModal();
-                });
-            }
-        }
-
-        function deleteVideo(videoId) {
-            if (confirm('Are you sure you want to delete this video?')) {
-                db.collection('videos').doc(videoId).delete();
-            }
-        }
-
-        function renderAdminVideos() {
-            const list = document.getElementById('adminVideoList');
-            if (allVideos.length === 0) {
-                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No videos uploaded yet.</p>`;
-                return;
-            }
-            list.innerHTML = allVideos.map(v => `
-                <div class="glass-panel p-3 rounded-2xl flex items-center justify-between space-x-3">
-                    <img src="${v.thumbnailUrl}" class="w-12 h-12 object-cover rounded-xl shrink-0">
-                    <div class="flex-1 min-w-0">
-                        <h4 class="font-bold text-xs text-slate-100 truncate">${v.title}</h4>
-                        <p class="text-[10px] text-slate-400">Views: ${v.views || 0} | ${v.isLocked ? 'Locked' : 'Free'}</p>
-                    </div>
-                    <div class="flex items-center space-x-1 shrink-0">
-                        <button onclick="openVideoModal('${v.id}')" class="p-2 bg-slate-800 text-blue-400 rounded-lg hover:bg-slate-700 text-xs"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteVideo('${v.id}')" class="p-2 bg-slate-800 text-rose-400 rounded-lg hover:bg-slate-700 text-xs"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateAdminStats() {
-            document.getElementById('adminTotalVideos').innerText = allVideos.length;
-            const totalViews = allVideos.reduce((acc, v) => acc + (v.views || 0), 0);
-            document.getElementById('adminTotalViews').innerText = totalViews;
-
-            db.collection('users').get().then(s => {
-                document.getElementById('adminTotalUsers').innerText = s.size;
-            }).catch(() => {});
-            db.collection('unlocks').get().then(s => {
-                document.getElementById('adminTotalUnlocks').innerText = s.size;
-            }).catch(() => {});
-        }
-
-        function formatTimeAgo(timestamp) {
-            if (!timestamp) return 'Just now';
-            const millis = timestamp.toMillis ? timestamp.toMillis() : Date.now();
-            const seconds = Math.floor((Date.now() - millis) / 1000);
-            if (seconds < 60) return 'Just now';
-            const minutes = Math.floor(seconds / 60);
-            if (minutes < 60) return `${minutes}m ago`;
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return `${hours}h ago`;
-            return `${Math.floor(hours / 24)}d ago`;
-        }
-    </script>
+  `).join('');
+}
+
+function openVideoModal(videoId = null) {
+  if (!currentUser.isAdmin) return;
+  document.getElementById('videoModal').classList.remove('hidden');
+  if (videoId) {
+    const v = allVideos.find(item => item.id === videoId);
+    if (v) {
+      document.getElementById('videoModalTitle').innerText = 'Edit Video';
+      document.getElementById('editVideoId').value = v.id;
+      document.getElementById('formTitle').value = v.title || '';
+      document.getElementById('formCategory').value = v.category || '';
+      document.getElementById('formVideoUrl').value = v.videoUrl || '';
+      document.getElementById('formThumbUrl').value = v.thumbnailUrl || '';
+      document.getElementById('formDescription').value = v.description || '';
+      document.getElementById('formIsLocked').checked = !!v.isLocked;
+      document.getElementById('formIsFeatured').checked = !!v.isFeatured;
+    }
+  } else {
+    document.getElementById('videoModalTitle').innerText = 'Upload Video';
+    document.getElementById('editVideoId').value = '';
+    document.getElementById('formTitle').value = '';
+    document.getElementById('formCategory').value = '';
+    document.getElementById('formVideoUrl').value = '';
+    document.getElementById('formThumbUrl').value = '';
+    document.getElementById('formDescription').value = '';
+    document.getElementById('formIsLocked').checked = false;
+    document.getElementById('formIsFeatured').checked = false;
+  }
+}
+
+function closeVideoModal() {
+  document.getElementById('videoModal').classList.add('hidden');
+}
+
+async function saveVideoData() {
+  if (!currentUser.isAdmin) return;
+  const id = document.getElementById('editVideoId').value;
+  const title = document.getElementById('formTitle').value.trim();
+  const category = document.getElementById('formCategory').value.trim() || 'Entertainment';
+  let videoUrl = document.getElementById('formVideoUrl').value.trim();
+  let thumbnailUrl = document.getElementById('formThumbUrl').value.trim();
+  const description = document.getElementById('formDescription').value.trim();
+  const isLocked = document.getElementById('formIsLocked').checked;
+  const isFeatured = document.getElementById('formIsFeatured').checked;
+
+  if (!title) {
+    alert('Please enter a video title.');
+    return;
+  }
+
+  const videoFile = document.getElementById('formVideoFile').files[0];
+  const thumbFile = document.getElementById('formThumbFile').files[0];
+
+  if (videoFile) {
+    const storageRef = storage.ref(`videos/${Date.now()}_${videoFile.name}`);
+    const snapshot = await storageRef.put(videoFile);
+    videoUrl = await snapshot.ref.getDownloadURL();
+  }
+
+  if (thumbFile) {
+    const storageRef = storage.ref(`thumbnails/${Date.now()}_${thumbFile.name}`);
+    const snapshot = await storageRef.put(thumbFile);
+    thumbnailUrl = await snapshot.ref.getDownloadURL();
+  }
+
+  const videoPayload = {
+    title,
+    category,
+    videoUrl: videoUrl || 'https://www.w3schools.com/html/mov_bbb.mp4',
+    thumbnailUrl: thumbnailUrl || 'https://via.placeholder.com/640x360',
+    description,
+    isLocked,
+    isFeatured,
+    duration: '03:45',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (id) {
+    db.collection('videos').doc(id).update(videoPayload).then(() => {
+      closeVideoModal();
+    });
+  } else {
+    videoPayload.views = 0;
+    videoPayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    db.collection('videos').add(videoPayload).then(() => {
+      closeVideoModal();
+    });
+  }
+}
+
+function deleteVideo(videoId) {
+  if (!currentUser.isAdmin) return;
+  if (confirm('Are you sure you want to delete this video?')) {
+    db.collection('videos').doc(videoId).delete();
+  }
+}
+
+function renderAdminVideos() {
+  const list = document.getElementById('adminVideoList');
+  if (allVideos.length === 0) {
+    list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No videos uploaded yet.</p>`;
+    return;
+  }
+  list.innerHTML = allVideos.map(v => `
+    <div class="glass-panel p-3 rounded-2xl flex items-center justify-between space-x-3">
+      <img src="${v.thumbnailUrl}" class="w-12 h-12 object-cover rounded-xl shrink-0">
+      <div class="flex-1 min-w-0">
+        <h4 class="font-bold text-xs text-slate-100 truncate">${v.title}</h4>
+        <p class="text-[10px] text-slate-400">Views: ${v.views || 0} | ${v.isLocked ? 'Locked' : 'Free'}</p>
+      </div>
+      <div class="flex items-center space-x-1 shrink-0">
+        <button onclick="openVideoModal('${v.id}')" class="p-2 bg-slate-800 text-blue-400 rounded-lg hover:bg-slate-700 text-xs"><i class="fa-solid fa-pen"></i></button>
+        <button onclick="deleteVideo('${v.id}')" class="p-2 bg-slate-800 text-rose-400 rounded-lg hover:bg-slate-700 text-xs"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateAdminStats() {
+  if (!currentUser.isAdmin) return;
+  document.getElementById('adminTotalVideos').innerText = allVideos.length;
+  const totalViews = allVideos.reduce((acc, v) => acc + (v.views || 0), 0);
+  document.getElementById('adminTotalViews').innerText = totalViews;
+  db.collection('users').get().then(s => {
+    document.getElementById('adminTotalUsers').innerText = s.size;
+  }).catch(() => {});
+  db.collection('unlocks').get().then(s => {
+    document.getElementById('adminTotalUnlocks').innerText = s.size;
+  }).catch(() => {});
+}
+
+function formatTimeAgo(timestamp) {
+  if (!timestamp) return 'Just now';
+  const millis = timestamp.toMillis ? timestamp.toMillis() : Date.now();
+  const seconds = Math.floor((Date.now() - millis) / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+</script>
 </body>
 </html>
