@@ -127,6 +127,11 @@ body{padding-bottom:100px}
 .thumb-prev{width:100%;aspect-ratio:16/9;border:2px dashed var(--border);border-radius:12px;margin-top:5px;display:grid;place-items:center;overflow:hidden}
 .thumb-prev img{width:100%;height:100%;object-fit:cover}
 
+/* ADMIN LIST ITEMS */
+.admin-list-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);padding:10px 12px;border-radius:12px;margin-bottom:8px}
+.admin-list-info{display:flex;align-items:center;gap:10px;overflow:hidden}
+.admin-list-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;background:#000}
+
 /* NAV */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(11,13,23,0.9);backdrop-filter:blur(15px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 5px calc(10px + env(safe-area-inset-bottom));z-index:150}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:10px;font-weight:600;flex:1;background:none;border:none}
@@ -236,10 +241,11 @@ body{padding-bottom:100px}
   <h3 class="page-title">🛠 অ্যাডমিন প্যানেল</h3>
   <div class="cat-tabs" style="padding:0;margin-bottom:15px">
     <button class="tab active" onclick="switchAdminSubView('dash', this)">ড্যাশবোর্ড</button>
-    <button class="tab" onclick="switchAdminSubView('vids', this)">ভিডিও</button>
-    <button class="tab" onclick="switchAdminSubView('cats', this)">ক্যাটাগরি</button>
+    <button class="tab" onclick="switchAdminSubView('vids', this)">ভিডিও ম্যানেজ</button>
+    <button class="tab" onclick="switchAdminSubView('cats', this)">ক্যাটাগরি ম্যানেজ</button>
     <button class="tab" onclick="switchAdminSubView('settings', this)">সেটিংস</button>
   </div>
+  
   <div id="admin-dash" class="admin-subview">
     <div class="grid" style="grid-template-columns:1fr 1fr">
       <div class="admin-card"><div style="font-size:10px;color:var(--muted)">মোট ভিডিও</div><h3 id="ad-stat-v">0</h3></div>
@@ -248,6 +254,7 @@ body{padding-bottom:100px}
       <div class="admin-card"><div style="font-size:10px;color:var(--muted)">অ্যাড ভিউ</div><h3 id="ad-stat-av">0</h3></div>
     </div>
   </div>
+
   <div id="admin-vids" class="admin-subview hidden">
     <div class="admin-card">
       <h4>➕ নতুন ভিডিও যোগ করুন</h4>
@@ -273,8 +280,11 @@ body{padding-bottom:100px}
       <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1" min="1"></div>
       <button class="btn btn-p" onclick="saveVideo()">সেভ ভিডিও</button>
     </div>
+
+    <h4 style="margin:15px 0 10px">সকল ভিডিও তালিকা ও ডিলিট</h4>
     <div id="admin-vid-list"></div>
   </div>
+
   <div id="admin-cats" class="admin-subview hidden">
     <div class="admin-card">
       <h4>➕ নতুন ক্যাটাগরি</h4>
@@ -282,8 +292,11 @@ body{padding-bottom:100px}
       <div class="form-group"><label>ইমোজি/আইকন</label><input type="text" id="ac-icon" placeholder="🔥"></div>
       <button class="btn btn-p" onclick="saveCategory()">সেভ ক্যাটাগরি</button>
     </div>
+
+    <h4 style="margin:15px 0 10px">সকল ক্যাটাগরি তালিকা ও ডিলিট</h4>
     <div id="admin-cat-list"></div>
   </div>
+
   <div id="admin-settings" class="admin-subview hidden">
     <div class="admin-card">
       <h4>Data Management</h4>
@@ -349,7 +362,6 @@ const ADMIN_ID = 7904568371;
 const DB_NAME = "VidUnlockDB_V2";
 const STORE_KEY = "VidUnlock_Core_State";
 
-// Supabase Configuration
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
 
@@ -415,10 +427,9 @@ async function initApp() {
   tg.expand();
   await initDB();
   
-  // Load from Supabase or fallback to LocalStorage
   try {
     const { data: dbVids, error } = await supabaseClient.from('videos').select('*');
-    if (!error && dbVids && dbVids.length > 0) {
+    if (!error && dbVids) {
       state.videos = dbVids;
     } else {
       const saved = localStorage.getItem(STORE_KEY);
@@ -427,7 +438,6 @@ async function initApp() {
     
     const { data: dbCats, error: catErr } = await supabaseClient.from('categories').select('*');
     if (!catErr && dbCats && dbCats.length > 0) {
-      // Merge categories preserving default 'all'
       state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨', order: 0 }, ...dbCats.filter(c => c.id !== 'cat_all')];
     }
   } catch (err) {
@@ -627,12 +637,23 @@ function handleAdSuccess(vidId) {
 }
 
 function watchExternal(link) {
-  if (tg.openLink) tg.openLink(link);
-  else window.open(link, '_blank');
+  if (!link) return;
+  
+  // লিংকে যদি http:// বা https:// না থাকে, তবে তা স্বয়ংক্রিয়ভাবে যুক্ত করে নেবে (404 Error Fix)
+  let finalLink = link;
+  if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
+    finalLink = 'https://' + finalLink;
+  }
+  
+  if (tg.openLink) {
+    tg.openLink(finalLink);
+  } else {
+    window.open(finalLink, '_blank');
+  }
 }
 
 /* =======================================================
-   6. ADMIN ACTIONS & SUPABASE UPLOAD
+   6. ADMIN ACTIONS (ADD & DELETE)
    ======================================================= */
 async function saveVideo() {
   const title = document.getElementById('av-title').value;
@@ -663,12 +684,10 @@ async function saveVideo() {
     await saveFile(vidData.fileId, videoFile);
   }
 
-  // Save to Supabase DB
   try {
     const { error } = await supabaseClient.from('videos').insert([vidData]);
     if (error) {
-      console.error("Supabase insert error:", error);
-      showToast("क्लाউডে সেভ করতে সমস্যা হয়েছে", "danger");
+      showToast("ক্লাউডে সেভ করতে সমস্যা হয়েছে", "danger");
       return;
     }
   } catch (err) {
@@ -679,6 +698,27 @@ async function saveVideo() {
   saveState();
   renderAll();
   showToast("ভিডিও সফলভাবে সেভ হয়েছে! ✅", "success");
+  document.getElementById('av-title').value = '';
+  document.getElementById('av-link').value = '';
+}
+
+async function deleteVideo(id) {
+  if (!confirm("আপনি কি এই ভিডিওটি ডিলিট করতে চান?")) return;
+
+  try {
+    const { error } = await supabaseClient.from('videos').delete().eq('id', id);
+    if (error) {
+      showToast("ক্লাউড থেকে ডিলিট করতে সমস্যা হয়েছে", "danger");
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  state.videos = state.videos.filter(v => v.id !== id);
+  saveState();
+  renderAll();
+  showToast("ভিডিও ডিলিট করা হয়েছে! 🗑️", "success");
 }
 
 async function saveCategory() {
@@ -702,7 +742,33 @@ async function saveCategory() {
   state.categories.push(newCat);
   saveState();
   renderCategories();
+  renderAdmin();
   showToast("ক্যাটাগরি সেভ হয়েছে! ✅", "success");
+  document.getElementById('ac-name').value = '';
+  document.getElementById('ac-icon').value = '';
+}
+
+async function deleteCategory(id) {
+  if (id === 'cat_all' || id === 'cat_viral') {
+    return showToast("এই ডিফল্ট ক্যাটাগরি ডিলিট করা যাবে না!", "warning");
+  }
+  if (!confirm("এই ক্যাটাগরি ডিলিট করতে চান?")) return;
+
+  try {
+    const { error } = await supabaseClient.from('categories').delete().eq('id', id);
+    if (error) {
+      showToast("ক্লাউড থেকে ক্যাটাগরি ডিলিট করতে সমস্যা হয়েছে", "danger");
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  state.categories = state.categories.filter(c => c.id !== id);
+  saveState();
+  renderCategories();
+  renderAdmin();
+  showToast("ক্যাটাগরি ডিলিট হয়েছে! 🗑️", "success");
 }
 
 function renderAdmin() {
@@ -711,6 +777,29 @@ function renderAdmin() {
   document.getElementById('ad-stat-c').textContent = state.categories.length;
   document.getElementById('ad-stat-u').textContent = Object.keys(state.users).length;
   document.getElementById('ad-stat-av').textContent = state.adViews;
+
+  const vidListCont = document.getElementById('admin-vid-list');
+  if (vidListCont) {
+    vidListCont.innerHTML = state.videos.length ? state.videos.map(v => `
+      <div class="admin-list-item">
+        <div class="admin-list-info">
+          <img src="${v.thumb}" class="admin-list-thumb">
+          <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">${v.title}</div>
+        </div>
+        <button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteVideo('${v.id}')">ডিলিট</button>
+      </div>
+    `).join('') : '<div class="empty-state">কোনো ভিডিও নেই</div>';
+  }
+
+  const catListCont = document.getElementById('admin-cat-list');
+  if (catListCont) {
+    catListCont.innerHTML = state.categories.length ? state.categories.map(c => `
+      <div class="admin-list-item">
+        <div style="font-size:13px;font-weight:600">${c.icon} ${c.name}</div>
+        ${c.id !== 'cat_all' && c.id !== 'cat_viral' ? `<button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteCategory('${c.id}')">ডিলিট</button>` : '<span style="font-size:10px;color:var(--muted)">Protected</span>'}
+      </div>
+    `).join('') : '<div class="empty-state">কোনো ক্যাটাগরি নেই</div>';
+  }
 }
 
 function switchAdminSubView(id, btn) {
