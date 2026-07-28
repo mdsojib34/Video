@@ -31,14 +31,8 @@
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
         }
-        /* Custom scrollbar hiding */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .glass-panel {
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
@@ -49,39 +43,10 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
-        .animate-pulse-subtle {
-            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
+        .animate-pulse-subtle { animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
 <body class="antialiased pb-20">
-
-    <!-- ==================== CONFIGURATION MODAL (Initial Setup if config missing) ==================== -->
-    <div id="configModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden">
-        <div class="glass-panel w-11/12 max-w-md p-6 rounded-2xl shadow-2xl border border-blue-500/20">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
-                    <i class="fa-solid fa-fire"></i>
-                </div>
-                <h2 class="text-xl font-bold">Firebase Configuration</h2>
-                <p class="text-xs text-slate-400 mt-1">Paste your Firebase SDK configuration below to initialize backend storage & sync.</p>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Firebase Config JSON / JS Object</label>
-                    <textarea id="firebaseConfigInput" rows="6" placeholder='{
-  "apiKey": "AIzaSy...",
-  "authDomain": "your-app.firebaseapp.com",
-  "projectId": "your-app",
-  "storageBucket": "your-app.appspot.com",
-  "messagingSenderId": "...",
-  "appId": "..."
-}' class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"></textarea>
-                </div>
-                <button onclick="saveFirebaseConfig()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold transition shadow-lg shadow-blue-600/30">Connect Firebase & Launch</button>
-            </div>
-        </div>
-    </div>
 
     <!-- ==================== TOP HEADER ==================== -->
     <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
@@ -110,7 +75,6 @@
         
         <!-- HOME TAB -->
         <section id="tab-home" class="space-y-6">
-            <!-- Banner / Featured Carousel -->
             <div id="bannerContainer" class="relative rounded-2xl overflow-hidden glass-panel h-48 flex items-end p-5 shadow-xl border border-slate-700/50">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent z-10"></div>
                 <img id="bannerImage" src="" alt="Banner" class="absolute inset-0 w-full h-full object-cover opacity-60">
@@ -124,18 +88,15 @@
                 </div>
             </div>
 
-            <!-- Categories Slider -->
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="font-bold text-sm text-slate-200 tracking-wide">Categories</h3>
                 </div>
                 <div id="categoriesSlider" class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
                     <button onclick="filterCategory('All')" class="category-chip px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-md transition">All</button>
-                    <!-- Dynamically populated categories -->
                 </div>
             </div>
 
-            <!-- Video Feeds / Grid -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 id="videoFeedTitle" class="font-bold text-sm text-slate-200 tracking-wide">Trending Videos</h3>
@@ -147,7 +108,6 @@
                 </div>
 
                 <div id="videoGrid" class="grid grid-cols-2 gap-3.5">
-                    <!-- Video cards populated in real-time -->
                     <div class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center h-44 animate-pulse-subtle col-span-2">
                         <i class="fa-solid fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
                         <p class="text-xs text-slate-400">Syncing with Firebase...</p>
@@ -162,9 +122,7 @@
                 <h3 class="font-bold text-base text-slate-100">My Favorites</h3>
                 <span id="favoritesCount" class="text-xs text-slate-400 font-medium">0 videos</span>
             </div>
-            <div id="favoritesGrid" class="grid grid-cols-2 gap-3.5">
-                <!-- Populated via JS -->
-            </div>
+            <div id="favoritesGrid" class="grid grid-cols-2 gap-3.5"></div>
         </section>
 
         <!-- HISTORY TAB -->
@@ -173,9 +131,7 @@
                 <h3 class="font-bold text-base text-slate-100">Watch History</h3>
                 <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">Clear History</button>
             </div>
-            <div id="historyGrid" class="grid grid-cols-2 gap-3.5">
-                <!-- Populated via JS -->
-            </div>
+            <div id="historyGrid" class="grid grid-cols-2 gap-3.5"></div>
         </section>
 
         <!-- PROFILE TAB -->
@@ -235,7 +191,6 @@
                 </button>
             </div>
 
-            <!-- Statistics Grid -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="glass-panel p-4 rounded-2xl border border-slate-700/50">
                     <div class="text-blue-400 text-xs font-semibold mb-1"><i class="fa-solid fa-video mr-1.5"></i> Total Videos</div>
@@ -255,12 +210,9 @@
                 </div>
             </div>
 
-            <!-- Manage Videos List -->
             <div class="space-y-3">
                 <h3 class="font-bold text-sm text-slate-200">Manage Platform Videos</h3>
-                <div id="adminVideoList" class="space-y-2">
-                    <!-- Populated via JS -->
-                </div>
+                <div id="adminVideoList" class="space-y-2"></div>
             </div>
         </section>
 
@@ -304,9 +256,7 @@
         </div>
 
         <div class="w-full bg-black relative aspect-video flex items-center justify-center">
-            <!-- Video Element -->
             <video id="activeVideoElement" controls class="w-full h-full object-contain" poster=""></video>
-            <!-- Lock Overlay for Premium/Locked Videos -->
             <div id="videoLockOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center hidden z-10">
                 <div class="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mb-3 text-2xl shadow-xl shadow-amber-500/10">
                     <i class="fa-solid fa-lock"></i>
@@ -330,25 +280,20 @@
                 <p id="playerDescription" class="text-xs text-slate-400 mt-2 leading-relaxed">Video description goes here...</p>
             </div>
 
-            <!-- Comments Section -->
             <div class="space-y-3 pt-4 border-t border-slate-800">
                 <div class="flex items-center justify-between">
                     <h4 class="font-bold text-sm text-slate-200">Comments (<span id="commentCount">0</span>)</h4>
                 </div>
-                <!-- Comment Input -->
                 <div class="flex space-x-2">
                     <input id="commentInput" type="text" placeholder="Add a public comment..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
                     <button onclick="postComment()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-md">Post</button>
                 </div>
-                <!-- Comments List -->
-                <div id="commentsList" class="space-y-2.5 pt-2">
-                    <!-- Populated via real-time listener -->
-                </div>
+                <div id="commentsList" class="space-y-2.5 pt-2"></div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== ADMIN VIDEO UPLOAD / EDIT MODAL ==================== -->
+    <!-- ==================== ADMIN VIDEO MODAL ==================== -->
     <div id="videoModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center hidden p-4">
         <div class="glass-panel w-full max-w-md p-6 rounded-3xl space-y-4 max-h-[90vh] overflow-y-auto border border-slate-700/50 shadow-2xl">
             <div class="flex items-center justify-between">
@@ -403,12 +348,10 @@
             </div>
             <button onclick="closeSearchModal()" class="text-xs font-bold text-slate-400 hover:text-white px-2">Cancel</button>
         </div>
-        <div id="searchResultsGrid" class="grid grid-cols-2 gap-3 overflow-y-auto flex-1">
-            <!-- Search results populated here -->
-        </div>
+        <div id="searchResultsGrid" class="grid grid-cols-2 gap-3 overflow-y-auto flex-1"></div>
     </div>
 
-    <!-- ==================== REWARDED ADVERTISEMENT SIMULATOR MODAL ==================== -->
+    <!-- ==================== REWARDED AD MODAL ==================== -->
     <div id="rewardAdModal" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 hidden text-center">
         <div class="w-20 h-20 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center mb-4 text-3xl animate-bounce">
             <i class="fa-solid fa-rectangle-ad"></i>
@@ -429,12 +372,20 @@
 
     <!-- ==================== APPLICATION SCRIPT ==================== -->
     <script>
-        /* -------------------------------------------------------------
-         * GLOBAL STATE & INITIALIZATION
-         * ------------------------------------------------------------- */
+        const firebaseConfig = {
+            apiKey: "AIzaSyD02il4iKbRsYv45KGPGr8PQplF5wawgls",
+            authDomain: "telegram-bot-80f03.firebaseapp.com",
+            databaseURL: "https://telegram-bot-80f03-default-rtdb.firebaseio.com",
+            projectId: "telegram-bot-80f03",
+            storageBucket: "telegram-bot-80f03.firebasestorage.app",
+            messagingSenderId: "735419091756",
+            appId: "1:735419091756:web:4b8224b4d323d71c9e7a89",
+            measurementId: "G-V1E9LZSF0W"
+        };
+
         let db, auth, storage;
         let currentUser = {
-            uid: 'guest_' + Math.random().toString(36.substring(2, 9)),
+            uid: 'guest_' + Math.random().toString(36).substring(2, 9),
             displayName: 'Telegram User',
             photoURL: '',
             isAdmin: false
@@ -447,7 +398,6 @@
         let currentSort = 'trending';
         let adCountdownInterval = null;
 
-        // Telegram WebApp Initialization
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.expand();
@@ -459,34 +409,10 @@
             }
         }
 
-        // Check Firebase Config stored in localStorage or prompt
         window.addEventListener('DOMContentLoaded', () => {
-            const savedConfig = localStorage.getItem('firebase_config_tma');
-            if (savedConfig) {
-                try {
-                    const configObj = JSON.parse(savedConfig);
-                    initFirebase(configObj);
-                } catch (e) {
-                    document.getElementById('configModal').classList.remove('hidden');
-                }
-            } else {
-                document.getElementById('configModal').classList.remove('hidden');
-            }
+            initFirebase(firebaseConfig);
             updateUserProfileUI();
         });
-
-        function saveFirebaseConfig() {
-            const inputVal = document.getElementById('firebaseConfigInput').value.trim();
-            try {
-                // Ensure valid JSON object
-                const parsed = JSON.parse(inputVal);
-                localStorage.setItem('firebase_config_tma', JSON.stringify(parsed));
-                document.getElementById('configModal').classList.add('hidden');
-                initFirebase(parsed);
-            } catch (err) {
-                alert('Invalid JSON configuration object. Please check your syntax.');
-            }
-        }
 
         function initFirebase(config) {
             if (!firebase.apps.length) {
@@ -496,7 +422,6 @@
             auth = firebase.auth();
             storage = firebase.storage();
 
-            // Authenticate anonymously or custom
             auth.signInAnonymously().then((userCredential) => {
                 const firebaseUser = userCredential.user;
                 currentUser.uid = tg && tg.initDataUnsafe?.user?.id ? 'tg_' + tg.initDataUnsafe.user.id : firebaseUser.uid;
@@ -508,19 +433,13 @@
             });
         }
 
-        /* -------------------------------------------------------------
-         * USER & ADMIN SYNC
-         * ------------------------------------------------------------- */
         function checkAdminPermissions() {
-            // Hardcoded or fetched admin list check. E.g., first user or specific UID
-            // For production safety, sync with 'settings/admin' or user doc
             db.collection('settings').doc('adminConfig').get().then(doc => {
                 if (doc.exists && doc.data().adminUid === currentUser.uid) {
                     currentUser.isAdmin = true;
                     document.getElementById('adminNavBtn').classList.remove('hidden');
                     document.getElementById('userRoleDisplay').innerText = 'Administrator';
                 } else {
-                    // Default make first connected user admin if none exists
                     db.collection('users').doc(currentUser.uid).get().then(userDoc => {
                         if (!userDoc.exists) {
                             db.collection('users').doc(currentUser.uid).set({
@@ -560,11 +479,7 @@
             }
         }
 
-        /* -------------------------------------------------------------
-         * REAL-TIME FIRESTORE SYNC (VIDEOS, COMMENTS, ETC.)
-         * ------------------------------------------------------------- */
         function startRealtimeListeners() {
-            // Videos Real-time Listener
             db.collection('videos').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
                 allVideos = [];
                 snapshot.forEach(doc => {
@@ -578,7 +493,6 @@
                 console.error("Videos Sync Error:", err);
             });
 
-            // Categories Real-time Listener
             db.collection('categories').onSnapshot(snapshot => {
                 const customCats = ['All'];
                 snapshot.forEach(doc => {
@@ -593,9 +507,6 @@
             });
         }
 
-        /* -------------------------------------------------------------
-         * RENDER FUNCTIONS & UI CONTROLS
-         * ------------------------------------------------------------- */
         function switchTab(tabId) {
             ['home', 'favorites', 'history', 'profile', 'admin'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
@@ -651,7 +562,6 @@
             } else if (currentSort === 'popular') {
                 filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
             } else {
-                // Trending algorithm blend of views & recency
                 filtered.sort((a, b) => ((b.views || 0) * 2 + (b.createdAt?.toMillis?.() || 0)) - ((a.views || 0) * 2 + (a.createdAt?.toMillis?.() || 0)));
             }
 
@@ -692,9 +602,6 @@
             if (window.currentFeaturedId) openPlayer(window.currentFeaturedId);
         }
 
-        /* -------------------------------------------------------------
-         * VIDEO PLAYER & UNLOCK SYSTEM (REWARDED AD INTEGRATION)
-         * ------------------------------------------------------------- */
         let currentOpenVideoId = null;
         let unsubscribeComments = null;
 
@@ -714,7 +621,6 @@
             videoEl.poster = video.thumbnailUrl || '';
             videoEl.src = video.videoUrl || '';
 
-            // Check if locked and if user already unlocked
             if (video.isLocked) {
                 db.collection('unlocks').doc(`${currentUser.uid}_${videoId}`).get().then(doc => {
                     if (doc.exists) {
@@ -730,12 +636,10 @@
                 videoEl.play().catch(() => {});
             }
 
-            // Increment views count atomically
             db.collection('videos').doc(videoId).update({
                 views: firebase.firestore.FieldValue.increment(1)
             }).catch(() => {});
 
-            // Add to history
             addToHistory(video);
             checkPlayerFavoriteStatus();
             loadComments(videoId);
@@ -751,7 +655,6 @@
             if (unsubscribeComments) unsubscribeComments();
         }
 
-        // Rewarded Advertisement Flow (Monetag / Adsterra / Custom Simulator)
         function startRewardedAdFlow() {
             document.getElementById('rewardAdModal').classList.remove('hidden');
             let timeLeft = 5;
@@ -761,7 +664,7 @@
             adCountdownInterval = setInterval(() => {
                 timeLeft--;
                 document.getElementById('adTimerDisplay').innerText = `${timeLeft}s`;
-                document.getElementById('adProgressBar.style.width'] = `${(timeLeft / 5) * 100}%`;
+                document.getElementById('adProgressBar').style.width = `${(timeLeft / 5) * 100}%`;
 
                 if (timeLeft <= 0) {
                     clearInterval(adCountdownInterval);
@@ -780,7 +683,6 @@
             document.getElementById('rewardAdModal').classList.add('hidden');
             if (!currentOpenVideoId) return;
 
-            // Save unlock state in Firestore
             db.collection('unlocks').doc(`${currentUser.uid}_${currentOpenVideoId}`).set({
                 userId: currentUser.uid,
                 videoId: currentOpenVideoId,
@@ -790,16 +692,12 @@
                 const videoEl = document.getElementById('activeVideoElement');
                 videoEl.play().catch(() => {});
                 
-                // Update global unlock stats
                 db.collection('settings').doc('platformStats').set({
                     totalUnlocks: firebase.firestore.FieldValue.increment(1)
                 }, { merge: true }).catch(() => {});
             });
         }
 
-        /* -------------------------------------------------------------
-         * COMMENTS SYSTEM (REAL-TIME FIRESTORE)
-         * ------------------------------------------------------------- */
         function loadComments(videoId) {
             if (unsubscribeComments) unsubscribeComments();
 
@@ -859,9 +757,6 @@
             db.collection('videos').doc(videoId).collection('comments').doc(commentId).delete();
         }
 
-        /* -------------------------------------------------------------
-         * FAVORITES & HISTORY MANAGEMENT
-         * ------------------------------------------------------------- */
         function togglePlayerFavorite() {
             if (!activeVideo) return;
             const favRef = db.collection('favorites').doc(`${currentUser.uid}_${activeVideo.id}`);
@@ -973,9 +868,6 @@
             });
         }
 
-        /* -------------------------------------------------------------
-         * SEARCH SYSTEM
-         * ------------------------------------------------------------- */
         function openSearchModal() { document.getElementById('searchModal').classList.remove('hidden'); document.getElementById('searchInputField').focus(); }
         function closeSearchModal() { document.getElementById('searchModal').classList.add('hidden'); }
 
@@ -998,9 +890,6 @@
             `).join('');
         }
 
-        /* -------------------------------------------------------------
-         * ADMIN DASHBOARD & CRUD OPERATIONS
-         * ------------------------------------------------------------- */
         function openVideoModal(videoId = null) {
             document.getElementById('videoModal').classList.remove('hidden');
             if (videoId) {
@@ -1043,7 +932,6 @@
 
             if (!title) { alert('Please enter a video title.'); return; }
 
-            // Handle File uploads via Firebase Storage if files selected
             const videoFile = document.getElementById('formVideoFile').files[0];
             const thumbFile = document.getElementById('formThumbFile').files[0];
 
@@ -1124,9 +1012,6 @@
             });
         }
 
-        /* -------------------------------------------------------------
-         * UTILS
-         * ------------------------------------------------------------- */
         function formatTimeAgo(timestamp) {
             if (!timestamp) return 'Just now';
             const millis = timestamp.toMillis ? timestamp.toMillis() : Date.now();
