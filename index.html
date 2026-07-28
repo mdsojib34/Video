@@ -8,6 +8,8 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- Advertisement SDK -->
 <script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 /* =========================================================
@@ -341,11 +343,17 @@ body{padding-bottom:100px}
 
 <script>
 /* =======================================================
-   1. CORE STATE & CONFIG
+   1. CORE STATE & CONFIG & SUPABASE
    ======================================================= */
 const ADMIN_ID = 7904568371;
 const DB_NAME = "VidUnlockDB_V2";
 const STORE_KEY = "VidUnlock_Core_State";
+
+// Supabase Configuration
+const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let state = {
   version: 3,
@@ -400,15 +408,33 @@ async function getFile(id) {
 }
 
 /* =======================================================
-   3. APP INITIALIZATION
+   3. APP INITIALIZATION & SUPABASE SYNC
    ======================================================= */
 async function initApp() {
   tg.ready();
   tg.expand();
   await initDB();
   
-  const saved = localStorage.getItem(STORE_KEY);
-  if (saved) state = { ...state, ...JSON.parse(saved) };
+  // Load from Supabase or fallback to LocalStorage
+  try {
+    const { data: dbVids, error } = await supabaseClient.from('videos').select('*');
+    if (!error && dbVids && dbVids.length > 0) {
+      state.videos = dbVids;
+    } else {
+      const saved = localStorage.getItem(STORE_KEY);
+      if (saved) state = { ...state, ...JSON.parse(saved) };
+    }
+    
+    const { data: dbCats, error: catErr } = await supabaseClient.from('categories').select('*');
+    if (!catErr && dbCats && dbCats.length > 0) {
+      // Merge categories preserving default 'all'
+      state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨', order: 0 }, ...dbCats.filter(c => c.id !== 'cat_all')];
+    }
+  } catch (err) {
+    console.error("Supabase sync failed, using local storage", err);
+    const saved = localStorage.getItem(STORE_KEY);
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  }
 
   if (Number(user.id) === ADMIN_ID) {
     document.getElementById('nav-admin').classList.remove('hidden');
@@ -437,12 +463,13 @@ function renderCategories() {
   `).join('');
   
   const select = document.getElementById('av-cat');
-  if(select) select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  if(select) select.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
 function createVideoCard(v) {
   const isUnlocked = state.unlocked[v.id];
   const isFav = state.favorites[v.id];
+  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
   return `
     <div class="card" onclick="openDetail('${v.id}')">
       <div class="card-thumb">
@@ -453,10 +480,10 @@ function createVideoCard(v) {
         <div class="card-play"><div class="play-btn-circle">▶</div></div>
       </div>
       <div class="card-body">
-        <div class="card-cat">${state.categories.find(c=>c.id===v.categoryId)?.name || ''}</div>
+        <div class="card-cat">${state.categories.find(c=>c.id===v.category_id || c.id===v.categoryId)?.name || ''}</div>
         <div class="card-title">${v.title}</div>
         <div class="card-footer">
-          <span>👁 ${Object.keys(v.views || {}).length} ভিউ</span>
+          <span>👁 ${viewsCount} ভিউ</span>
           <span>${isFav ? '❤️' : '🤍'}</span>
         </div>
       </div>
@@ -475,7 +502,7 @@ function renderAll() {
 function renderHome() {
   const grid = document.getElementById('main-grid');
   let vids = state.videos;
-  if (currentCat !== 'cat_all') vids = vids.filter(v => v.categoryId === currentCat);
+  if (currentCat !== 'cat_all') vids = vids.filter(v => (v.category_id === currentCat || v.categoryId === currentCat));
   grid.innerHTML = vids.map(createVideoCard).join('');
 }
 
@@ -492,7 +519,7 @@ function renderUnlocked() {
 }
 
 /* =======================================================
-   5. VIDEO ACTIONS & AD SYSTEM (FIXED)
+   5. VIDEO ACTIONS & AD SYSTEM
    ======================================================= */
 let currentActiveVid = null;
 
@@ -512,11 +539,12 @@ async function openDetail(id) {
 async function updateDetailUI(v) {
   const isUnlocked = state.unlocked[v.id];
   const prog = state.progress[v.id] || 0;
-  const req = v.requiredAds || 1;
+  const req = v.required_ads || v.requiredAds || 1;
   const pct = Math.floor((prog/req)*100);
 
   document.getElementById('md-title').textContent = v.title;
-  document.getElementById('md-views').textContent = Object.keys(v.views).length + " Views";
+  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
+  document.getElementById('md-views').textContent = viewsCount + " Views";
   document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
 
@@ -561,12 +589,8 @@ async function watchAd() {
   btn.textContent = "⏳ লোড হচ্ছে...";
 
   try {
-    // Calling SDK and waiting for completion
     await show_11404425(); 
-    
-    // If we reach here, it means Ad was closed/completed
     handleAdSuccess(v.id);
-    
   } catch (err) {
     console.error("Ad failed:", err);
     showToast("Ad display failed. Try again.", "danger");
@@ -575,7 +599,8 @@ async function watchAd() {
     if (btn) {
       btn.disabled = false;
       const prog = state.progress[v.id] || 0;
-      btn.textContent = `📺 WATCH AD TO UNLOCK (${prog}/${v.requiredAds})`;
+      const req = v.required_ads || v.requiredAds || 1;
+      btn.textContent = `📺 WATCH AD TO UNLOCK (${prog}/${req})`;
     }
   }
 }
@@ -584,20 +609,21 @@ function handleAdSuccess(vidId) {
   const v = state.videos.find(x => x.id === vidId);
   if(!v) return;
 
+  const req = v.required_ads || v.requiredAds || 1;
   state.progress[vidId] = (state.progress[vidId] || 0) + 1;
   state.adViews++;
 
-  if (state.progress[vidId] >= v.requiredAds) {
+  if (state.progress[vidId] >= req) {
     state.unlocked[vidId] = true;
     delete state.progress[vidId];
     showToast("অভিনন্দন! ভিডিওটি আনলক হয়েছে। 🎉", "success");
   } else {
-    showToast(`অ্যাড দেখা সফল! বাকি: ${v.requiredAds - state.progress[vidId]}`, "info");
+    showToast(`অ্যাড দেখা সফল! বাকি: ${req - state.progress[vidId]}`, "info");
   }
   
   saveState();
-  renderAll(); // Updates background grids
-  updateDetailUI(v); // Updates current modal UI immediately
+  renderAll();
+  updateDetailUI(v);
 }
 
 function watchExternal(link) {
@@ -606,9 +632,9 @@ function watchExternal(link) {
 }
 
 /* =======================================================
-   6. ADMIN ACTIONS
+   6. ADMIN ACTIONS & SUPABASE UPLOAD
    ======================================================= */
-function saveVideo() {
+async function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
   const source = document.getElementById('av-source').value;
@@ -620,17 +646,63 @@ function saveVideo() {
   if (!title) return showToast("শিরোনাম দিন");
 
   const vidId = 'v' + Date.now();
-  const vidData = { id: vidId, title, categoryId: catId, source, link, requiredAds: ads, thumb: thumbBase64, views: {}, serial: state.videos.length + 1 };
+  const vidData = { 
+    id: vidId, 
+    title, 
+    category_id: catId, 
+    source, 
+    link, 
+    required_ads: ads, 
+    thumb: thumbBase64 || '', 
+    serial: state.videos.length + 1,
+    views: {}
+  };
 
   if (source === 'file' && videoFile) {
     vidData.fileId = 'file_' + vidId;
-    saveFile(vidData.fileId, videoFile);
+    await saveFile(vidData.fileId, videoFile);
+  }
+
+  // Save to Supabase DB
+  try {
+    const { error } = await supabaseClient.from('videos').insert([vidData]);
+    if (error) {
+      console.error("Supabase insert error:", error);
+      showToast("क्लाউডে সেভ করতে সমস্যা হয়েছে", "danger");
+      return;
+    }
+  } catch (err) {
+    console.error("Network error:", err);
   }
 
   state.videos.push(vidData);
   saveState();
   renderAll();
-  showToast("ভিডিও সেভ হয়েছে");
+  showToast("ভিডিও সফলভাবে সেভ হয়েছে! ✅", "success");
+}
+
+async function saveCategory() {
+  const name = document.getElementById('ac-name').value;
+  const icon = document.getElementById('ac-icon').value || '📁';
+  if (!name) return showToast("ক্যাটাগরির নাম দিন");
+
+  const catId = 'cat_' + Date.now();
+  const newCat = { id: catId, name, icon, order: state.categories.length };
+
+  try {
+    const { error } = await supabaseClient.from('categories').insert([newCat]);
+    if (error) {
+      showToast("ক্যাটাগরি সেভ করতে সমস্যা হয়েছে", "danger");
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  state.categories.push(newCat);
+  saveState();
+  renderCategories();
+  showToast("ক্যাটাগরি সেভ হয়েছে! ✅", "success");
 }
 
 function renderAdmin() {
