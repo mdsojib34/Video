@@ -273,7 +273,7 @@ body{padding-bottom:100px}
 
   <div id="admin-vids" class="admin-subview hidden">
     <div class="admin-card">
-      <h4>➕ নতুন ভিডিও যোগ করুন (গ্যালারি থেকে)</h4>
+      <h4>➕ নতুন ভিডিও আপলোড করুন (ক্লাউডে)</h4>
       <div class="form-group"><label>শিরোনাম</label><input type="text" id="av-title"></div>
       <div class="form-group"><label>ক্যাটাগরি</label><select id="av-cat"></select></div>
       <div class="form-group">
@@ -282,11 +282,11 @@ body{padding-bottom:100px}
         <div class="thumb-prev" id="av-thumb-prev"><span>Preview</span></div>
       </div>
       <div class="form-group">
-        <label>📁 ভিডিও ফাইল (গ্যালারি থেকে সিলেক্ট করুন)</label>
+        <label>📁 ভিডিও ফাইল সিলেক্ট করুন</label>
         <input type="file" id="av-file" accept="video/*">
       </div>
       <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1" min="1"></div>
-      <button class="btn btn-p" onclick="saveVideo()">সেভ ভিডিও</button>
+      <button class="btn btn-p" onclick="saveVideo()" id="upload-btn">ক্লাউডে আপলোড ও সেভ করুন</button>
     </div>
 
     <h4 style="margin:15px 0 10px">সকল ভিডিও তালিকা ও ডিলিট</h4>
@@ -384,8 +384,7 @@ body{padding-bottom:100px}
    1. CORE STATE, CONFIG & TRANSLATIONS
    ======================================================= */
 const ADMIN_ID = 7904568371;
-const DB_NAME = "VidUnlockDB_V3";
-const STORE_KEY = "VidUnlock_Core_State_V3";
+const STORE_KEY = "VidUnlock_Core_State_V5";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
@@ -458,7 +457,7 @@ const i18n = {
 };
 
 let state = {
-  version: 5,
+  version: 6,
   lang: 'bn',
   categories: [
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
@@ -482,35 +481,6 @@ let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
 let currentView = 'home';
 let currentCat = 'cat_all';
 let isAdShowing = false;
-let db = null;
-
-/* =======================================================
-   2. INDEXEDDB SETUP
-   ======================================================= */
-async function initDB() {
-  return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 3);
-    request.onupgradeneeded = (e) => {
-      let db = e.target.result;
-      if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
-    };
-    request.onsuccess = (e) => { db = e.target.result; resolve(); };
-  });
-}
-
-async function saveFile(id, blob) {
-  const tx = db.transaction('files', 'readwrite');
-  return tx.objectStore('files').put(blob, id);
-}
-
-async function getFile(id) {
-  return new Promise((resolve) => {
-    const tx = db.transaction('files', 'readonly');
-    const req = tx.objectStore('files').get(id);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => resolve(null);
-  });
-}
 
 /* =======================================================
    3. APP INITIALIZATION & SUPABASE SYNC
@@ -518,7 +488,6 @@ async function getFile(id) {
 async function initApp() {
   tg.ready();
   tg.expand();
-  await initDB();
   
   const savedLocal = localStorage.getItem(STORE_KEY);
   if (savedLocal) {
@@ -658,7 +627,6 @@ function renderUnlocked() {
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>🔓</i>No unlocked videos</div>';
 }
 
-/* VIRAL LINKS VIEW RENDER */
 function renderViralLinks() {
   const cont = document.getElementById('viral-links-list');
   const links = state.viralLinks || [];
@@ -712,7 +680,6 @@ async function updateDetailUI(v) {
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
   document.getElementById('md-views').textContent = viewsCount + " Views";
   
-  // Favorites & Reactions UI
   document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
 
@@ -723,10 +690,8 @@ async function updateDetailUI(v) {
   document.getElementById('md-react-count').textContent = state.reactions[v.id].length;
 
   const mediaCont = document.getElementById('md-media-container');
-  if (isUnlocked && v.source === 'file') {
-    const blob = await getFile(v.fileId);
-    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
-    else mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
+  if (isUnlocked && v.videoUrl) {
+    mediaCont.innerHTML = `<video src="${v.videoUrl}" controls style="width:100%;height:100%"></video>`;
   } else {
     mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
   }
@@ -736,7 +701,7 @@ async function updateDetailUI(v) {
     actionArea.innerHTML = `
       <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
         <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
-        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">উপরের প্লেয়ারে ভিডিও প্লে করুন।</p>`}
+        <p style="font-size:12px;color:var(--muted)">উপরের প্লেয়ারে ভিডিও প্লে করুন।</p>
       </div>`;
   } else {
     actionArea.innerHTML = `
@@ -824,7 +789,7 @@ function watchExternal(link) {
 }
 
 /* =======================================================
-   7. ADMIN ACTIONS (ADD & DELETE)
+   7. ADMIN ACTIONS (SUPABASE STORAGE UPLOAD)
    ======================================================= */
 async function saveVideo() {
   const title = document.getElementById('av-title').value;
@@ -832,40 +797,66 @@ async function saveVideo() {
   const ads = parseInt(document.getElementById('av-ads').value) || 1;
   const thumbBase64 = document.getElementById('av-thumb-prev')._data;
   const fileInput = document.getElementById('av-file');
+  const uploadBtn = document.getElementById('upload-btn');
 
   if (!title) return showToast("দয়া করে ভিডিওর শিরোনাম দিন");
-  if (!fileInput.files[0]) return showToast("দয়া করে গ্যালারি থেকে একটি ভিডিও ফাইল সিলেক্ট করুন");
+  if (!fileInput.files[0]) return showToast("দয়া করে একটি ভিডিও ফাইল সিলেক্ট করুন");
 
-  const vidId = 'v' + Date.now();
-  const fileBlob = fileInput.files[0];
-
-  // সেভ ফাইল লোকাল ডাটাবেজে (IndexedDB)
-  await saveFile(vidId, fileBlob);
-
-  const vidData = { 
-    id: vidId, 
-    title, 
-    category_id: catId, 
-    source: 'file', 
-    fileId: vidId,
-    required_ads: ads, 
-    thumb: thumbBase64 || '', 
-    views: {}
-  };
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = "ক্লাউডে আপলোড হচ্ছে... দয়া করে অপেক্ষা করুন ⏳";
 
   try {
-    await supabaseClient.from('videos').insert([vidData]);
-  } catch (err) { console.error(err); }
+    const videoFile = fileInput.files[0];
+    const fileName = `video_${Date.now()}_${Math.random().toString(36.substring(2, 7))}.${videoFile.name.split('.').pop()}`;
 
-  state.videos.push(vidData);
-  saveState();
-  renderAll();
-  showToast("ভিডিও গ্যালারি থেকে সফলভাবে আপলোড ও সেভ হয়েছে! ✅", "success");
-  
-  document.getElementById('av-title').value = '';
-  document.getElementById('av-file').value = '';
-  document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
-  document.getElementById('av-thumb-prev')._data = null;
+    // Supabase Storage-এ ভিডিও আপলোড (bucket নাম 'videos' দিতে হবে, অথবা আপনার বালতি অনুযায়ী বদলাতে পারেন)
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+      .from('videos')
+      .upload(fileName, videoFile);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    // পাবলিক ইউআরএল জেনারেট করা
+    const { data: publicUrlData } = supabaseClient.storage
+      .from('videos')
+      .getPublicUrl(fileName);
+
+    const videoPublicUrl = publicUrlData.publicUrl;
+    const vidId = 'v' + Date.now();
+
+    const vidData = { 
+      id: vidId, 
+      title, 
+      category_id: catId, 
+      source: 'file', 
+      videoUrl: videoPublicUrl,
+      required_ads: ads, 
+      thumb: thumbBase64 || '', 
+      views: {}
+    };
+
+    const { error: dbError } = await supabaseClient.from('videos').insert([vidData]);
+    if (dbError) throw dbError;
+
+    state.videos.push(vidData);
+    saveState();
+    renderAll();
+    showToast("ভিডিও সফলভাবে ক্লাউডে আপলোড ও সেভ হয়েছে! ✅", "success");
+    
+    document.getElementById('av-title').value = '';
+    document.getElementById('av-file').value = '';
+    document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
+    document.getElementById('av-thumb-prev')._data = null;
+
+  } catch (err) {
+    console.error("Upload error:", err);
+    showToast("আপলোড ব্যর্থ হয়েছে! Supabase Storage bucket পলিসি বা সাইজ চেক করুন।", "danger");
+  } finally {
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = "ক্লাউডে আপলোড ও সেভ করুন";
+  }
 }
 
 async function deleteVideo(id) {
@@ -877,7 +868,6 @@ async function deleteVideo(id) {
   showToast("ভিডিও ডিলিট হয়েছে! 🗑️", "success");
 }
 
-/* SAVE CATEGORY (ADMIN) */
 async function saveCategory() {
   const name = document.getElementById('ac-name').value;
   const icon = document.getElementById('ac-icon').value || '📁';
@@ -898,7 +888,6 @@ async function saveCategory() {
   document.getElementById('ac-icon').value = '';
 }
 
-/* SAVE VIRAL LINK (ADMIN) */
 async function saveViralLink() {
   const title = document.getElementById('avl-title').value;
   const url = document.getElementById('avl-url').value;
@@ -923,7 +912,6 @@ async function saveViralLink() {
   document.getElementById('avl-url').value = '';
 }
 
-/* DELETE VIRAL LINK (ADMIN) */
 async function deleteViralLink(id) {
   if (!confirm("ভাইরাল লিংকটি ডিলিট করতে চান?")) return;
   
