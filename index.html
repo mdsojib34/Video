@@ -273,7 +273,7 @@ body{padding-bottom:100px}
 
   <div id="admin-vids" class="admin-subview hidden">
     <div class="admin-card">
-      <h4>➕ নতুন ভিডিও যোগ করুন</h4>
+      <h4>➕ নতুন ভিডিও যোগ করুন (গ্যালারি থেকে)</h4>
       <div class="form-group"><label>শিরোনাম</label><input type="text" id="av-title"></div>
       <div class="form-group"><label>ক্যাটাগরি</label><select id="av-cat"></select></div>
       <div class="form-group">
@@ -282,15 +282,7 @@ body{padding-bottom:100px}
         <div class="thumb-prev" id="av-thumb-prev"><span>Preview</span></div>
       </div>
       <div class="form-group">
-        <label>সোর্স টাইপ</label>
-        <select id="av-source" onchange="toggleSourceType(this.value)">
-          <option value="link">External Link / Telegram</option>
-          <option value="file">📁 Gallery Upload (IndexedDB)</option>
-        </select>
-      </div>
-      <div id="source-link-wrap" class="form-group"><label>ভিডিও লিঙ্ক</label><input type="text" id="av-link"></div>
-      <div id="source-file-wrap" class="form-group hidden">
-        <label>ভিডিও ফাইল</label>
+        <label>📁 ভিডিও ফাইল (গ্যালারি থেকে সিলেক্ট করুন)</label>
         <input type="file" id="av-file" accept="video/*">
       </div>
       <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1" min="1"></div>
@@ -734,6 +726,7 @@ async function updateDetailUI(v) {
   if (isUnlocked && v.source === 'file') {
     const blob = await getFile(v.fileId);
     if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
+    else mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
   } else {
     mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
   }
@@ -743,7 +736,7 @@ async function updateDetailUI(v) {
     actionArea.innerHTML = `
       <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
         <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
-        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">প্লেয়ারে ভিডিও চালু করুন।</p>`}
+        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">উপরের প্লেয়ারে ভিডিও প্লে করুন।</p>`}
       </div>`;
   } else {
     actionArea.innerHTML = `
@@ -805,7 +798,7 @@ function handleAdSuccess(vidId) {
   state.adViews++;
 
   if (state.progress[vidId] >= req) {
-    state.unlocked[vidId] = true; // স্থায়ীভাবে আনলক স্ট্যাটাস সেভ হলো
+    state.unlocked[vidId] = true;
     delete state.progress[vidId];
     showToast("অভিনন্দন! ভিডিওটি স্থায়ীভাবে আনলক হয়েছে। 🎉", "success");
   } else {
@@ -819,12 +812,10 @@ function handleAdSuccess(vidId) {
 
 function watchExternal(link) {
   if (!link) return;
-  
   let finalLink = link;
   if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
     finalLink = 'https://' + finalLink;
   }
-  
   if (tg.openLink) {
     tg.openLink(finalLink);
   } else {
@@ -838,20 +829,25 @@ function watchExternal(link) {
 async function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
-  const source = document.getElementById('av-source').value;
-  const link = document.getElementById('av-link').value;
   const ads = parseInt(document.getElementById('av-ads').value) || 1;
   const thumbBase64 = document.getElementById('av-thumb-prev')._data;
+  const fileInput = document.getElementById('av-file');
 
-  if (!title) return showToast("শিরোনাম দিন");
+  if (!title) return showToast("দয়া করে ভিডিওর শিরোনাম দিন");
+  if (!fileInput.files[0]) return showToast("দয়া করে গ্যালারি থেকে একটি ভিডিও ফাইল সিলেক্ট করুন");
 
   const vidId = 'v' + Date.now();
+  const fileBlob = fileInput.files[0];
+
+  // সেভ ফাইল লোকাল ডাটাবেজে (IndexedDB)
+  await saveFile(vidId, fileBlob);
+
   const vidData = { 
     id: vidId, 
     title, 
     category_id: catId, 
-    source, 
-    link, 
+    source: 'file', 
+    fileId: vidId,
     required_ads: ads, 
     thumb: thumbBase64 || '', 
     views: {}
@@ -864,9 +860,12 @@ async function saveVideo() {
   state.videos.push(vidData);
   saveState();
   renderAll();
-  showToast("ভিডিও সফলভাবে সেভ হয়েছে! ✅", "success");
+  showToast("ভিডিও গ্যালারি থেকে সফলভাবে আপলোড ও সেভ হয়েছে! ✅", "success");
+  
   document.getElementById('av-title').value = '';
-  document.getElementById('av-link').value = '';
+  document.getElementById('av-file').value = '';
+  document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
+  document.getElementById('av-thumb-prev')._data = null;
 }
 
 async function deleteVideo(id) {
@@ -876,6 +875,27 @@ async function deleteVideo(id) {
   saveState();
   renderAll();
   showToast("ভিডিও ডিলিট হয়েছে! 🗑️", "success");
+}
+
+/* SAVE CATEGORY (ADMIN) */
+async function saveCategory() {
+  const name = document.getElementById('ac-name').value;
+  const icon = document.getElementById('ac-icon').value || '📁';
+  if(!name) return showToast("ক্যাটাগরির নাম দিন");
+  
+  const catId = 'cat_' + Date.now();
+  const catData = { id: catId, name, icon, order: state.categories.length };
+  
+  try {
+    await supabaseClient.from('categories').insert([catData]);
+  } catch(e) {}
+
+  state.categories.push(catData);
+  saveState();
+  renderCategories();
+  showToast("ক্যাটাগরি সেভ হয়েছে! ✅", "success");
+  document.getElementById('ac-name').value = '';
+  document.getElementById('ac-icon').value = '';
 }
 
 /* SAVE VIRAL LINK (ADMIN) */
@@ -937,6 +957,15 @@ function renderAdmin() {
         <button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteVideo('${v.id}')">ডিলিট</button>
       </div>
     `).join('') : '<div class="empty-state">কোনো ভিডিও নেই</div>';
+  }
+
+  const catListCont = document.getElementById('admin-cat-list');
+  if (catListCont) {
+    catListCont.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `
+      <div class="admin-list-item">
+        <div style="font-size:12px;font-weight:600">${c.icon} ${c.name}</div>
+      </div>
+    `).join('');
   }
 
   const viralListCont = document.getElementById('admin-viral-list');
@@ -1082,4 +1111,3 @@ window.onload = initApp;
 </script>
 </body>
 </html>
- 
