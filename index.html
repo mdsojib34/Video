@@ -529,7 +529,6 @@ async function initApp() {
     }
   }
 
-  // টেলিগ্রাম মিনি অ্যাপের startapp প্যারামিটার চেক করা (যেমন: Viral_video44bot?startapp=v_default_1)
   const startParam = tg.initDataUnsafe?.start_param || tg.initDataUnsafe?.startapp;
   if (startParam) {
     setTimeout(() => {
@@ -626,7 +625,6 @@ function createVideoCard(v) {
           <button class="card-menu-btn" onclick="toggleCardMenu(event, '${v.id}')">⋮</button>
         </div>
         
-        <!-- CARD DROPDOWN MENU FOR SHARE -->
         <div class="card-menu-dropdown" id="menu-dropdown-${v.id}">
           <div class="card-menu-item" onclick="copyVideoShareLink('${v.id}')">📋 লিংক কপি করুন</div>
         </div>
@@ -654,9 +652,7 @@ window.addEventListener('click', () => {
 });
 
 function copyVideoShareLink(vidId) {
-  // নতুন Viral_video44bot এবং startapp ফরম্যাটে শেয়ার লিংক তৈরি
   const shareUrl = `https://t.me/Viral_video44bot?startapp=${vidId}`;
-  
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(shareUrl).then(() => {
       showToast("শেয়ার লিংক কপি হয়েছে! ✅", "success");
@@ -753,8 +749,11 @@ async function openDetail(id) {
   saveState();
 
   updateDetailUI(v);
+  
   const modal = document.getElementById('modal-detail');
-  if(modal) modal.classList.add('open');
+  if(modal) {
+    modal.classList.add('open');
+  }
 }
 
 async function updateDetailUI(v) {
