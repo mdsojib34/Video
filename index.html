@@ -405,7 +405,6 @@ const ADMIN_ID = 7904568371;
 const DB_NAME = "VidUnlockDB_V3";
 const STORE_KEY = "VidUnlock_Core_State_V3";
 
-// আপনার বটের ইউজারনেম সেট করা হলো
 const BOT_USERNAME = "Viral_video44bot"; 
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
@@ -539,13 +538,14 @@ async function getFile(id) {
 }
 
 /* =======================================================
-   3. APP INITIALIZATION & SUPABASE SYNC
+   3. APP INITIALIZATION & SUPABASE SYNC (FIXED)
    ======================================================= */
 async function initApp() {
   tg.ready();
   tg.expand();
   await initDB();
   
+  // ১. লোকাল স্টোরেজ লোড করা
   const savedLocal = localStorage.getItem(STORE_KEY);
   if (savedLocal) {
     try {
@@ -554,17 +554,25 @@ async function initApp() {
     } catch(e) {}
   }
 
+  // ২. Supabase থেকে ডেটা নিয়ে আসা এবং লোকাল স্টেটে আপডেট করা
   try {
-    const { data: dbVids } = await supabaseClient.from('videos').select('*');
-    if (dbVids) state.videos = dbVids;
+    const { data: dbVids, error: vidErr } = await supabaseClient.from('videos').select('*');
+    if (!vidErr && dbVids) {
+      state.videos = dbVids;
+    }
 
-    const { data: dbCats } = await supabaseClient.from('categories').select('*');
-    if (dbCats && dbCats.length > 0) {
+    const { data: dbCats, error: catErr } = await supabaseClient.from('categories').select('*');
+    if (!catErr && dbCats && dbCats.length > 0) {
       state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨', order: 0 }, ...dbCats.filter(c => c.id !== 'cat_all')];
     }
 
-    const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
-    if (dbViral) state.viralLinks = dbViral;
+    const { data: dbViral, error: viralErr } = await supabaseClient.from('viral_links').select('*');
+    if (!viralErr && dbViral) {
+      state.viralLinks = dbViral;
+    }
+    
+    // ক্লাউড ডেটা পাওয়ার পর স্টেট সেভ করে নেওয়া
+    saveState();
 
   } catch (err) {
     console.error("Supabase sync failed, using local storage", err);
