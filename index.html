@@ -707,8 +707,9 @@ async function updateDetailUI(v) {
 
   const mediaCont = document.getElementById('md-media-container');
   if(mediaCont) {
-    if (isUnlocked && v.videoUrl) {
-      mediaCont.innerHTML = `<video src="${v.videoUrl}" controls style="width:100%;height:100%"></video>`;
+    // FIX: ব্যবহার করা হয়েছে v.link (যা ডাটাবেজের সঠিক কলাম নাম)
+    if (isUnlocked && v.link) {
+      mediaCont.innerHTML = `<video src="${v.link}" controls style="width:100%;height:100%"></video>`;
     } else {
       mediaCont.innerHTML = `<img src="${v.thumb || ''}" style="width:100%;height:100%;object-fit:cover">`;
     }
@@ -843,12 +844,13 @@ async function saveVideo() {
       const videoPublicUrl = publicUrlData.publicUrl;
       const vidId = 'v' + Date.now();
 
+      // FIX: টেবিলের কলামের নাম 'link' ব্যবহার করা হয়েছে যাতে ডাটাবেজের সাথে হুবহু মিলে যায়
       const vidData = { 
         id: vidId, 
         title, 
         category_id: catId, 
         source: 'file', 
-        videoUrl: videoPublicUrl,
+        link: videoPublicUrl,
         required_ads: ads, 
         thumb: thumbBase64 || '', 
         views: {}
@@ -1139,4 +1141,4 @@ function shareVideo() {
 window.onload = initApp;
 </script>
 </body>
-</html>
+   </html>
