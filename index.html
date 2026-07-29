@@ -79,29 +79,19 @@ body{padding-bottom:100px}
 
 /* GRID & CARDS */
 .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:12px}
-.card{background:var(--grad-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative;transition:0.2s}
-.card-thumb{aspect-ratio:16/10;position:relative;background:#000;cursor:pointer}
+.card{background:var(--grad-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative;transition:0.2s;cursor:pointer}
+.card:active{transform:scale(0.97)}
+.card-thumb{aspect-ratio:16/10;position:relative;background:#000}
 .card-thumb img{width:100%;height:100%;object-fit:cover}
 .card-badge{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:6px;font-size:9px;font-weight:700;backdrop-filter:blur(6px)}
 .badge-locked{background:rgba(0,0,0,0.6);color:var(--warning)}
 .badge-unlocked{background:rgba(34,197,138,0.85);color:#fff}
 .card-play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,0.2)}
 .play-btn-circle{width:36px;height:36px;background:rgba(255,255,255,0.25);backdrop-filter:blur(4px);border-radius:50%;display:grid;place-items:center}
-.card-body{padding:10px;position:relative}
+.card-body{padding:10px}
 .card-cat{font-size:9px;color:var(--primary-2);text-transform:uppercase;font-weight:700;margin-bottom:2px}
-.card-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
-.card-title{font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:34px;cursor:pointer;flex:1}
-.card-menu-btn{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px}
-.card-menu-btn:hover{color:#fff;background:var(--surface-2)}
+.card-title{font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:34px}
 .card-footer{margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted)}
-
-/* CARD POPUP MENU */
-.card-popup-menu{position:absolute;right:10px;bottom:35px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.5);display:none;flex-direction:column;z-index:10;min-width:130px;overflow:hidden}
-.card-popup-menu.open{display:flex}
-.card-popup-item{padding:8px 12px;font-size:11px;color:var(--text);background:none;border:none;text-align:left;cursor:pointer;display:flex;align-items:center;gap:6px}
-.card-popup-item:hover{background:var(--primary);color:#fff}
-.card-popup-item.danger{color:var(--danger)}
-.card-popup-item.danger:hover{background:var(--danger);color:#fff}
 
 /* VIRAL LINKS CARD */
 .viral-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:15px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:0.2s}
@@ -169,7 +159,7 @@ body{padding-bottom:100px}
 .empty-state i{font-size:40px;display:block;margin-bottom:10px}
 </style>
 </head>
-<body onclick="closeAllMenus(event)">
+<body>
 
 <!-- LOADING SCREEN -->
 <div id="app-loader">
@@ -354,15 +344,12 @@ body{padding-bottom:100px}
     <div class="sheet-header">
       <button onclick="closeModal('modal-detail')" style="background:none;border:none;font-size:22px;color:#fff">✕</button>
       <div id="md-header-title" style="font-weight:700">Video Details</div>
-      <div style="display:flex;gap:15px;align-items:center;">
-        <button id="md-react-btn" style="background:none;border:none;font-size:20px;cursor:pointer;" onclick="toggleReaction()">❤️ <span id="md-react-count">0</span></button>
-        <button id="md-fav-btn" style="background:none;border:none;font-size:22px;cursor:pointer;">🤍</button>
-      </div>
+      <button id="md-fav-btn" style="background:none;border:none;font-size:22px">🤍</button>
     </div>
     <div class="sheet-content">
       <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:15px"></div>
       <h2 id="md-title"></h2>
-      <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
+      <div style="display:flex;gap:8px;margin:10px 0">
         <span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span>
         <span style="font-size:11px;color:var(--muted)" id="md-views">0 Views</span>
       </div>
@@ -402,10 +389,8 @@ body{padding-bottom:100px}
    1. CORE STATE, CONFIG & TRANSLATIONS
    ======================================================= */
 const ADMIN_ID = 7904568371;
-const DB_NAME = "VidUnlockDB_V3";
-const STORE_KEY = "VidUnlock_Core_State_V3";
-
-const BOT_USERNAME = "Viral_video44bot"; 
+const DB_NAME = "VidUnlockDB_V2";
+const STORE_KEY = "VidUnlock_Core_State";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
@@ -478,7 +463,7 @@ const i18n = {
 };
 
 let state = {
-  version: 5,
+  version: 4,
   lang: 'bn',
   categories: [
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
@@ -489,7 +474,6 @@ let state = {
   unlocked: {},
   progress: {},
   favorites: {},
-  reactions: {},
   comments: {},
   recent: [],
   adViews: 0,
@@ -505,11 +489,11 @@ let isAdShowing = false;
 let db = null;
 
 /* =======================================================
-   2. INDEXEDDB SETUP (FOR FILE STORAGE)
+   2. INDEXEDDB SETUP
    ======================================================= */
 async function initDB() {
   return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 3);
+    const request = indexedDB.open(DB_NAME, 2);
     request.onupgradeneeded = (e) => {
       let db = e.target.result;
       if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
@@ -518,14 +502,9 @@ async function initDB() {
   });
 }
 
-async function saveFileToDB(id, blob) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('files', 'readwrite');
-    const store = tx.objectStore('files');
-    store.put(blob, id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+async function saveFile(id, blob) {
+  const tx = db.transaction('files', 'readwrite');
+  return tx.objectStore('files').put(blob, id);
 }
 
 async function getFile(id) {
@@ -538,56 +517,40 @@ async function getFile(id) {
 }
 
 /* =======================================================
-   3. APP INITIALIZATION & SUPABASE SYNC (FIXED)
+   3. APP INITIALIZATION & SUPABASE SYNC
    ======================================================= */
 async function initApp() {
   tg.ready();
   tg.expand();
   await initDB();
   
-  // ১. লোকাল স্টোরেজ লোড করা
-  const savedLocal = localStorage.getItem(STORE_KEY);
-  if (savedLocal) {
-    try {
-      const parsed = JSON.parse(savedLocal);
-      state = { ...state, ...parsed };
-    } catch(e) {}
-  }
-
-  // ২. Supabase থেকে ডেটা নিয়ে আসা এবং লোকাল স্টেটে আপডেট করা
   try {
-    const { data: dbVids, error: vidErr } = await supabaseClient.from('videos').select('*');
-    if (!vidErr && dbVids) {
-      state.videos = dbVids;
-    }
+    const { data: dbVids } = await supabaseClient.from('videos').select('*');
+    if (dbVids) state.videos = dbVids;
 
-    const { data: dbCats, error: catErr } = await supabaseClient.from('categories').select('*');
-    if (!catErr && dbCats && dbCats.length > 0) {
+    const { data: dbCats } = await supabaseClient.from('categories').select('*');
+    if (dbCats && dbCats.length > 0) {
       state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨', order: 0 }, ...dbCats.filter(c => c.id !== 'cat_all')];
     }
 
-    const { data: dbViral, error: viralErr } = await supabaseClient.from('viral_links').select('*');
-    if (!viralErr && dbViral) {
-      state.viralLinks = dbViral;
-    }
-    
-    // ক্লাউড ডেটা পাওয়ার পর স্টেট সেভ করে নেওয়া
-    saveState();
+    const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
+    if (dbViral) state.viralLinks = dbViral;
 
   } catch (err) {
     console.error("Supabase sync failed, using local storage", err);
+    const saved = localStorage.getItem(STORE_KEY);
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  }
+
+  const savedLocal = localStorage.getItem(STORE_KEY);
+  if (savedLocal) {
+    const parsed = JSON.parse(savedLocal);
+    if (parsed.lang) state.lang = parsed.lang;
   }
 
   if (Number(user.id) === ADMIN_ID) {
     document.getElementById('nav-admin').classList.remove('hidden');
     document.getElementById('u-badge').style.display = 'inline-block';
-  }
-
-  const startParam = tg.initDataUnsafe?.start_param;
-  if(startParam) {
-    setTimeout(() => {
-      openDetail(startParam);
-    }, 500);
   }
 
   applyLanguage();
@@ -632,7 +595,7 @@ function applyLanguage() {
 }
 
 /* =======================================================
-   5. RENDERING LOGIC & ADMIN MANAGEMENT
+   5. RENDERING LOGIC
    ======================================================= */
 function renderCategories() {
   const container = document.getElementById('category-tabs');
@@ -646,59 +609,13 @@ function renderCategories() {
   if(select) select.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
-async function saveCategory() {
-  const name = document.getElementById('ac-name').value;
-  const icon = document.getElementById('ac-icon').value || '📁';
-  if(!name) return showToast("ক্যাটাগরির নাম দিন");
-
-  const catId = 'cat_' + Date.now();
-  const newCat = { id: catId, name, icon, order: state.categories.length };
-
-  try {
-    await supabaseClient.from('categories').insert([newCat]);
-  } catch(e) {}
-
-  state.categories.push(newCat);
-  saveState();
-  renderCategories();
-  renderAdmin();
-  document.getElementById('ac-name').value = '';
-  document.getElementById('ac-icon').value = '';
-  showToast("ক্যাটাগরি সফলভাবে যোগ হয়েছে! ✅", "success");
-}
-
-async function deleteCategory(id) {
-  if(id === 'cat_all' || id === 'cat_viral') return showToast("এই ক্যাটাগরি ডিলিট করা যাবে না!");
-  if(!confirm("ক্যাটাগরি ডিলিট করতে চান?")) return;
-
-  try {
-    await supabaseClient.from('categories').delete().eq('id', id);
-  } catch(e) {}
-
-  state.categories = state.categories.filter(c => c.id !== id);
-  saveState();
-  renderCategories();
-  renderAdmin();
-  showToast("ক্যাটাগরি ডিলিট করা হয়েছে! 🗑️", "success");
-}
-
-function toggleSourceType(val) {
-  if(val === 'file') {
-    document.getElementById('source-link-wrap').classList.add('hidden');
-    document.getElementById('source-file-wrap').classList.remove('hidden');
-  } else {
-    document.getElementById('source-file-wrap').classList.add('hidden');
-    document.getElementById('source-link-wrap').classList.remove('hidden');
-  }
-}
-
 function createVideoCard(v) {
   const isUnlocked = state.unlocked[v.id];
   const isFav = state.favorites[v.id];
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
   return `
-    <div class="card">
-      <div class="card-thumb" onclick="openDetail('${v.id}')">
+    <div class="card" onclick="openDetail('${v.id}')">
+      <div class="card-thumb">
         <img src="${v.thumb || ''}" loading="lazy">
         <div class="card-badge ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}">
           ${isUnlocked ? (state.lang==='bn'?'🔓 আনলক':'🔓 Unlocked') : (state.lang==='bn'?'🔒 লক':'🔒 Locked')}
@@ -707,69 +624,14 @@ function createVideoCard(v) {
       </div>
       <div class="card-body">
         <div class="card-cat">${state.categories.find(c=>c.id===v.category_id || c.id===v.categoryId)?.name || ''}</div>
-        <div class="card-title-row">
-          <div class="card-title" onclick="openDetail('${v.id}')">${v.title}</div>
-          <button class="card-menu-btn" onclick="toggleCardMenu(event, '${v.id}')">⋮</button>
-        </div>
+        <div class="card-title">${v.title}</div>
         <div class="card-footer">
           <span>👁 ${viewsCount} views</span>
           <span>${isFav ? '❤️' : '🤍'}</span>
         </div>
-        <div class="card-popup-menu" id="menu-${v.id}">
-          <button class="card-popup-item" onclick="copyVideoLink('${v.id}')">📋 লিংক কপি করুন</button>
-          <button class="card-popup-item" onclick="shareVideoId('${v.id}')">📤 শেয়ার করুন</button>
-          <button class="card-popup-item danger" onclick="reportVideo('${v.id}')">🚩 রিপোর্ট করুন</button>
-        </div>
       </div>
     </div>
   `;
-}
-
-function toggleCardMenu(event, id) {
-  event.stopPropagation();
-  document.querySelectorAll('.card-popup-menu').forEach(m => {
-    if(m.id !== 'menu-' + id) m.classList.remove('open');
-  });
-  const menu = document.getElementById('menu-' + id);
-  if(menu) menu.classList.toggle('open');
-}
-
-function closeAllMenus(event) {
-  if(!event.target.classList.contains('card-menu-btn')) {
-    document.querySelectorAll('.card-popup-menu').forEach(m => m.classList.remove('open'));
-  }
-}
-
-function getShortLink(id) {
-  return `https://t.me/${BOT_USERNAME}?start=${id}`;
-}
-
-function copyVideoLink(id) {
-  const shortUrl = getShortLink(id);
-  navigator.clipboard.writeText(shortUrl).then(() => {
-    showToast("ভিডিও লিংক কপি করা হয়েছে! 📋", "success");
-  });
-}
-
-function shareVideoId(id) {
-  const v = state.videos.find(x => x.id === id);
-  if(!v) return;
-  const shortUrl = getShortLink(id);
-  const text = encodeURIComponent(`🔥 ${v.title}\n\nভিডিওটি দেখতে এখানে ক্লিক করুন: ${shortUrl}`);
-  if(tg.openTelegramLink) {
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shortUrl)}&text=${text}`);
-  } else {
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(shortUrl)}&text=${text}`, '_blank');
-  }
-}
-
-function shareVideo() {
-  if(!currentActiveVid) return;
-  shareVideoId(currentActiveVid.id);
-}
-
-function reportVideo(id) {
-  showToast("ভিডিওটি রিপোর্ট করা হয়েছে। ধন্যবাদ!", "info");
 }
 
 function renderAll() {
@@ -800,6 +662,7 @@ function renderUnlocked() {
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>🔓</i>No unlocked videos</div>';
 }
 
+/* VIRAL LINKS VIEW RENDER */
 function renderViralLinks() {
   const cont = document.getElementById('viral-links-list');
   const links = state.viralLinks || [];
@@ -852,24 +715,13 @@ async function updateDetailUI(v) {
   document.getElementById('md-title').textContent = v.title;
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
   document.getElementById('md-views').textContent = viewsCount + " Views";
-  
   document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
-
-  if(!state.reactions[v.id]) state.reactions[v.id] = [];
-  const hasReacted = state.reactions[v.id].includes(user.id);
-  const reactBtn = document.getElementById('md-react-btn');
-  reactBtn.style.color = hasReacted ? 'var(--accent)' : 'inherit';
-  document.getElementById('md-react-count').textContent = state.reactions[v.id].length;
 
   const mediaCont = document.getElementById('md-media-container');
   if (isUnlocked && v.source === 'file') {
     const blob = await getFile(v.fileId);
-    if (blob) {
-      mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls autoplay style="width:100%;height:100%"></video>`;
-    } else {
-      mediaCont.innerHTML = `<div style="display:grid;place-items:center;height:100%;color:#fff;font-size:12px">ফাইল লোকালি পাওয়া যায়নি!</div>`;
-    }
+    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
   } else {
     mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
   }
@@ -879,7 +731,7 @@ async function updateDetailUI(v) {
     actionArea.innerHTML = `
       <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
         <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
-        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">উপরে প্লেয়ারে ভিডিও চালু হয়ে গেছে।</p>`}
+        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">প্লেয়ারে ভিডিও চালু করুন।</p>`}
       </div>`;
   } else {
     actionArea.innerHTML = `
@@ -890,21 +742,6 @@ async function updateDetailUI(v) {
       <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK</button>`;
   }
   renderComments(v.id);
-}
-
-function toggleReaction() {
-  if(!currentActiveVid) return;
-  const vidId = currentActiveVid.id;
-  if(!state.reactions[vidId]) state.reactions[vidId] = [];
-  
-  const idx = state.reactions[vidId].indexOf(user.id);
-  if(idx > -1) {
-    state.reactions[vidId].splice(idx, 1);
-  } else {
-    state.reactions[vidId].push(user.id);
-  }
-  saveState();
-  updateDetailUI(currentActiveVid);
 }
 
 async function watchAd() {
@@ -941,9 +778,9 @@ function handleAdSuccess(vidId) {
   state.adViews++;
 
   if (state.progress[vidId] >= req) {
-    state.unlocked[vidId] = true; 
+    state.unlocked[vidId] = true;
     delete state.progress[vidId];
-    showToast("অভিনন্দন! ভিডিওটি স্থায়ীভাবে আনলক হয়েছে। 🎉", "success");
+    showToast("অভিনন্দন! ভিডিওটি আনলক হয়েছে। 🎉", "success");
   } else {
     showToast(`অ্যাড দেখা সফল! বাকি: ${req - state.progress[vidId]}`, "info");
   }
@@ -955,10 +792,12 @@ function handleAdSuccess(vidId) {
 
 function watchExternal(link) {
   if (!link) return;
+  
   let finalLink = link;
   if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
     finalLink = 'https://' + finalLink;
   }
+  
   if (tg.openLink) {
     tg.openLink(finalLink);
   } else {
@@ -974,27 +813,18 @@ async function saveVideo() {
   const catId = document.getElementById('av-cat').value;
   const source = document.getElementById('av-source').value;
   const link = document.getElementById('av-link').value;
-  const fileInput = document.getElementById('av-file');
   const ads = parseInt(document.getElementById('av-ads').value) || 1;
   const thumbBase64 = document.getElementById('av-thumb-prev')._data;
 
   if (!title) return showToast("শিরোনাম দিন");
 
   const vidId = 'v' + Date.now();
-  let fileId = null;
-
-  if (source === 'file' && fileInput.files[0]) {
-    fileId = 'f_' + Date.now();
-    await saveFileToDB(fileId, fileInput.files[0]);
-  }
-
   const vidData = { 
     id: vidId, 
     title, 
     category_id: catId, 
     source, 
-    link: source === 'link' ? link : '', 
-    fileId: fileId,
+    link, 
     required_ads: ads, 
     thumb: thumbBase64 || '', 
     views: {}
@@ -1002,18 +832,14 @@ async function saveVideo() {
 
   try {
     await supabaseClient.from('videos').insert([vidData]);
-  } catch (err) { console.error("Supabase insert error:", err); }
+  } catch (err) { console.error(err); }
 
   state.videos.push(vidData);
   saveState();
   renderAll();
   showToast("ভিডিও সফলভাবে সেভ হয়েছে! ✅", "success");
-  
   document.getElementById('av-title').value = '';
   document.getElementById('av-link').value = '';
-  if(fileInput) fileInput.value = '';
-  document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
-  document.getElementById('av-thumb-prev')._data = null;
 }
 
 async function deleteVideo(id) {
@@ -1025,6 +851,7 @@ async function deleteVideo(id) {
   showToast("ভিডিও ডিলিট হয়েছে! 🗑️", "success");
 }
 
+/* SAVE VIRAL LINK (ADMIN) */
 async function saveViralLink() {
   const title = document.getElementById('avl-title').value;
   const url = document.getElementById('avl-url').value;
@@ -1035,7 +862,9 @@ async function saveViralLink() {
 
   try {
     await supabaseClient.from('viral_links').insert([linkData]);
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+  }
 
   if (!state.viralLinks) state.viralLinks = [];
   state.viralLinks.push(linkData);
@@ -1047,11 +876,15 @@ async function saveViralLink() {
   document.getElementById('avl-url').value = '';
 }
 
+/* DELETE VIRAL LINK (ADMIN) */
 async function deleteViralLink(id) {
   if (!confirm("ভাইরাল লিংকটি ডিলিট করতে চান?")) return;
+  
   try {
     await supabaseClient.from('viral_links').delete().eq('id', id);
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+  }
 
   state.viralLinks = state.viralLinks.filter(l => l.id !== id);
   saveState();
@@ -1077,19 +910,6 @@ function renderAdmin() {
         <button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteVideo('${v.id}')">ডিলিট</button>
       </div>
     `).join('') : '<div class="empty-state">কোনো ভিডিও নেই</div>';
-  }
-
-  const catListCont = document.getElementById('admin-cat-list');
-  if(catListCont) {
-    catListCont.innerHTML = state.categories.map(c => `
-      <div class="admin-list-item">
-        <div class="admin-list-info">
-          <div style="font-size:16px">${c.icon}</div>
-          <div style="font-size:12px;font-weight:600">${c.name}</div>
-        </div>
-        ${c.id !== 'cat_all' && c.id !== 'cat_viral' ? `<button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteCategory('${c.id}')">ডিলিট</button>` : `<span style="font-size:10px;color:var(--muted)">Default</span>`}
-      </div>
-    `).join('');
   }
 
   const viralListCont = document.getElementById('admin-viral-list');
@@ -1132,6 +952,7 @@ function showView(viewId) {
   if (viewIndexMap[viewId] !== undefined && navItems[viewIndexMap[viewId]]) {
     navItems[viewIndexMap[viewId]].classList.add('active');
   }
+  
   currentView = viewId;
 }
 
