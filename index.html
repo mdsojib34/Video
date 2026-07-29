@@ -503,7 +503,7 @@ let isAdShowing = false;
 let db = null;
 
 /* =======================================================
-   2. INDEXEDDB SETUP
+   2. INDEXEDDB SETUP (FOR FILE STORAGE)
    ======================================================= */
 async function initDB() {
   return new Promise((resolve) => {
@@ -513,6 +513,16 @@ async function initDB() {
       if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
     };
     request.onsuccess = (e) => { db = e.target.result; resolve(); };
+  });
+}
+
+async function saveFileToDB(id, blob) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readwrite');
+    const store = tx.objectStore('files');
+    store.put(blob, id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
   });
 }
 
@@ -562,6 +572,14 @@ async function initApp() {
     document.getElementById('u-badge').style.display = 'inline-block';
   }
 
+  // Handle Telegram StartParam if any (Deep Linking for small links)
+  const startParam = tg.initDataUnsafe?.start_param;
+  if(startParam) {
+    setTimeout(() => {
+      openDetail(startParam);
+    }, 500);
+  }
+
   applyLanguage();
   updateUserUI();
   renderCategories();
@@ -604,7 +622,7 @@ function applyLanguage() {
 }
 
 /* =======================================================
-   5. RENDERING LOGIC
+   5. RENDERING LOGIC & ADMIN MANAGEMENT
    ======================================================= */
 function renderCategories() {
   const container = document.getElementById('category-tabs');
@@ -616,6 +634,53 @@ function renderCategories() {
   
   const select = document.getElementById('av-cat');
   if(select) select.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+// ক্যাটাগরি সেভ করার ফাংশন
+async function saveCategory() {
+  const name = document.getElementById('ac-name').value;
+  const icon = document.getElementById('ac-icon').value || '📁';
+  if(!name) return showToast("ক্যাটাগরির নাম দিন");
+
+  const catId = 'cat_' + Date.now();
+  const newCat = { id: catId, name, icon, order: state.categories.length };
+
+  try {
+    await supabaseClient.from('categories').insert([newCat]);
+  } catch(e) {}
+
+  state.categories.push(newCat);
+  saveState();
+  renderCategories();
+  renderAdmin();
+  document.getElementById('ac-name').value = '';
+  document.getElementById('ac-icon').value = '';
+  showToast("ক্যাটাগরি সফলভাবে যোগ হয়েছে! ✅", "success");
+}
+
+async function deleteCategory(id) {
+  if(id === 'cat_all' || id === 'cat_viral') return showToast("এই ক্যাটাগরি ডিলিট করা যাবে না!");
+  if(!confirm("ক্যাটাগরি ডিলিট করতে চান?")) return;
+
+  try {
+    await supabaseClient.from('categories').delete().eq('id', id);
+  } catch(e) {}
+
+  state.categories = state.categories.filter(c => c.id !== id);
+  saveState();
+  renderCategories();
+  renderAdmin();
+  showToast("ক্যাটাগরি ডিলিট করা হয়েছে! 🗑️", "success");
+}
+
+function toggleSourceType(val) {
+  if(val === 'file') {
+    document.getElementById('source-link-wrap').classList.add('hidden');
+    document.getElementById('source-file-wrap').classList.remove('hidden');
+  } else {
+    document.getElementById('source-file-wrap').classList.add('hidden');
+    document.getElementById('source-link-wrap').classList.remove('hidden');
+  }
 }
 
 function createVideoCard(v) {
@@ -653,7 +718,6 @@ function createVideoCard(v) {
 
 function toggleCardMenu(event, id) {
   event.stopPropagation();
-  // Close all other menus first
   document.querySelectorAll('.card-popup-menu').forEach(m => {
     if(m.id !== 'menu-' + id) m.classList.remove('open');
   });
@@ -667,24 +731,34 @@ function closeAllMenus(event) {
   }
 }
 
+// ছোট লিংক জেনারেটর (Telegram Deep Link Format)
+function getShortLink(id) {
+  const botUsername = "your_bot_username"; // আপনার বটের ইউজারনেম এখানে বসাবেন
+  return `https://t.me/${botUsername}?start=${id}`;
+}
+
 function copyVideoLink(id) {
-  const v = state.videos.find(x => x.id === id);
-  if(!v) return;
-  const shareText = `Check out this video: ${v.title}`;
-  navigator.clipboard.writeText(window.location.href).then(() => {
-    showToast("লিংক কপি করা হয়েছে! 📋", "success");
+  const shortUrl = getShortLink(id);
+  navigator.clipboard.writeText(shortUrl).then(() => {
+    showToast("ছোট লিংক কপি করা হয়েছে! 📋", "success");
   });
 }
 
 function shareVideoId(id) {
   const v = state.videos.find(x => x.id === id);
   if(!v) return;
-  const text = encodeURIComponent(`🔥 ${v.title}\n\nভিডিওটি দেখতে এখানে ক্লিক করুন: ${window.location.href}`);
+  const shortUrl = getShortLink(id);
+  const text = encodeURIComponent(`🔥 ${v.title}\n\nভিডিওটি দেখতে এখানে ক্লিক করুন: ${shortUrl}`);
   if(tg.openTelegramLink) {
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${text}`);
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shortUrl)}&text=${text}`);
   } else {
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${text}`, '_blank');
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(shortUrl)}&text=${text}`, '_blank');
   }
+}
+
+function shareVideo() {
+  if(!currentActiveVid) return;
+  shareVideoId(currentActiveVid.id);
 }
 
 function reportVideo(id) {
@@ -719,7 +793,6 @@ function renderUnlocked() {
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>🔓</i>No unlocked videos</div>';
 }
 
-/* VIRAL LINKS VIEW RENDER */
 function renderViralLinks() {
   const cont = document.getElementById('viral-links-list');
   const links = state.viralLinks || [];
@@ -773,7 +846,6 @@ async function updateDetailUI(v) {
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
   document.getElementById('md-views').textContent = viewsCount + " Views";
   
-  // Favorites & Reactions UI
   document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
 
@@ -786,7 +858,11 @@ async function updateDetailUI(v) {
   const mediaCont = document.getElementById('md-media-container');
   if (isUnlocked && v.source === 'file') {
     const blob = await getFile(v.fileId);
-    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
+    if (blob) {
+      mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls autoplay style="width:100%;height:100%"></video>`;
+    } else {
+      mediaCont.innerHTML = `<div style="display:grid;place-items:center;height:100%;color:#fff;font-size:12px">ফাইল লোকালি পাওয়া যায়নি!</div>`;
+    }
   } else {
     mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
   }
@@ -796,7 +872,7 @@ async function updateDetailUI(v) {
     actionArea.innerHTML = `
       <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
         <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
-        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">প্লেয়ারে ভিডিও চালু করুন।</p>`}
+        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">উপরে প্লেয়ারে ভিডিও চালু হয়ে গেছে।</p>`}
       </div>`;
   } else {
     actionArea.innerHTML = `
@@ -891,18 +967,27 @@ async function saveVideo() {
   const catId = document.getElementById('av-cat').value;
   const source = document.getElementById('av-source').value;
   const link = document.getElementById('av-link').value;
+  const fileInput = document.getElementById('av-file');
   const ads = parseInt(document.getElementById('av-ads').value) || 1;
   const thumbBase64 = document.getElementById('av-thumb-prev')._data;
 
   if (!title) return showToast("শিরোনাম দিন");
 
   const vidId = 'v' + Date.now();
+  let fileId = null;
+
+  if (source === 'file' && fileInput.files[0]) {
+    fileId = 'f_' + Date.now();
+    await saveFileToDB(fileId, fileInput.files[0]);
+  }
+
   const vidData = { 
     id: vidId, 
     title, 
     category_id: catId, 
     source, 
-    link, 
+    link: source === 'link' ? link : '', 
+    fileId: fileId,
     required_ads: ads, 
     thumb: thumbBase64 || '', 
     views: {}
@@ -916,8 +1001,10 @@ async function saveVideo() {
   saveState();
   renderAll();
   showToast("ভিডিও সফলভাবে সেভ হয়েছে! ✅", "success");
+  
   document.getElementById('av-title').value = '';
   document.getElementById('av-link').value = '';
+  if(fileInput) fileInput.value = '';
 }
 
 async function deleteVideo(id) {
@@ -981,6 +1068,20 @@ function renderAdmin() {
         <button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteVideo('${v.id}')">ডিলিট</button>
       </div>
     `).join('') : '<div class="empty-state">কোনো ভিডিও নেই</div>';
+  }
+
+  // ক্যাটাগরি ম্যানেজমেন্ট লিস্ট রেন্ডার
+  const catListCont = document.getElementById('admin-cat-list');
+  if(catListCont) {
+    catListCont.innerHTML = state.categories.map(c => `
+      <div class="admin-list-item">
+        <div class="admin-list-info">
+          <div style="font-size:16px">${c.icon}</div>
+          <div style="font-size:12px;font-weight:600">${c.name}</div>
+        </div>
+        ${c.id !== 'cat_all' && c.id !== 'cat_viral' ? `<button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteCategory('${c.id}')">ডিলিট</button>` : `<span style="font-size:10px;color:var(--muted)">Default</span>`}
+      </div>
+    `).join('');
   }
 
   const viralListCont = document.getElementById('admin-viral-list');
@@ -1125,4 +1226,3 @@ window.onload = initApp;
 </script>
 </body>
 </html>
-body
