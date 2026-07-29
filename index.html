@@ -405,6 +405,9 @@ const ADMIN_ID = 7904568371;
 const DB_NAME = "VidUnlockDB_V3";
 const STORE_KEY = "VidUnlock_Core_State_V3";
 
+// আপনার বটের ইউজারনেম সেট করা হলো
+const BOT_USERNAME = "Viral_video44bot"; 
+
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
 
@@ -572,7 +575,6 @@ async function initApp() {
     document.getElementById('u-badge').style.display = 'inline-block';
   }
 
-  // Handle Telegram StartParam if any (Deep Linking for small links)
   const startParam = tg.initDataUnsafe?.start_param;
   if(startParam) {
     setTimeout(() => {
@@ -636,7 +638,6 @@ function renderCategories() {
   if(select) select.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
-// ক্যাটাগরি সেভ করার ফাংশন
 async function saveCategory() {
   const name = document.getElementById('ac-name').value;
   const icon = document.getElementById('ac-icon').value || '📁';
@@ -731,16 +732,14 @@ function closeAllMenus(event) {
   }
 }
 
-// ছোট লিংক জেনারেটর (Telegram Deep Link Format)
 function getShortLink(id) {
-  const botUsername = "your_bot_username"; // আপনার বটের ইউজারনেম এখানে বসাবেন
-  return `https://t.me/${botUsername}?start=${id}`;
+  return `https://t.me/${BOT_USERNAME}?start=${id}`;
 }
 
 function copyVideoLink(id) {
   const shortUrl = getShortLink(id);
   navigator.clipboard.writeText(shortUrl).then(() => {
-    showToast("ছোট লিংক কপি করা হয়েছে! 📋", "success");
+    showToast("ভিডিও লিংক কপি করা হয়েছে! 📋", "success");
   });
 }
 
@@ -995,7 +994,7 @@ async function saveVideo() {
 
   try {
     await supabaseClient.from('videos').insert([vidData]);
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error("Supabase insert error:", err); }
 
   state.videos.push(vidData);
   saveState();
@@ -1005,6 +1004,8 @@ async function saveVideo() {
   document.getElementById('av-title').value = '';
   document.getElementById('av-link').value = '';
   if(fileInput) fileInput.value = '';
+  document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
+  document.getElementById('av-thumb-prev')._data = null;
 }
 
 async function deleteVideo(id) {
@@ -1070,7 +1071,6 @@ function renderAdmin() {
     `).join('') : '<div class="empty-state">কোনো ভিডিও নেই</div>';
   }
 
-  // ক্যাটাগরি ম্যানেজমেন্ট লিস্ট রেন্ডার
   const catListCont = document.getElementById('admin-cat-list');
   if(catListCont) {
     catListCont.innerHTML = state.categories.map(c => `
