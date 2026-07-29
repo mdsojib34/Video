@@ -12,9 +12,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* =========================================================
-   CORE DESIGN SYSTEM
-   ========================================================= */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#0b0d17;
@@ -79,9 +76,8 @@ body{padding-bottom:100px}
 
 /* GRID & CARDS */
 .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:12px}
-.card{background:var(--grad-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative;transition:0.2s;cursor:pointer}
-.card:active{transform:scale(0.97)}
-.card-thumb{aspect-ratio:16/10;position:relative;background:#000}
+.card{background:var(--grad-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative;transition:0.2s}
+.card-thumb{aspect-ratio:16/10;position:relative;background:#000;cursor:pointer}
 .card-thumb img{width:100%;height:100%;object-fit:cover}
 .card-badge{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:6px;font-size:9px;font-weight:700;backdrop-filter:blur(6px)}
 .badge-locked{background:rgba(0,0,0,0.6);color:var(--warning)}
@@ -90,7 +86,16 @@ body{padding-bottom:100px}
 .play-btn-circle{width:36px;height:36px;background:rgba(255,255,255,0.25);backdrop-filter:blur(4px);border-radius:50%;display:grid;place-items:center}
 .card-body{padding:10px}
 .card-cat{font-size:9px;color:var(--primary-2);text-transform:uppercase;font-weight:700;margin-bottom:2px}
-.card-title{font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:34px}
+.card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:5px}
+.card-title{font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:34px;cursor:pointer;flex:1}
+.card-menu-btn{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px}
+
+/* CUSTOM CONTEXT MENU FOR CARD */
+.card-menu-dropdown{position:absolute;bottom:35px;right:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:6px;display:none;z-index:20;box-shadow:0 10px 25px rgba(0,0,0,0.5);width:140px}
+.card-menu-dropdown.open{display:block}
+.card-menu-item{padding:8px 10px;font-size:11px;color:#fff;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.card-menu-item:hover{background:var(--primary)}
+
 .card-footer{margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted)}
 
 /* VIRAL LINKS CARD */
@@ -380,10 +385,23 @@ body{padding-bottom:100px}
 
 <script>
 const ADMIN_ID = 7904568371;
-const STORE_KEY = "VidUnlock_Core_State_V6";
+const STORE_KEY = "VidUnlock_Core_State_V7";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
+
+// ডিফল্ট ডেমো ভিডিও যেখানে আপনার দেওয়া ফাইল লিংক যুক্ত করা হয়েছে
+const DEFAULT_VIDEOS = [
+  {
+    id: 'v_default_1',
+    title: 'অনেকেই রিকোয়েস্ট করছিলেন এই মেয়ের হট হট কিছু ভিডিও দেওয়ার জন্য তাই পেলাম...',
+    category_id: 'cat_viral',
+    link: 'https://mdsojib34.github.io/Video/',
+    thumb: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60',
+    required_ads: 3,
+    views: { '1': true, '2': true }
+  }
+];
 
 let supabaseClient;
 try {
@@ -458,13 +476,13 @@ const i18n = {
 };
 
 let state = {
-  version: 6,
+  version: 7,
   lang: 'bn',
   categories: [
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
     { id: 'cat_viral', name: 'ভাইরাল', icon: '🔥', order: 1 }
   ],
-  videos: [],
+  videos: DEFAULT_VIDEOS,
   viralLinks: [],
   unlocked: {},
   progress: {},
@@ -498,7 +516,7 @@ async function initApp() {
   if (supabaseClient) {
     try {
       const { data: dbVids } = await supabaseClient.from('videos').select('*');
-      if (dbVids) state.videos = dbVids;
+      if (dbVids && dbVids.length > 0) state.videos = dbVids;
 
       const { data: dbCats } = await supabaseClient.from('categories').select('*');
       if (dbCats && dbCats.length > 0) {
@@ -508,8 +526,16 @@ async function initApp() {
       const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
       if (dbViral) state.viralLinks = dbViral;
     } catch (err) {
-      console.error("Supabase sync failed, using local storage", err);
+      console.error("Supabase sync failed, using local/default storage", err);
     }
+  }
+
+  // টেলিগ্রাম স্টার্ট প্যারামিটার চেক করা (যেমন: bot?start=v_default_1)
+  const startParam = tg.initDataUnsafe?.start_param;
+  if (startParam) {
+    setTimeout(() => {
+      openDetail(startParam);
+    }, 500);
   }
 
   if (Number(user.id) === ADMIN_ID) {
@@ -583,26 +609,82 @@ function createVideoCard(v) {
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
   const catObj = state.categories.find(c => c.id === v.category_id || c.id === v.categoryId);
   const catName = catObj ? catObj.name : '';
+  const reqAds = v.required_ads || v.requiredAds || 3;
 
   return `
-    <div class="card" onclick="openDetail('${v.id}')">
-      <div class="card-thumb">
+    <div class="card" id="card-${v.id}">
+      <div class="card-thumb" onclick="openDetail('${v.id}')">
         <img src="${v.thumb || ''}" loading="lazy">
         <div class="card-badge ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}">
-          ${isUnlocked ? (state.lang==='bn'?'🔓 আনলক':'🔓 Unlocked') : (state.lang==='bn'?'🔒 লক':'🔒 Locked')}
+          ${isUnlocked ? (state.lang==='bn'?'🔓 আনলক':'🔓 Unlocked') : (state.lang==='bn'?`UNLOCK — 0/${reqAds} ADS`:`UNLOCK — 0/${reqAds} ADS`)}
         </div>
         <div class="card-play"><div class="play-btn-circle">▶</div></div>
       </div>
       <div class="card-body">
         <div class="card-cat">${catName}</div>
-        <div class="card-title">${v.title}</div>
-        <div class="card-footer">
+        <div class="card-title-row">
+          <div class="card-title" onclick="openDetail('${v.id}')">${v.title}</div>
+          <button class="card-menu-btn" onclick="toggleCardMenu(event, '${v.id}')">⋮</button>
+        </div>
+        
+        <!-- CARD DROPDOWN MENU FOR SHARE -->
+        <div class="card-menu-dropdown" id="menu-dropdown-${v.id}">
+          <div class="card-menu-item" onclick="copyVideoShareLink('${v.id}')">📋 লিংক কপি করুন</div>
+        </div>
+
+        <div class="card-footer" onclick="openDetail('${v.id}')" style="cursor:pointer">
           <span>👁 ${viewsCount} views</span>
           <span>${isFav ? '❤️' : '🤍'}</span>
         </div>
       </div>
     </div>
   `;
+}
+
+function toggleCardMenu(event, vidId) {
+  event.stopPropagation();
+  // Close all other open dropdowns first
+  document.querySelectorAll('.card-menu-dropdown').forEach(d => {
+    if(d.id !== `menu-dropdown-${vidId}`) d.classList.remove('open');
+  });
+  const menu = document.getElementById(`menu-dropdown-${vidId}`);
+  if(menu) menu.classList.toggle('open');
+}
+
+// Close dropdowns when clicking outside
+window.addEventListener('click', () => {
+  document.querySelectorAll('.card-menu-dropdown').forEach(d => d.classList.remove('open'));
+});
+
+function copyVideoShareLink(vidId) {
+  // টেলিগ্রাম বট ইউজারনেম দিয়ে ডাইরেক্ট ভিডিও ওপেন করার লিংক তৈরি
+  const shareUrl = `https://t.me/Viral_video44bot?start=${vidId}`;
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showToast("শেয়ার লিংক কপি হয়েছে! ✅", "success");
+    }).catch(() => {
+      fallbackCopyText(shareUrl);
+    });
+  } else {
+    fallbackCopyText(shareUrl);
+  }
+}
+
+function fallbackCopyText(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    showToast("শেয়ার লিংক কপি হয়েছে! ✅", "success");
+  } catch (err) {
+    showToast("লিংক কপি করা যায়নি", "danger");
+  }
+  document.body.removeChild(textArea);
 }
 
 function renderAll() {
@@ -681,7 +763,7 @@ async function openDetail(id) {
 async function updateDetailUI(v) {
   const isUnlocked = state.unlocked[v.id];
   const prog = state.progress[v.id] || 0;
-  const req = v.required_ads || v.requiredAds || 1;
+  const req = v.required_ads || v.requiredAds || 3;
   const pct = Math.floor((prog/req)*100);
 
   const titleEl = document.getElementById('md-title');
@@ -707,9 +789,8 @@ async function updateDetailUI(v) {
 
   const mediaCont = document.getElementById('md-media-container');
   if(mediaCont) {
-    // FIX: ব্যবহার করা হয়েছে v.link (যা ডাটাবেজের সঠিক কলাম নাম)
     if (isUnlocked && v.link) {
-      mediaCont.innerHTML = `<video src="${v.link}" controls style="width:100%;height:100%"></video>`;
+      mediaCont.innerHTML = `<video src="${v.link}" controls autoplay style="width:100%;height:100%"></video>`;
     } else {
       mediaCont.innerHTML = `<img src="${v.thumb || ''}" style="width:100%;height:100%;object-fit:cover">`;
     }
@@ -779,7 +860,7 @@ function handleAdSuccess(vidId) {
   const v = state.videos.find(x => x.id === vidId);
   if(!v) return;
 
-  const req = v.required_ads || v.requiredAds || 1;
+  const req = v.required_ads || v.requiredAds || 3;
   state.progress[vidId] = (state.progress[vidId] || 0) + 1;
   state.adViews++;
 
@@ -812,7 +893,7 @@ function watchExternal(link) {
 async function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
-  const ads = parseInt(document.getElementById('av-ads').value) || 1;
+  const ads = parseInt(document.getElementById('av-ads').value) || 3;
   const thumbPrev = document.getElementById('av-thumb-prev');
   const thumbBase64 = thumbPrev ? thumbPrev._data : '';
   const fileInput = document.getElementById('av-file');
@@ -844,7 +925,6 @@ async function saveVideo() {
       const videoPublicUrl = publicUrlData.publicUrl;
       const vidId = 'v' + Date.now();
 
-      // FIX: টেবিলের কলামের নাম 'link' ব্যবহার করা হয়েছে যাতে ডাটাবেজের সাথে হুবহু মিলে যায়
       const vidData = { 
         id: vidId, 
         title, 
@@ -852,7 +932,7 @@ async function saveVideo() {
         source: 'file', 
         link: videoPublicUrl,
         required_ads: ads, 
-        thumb: thumbBase64 || '', 
+        thumb: thumbBase64 || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60', 
         views: {}
       };
 
@@ -1131,7 +1211,9 @@ function clearAppData() {
 }
 
 function shareVideo() {
-  if (tg.switchInlineQuery) {
+  if (currentActiveVid) {
+    copyVideoShareLink(currentActiveVid.id);
+  } else if (tg.switchInlineQuery) {
     tg.switchInlineQuery("Check out this awesome video!");
   } else {
     showToast("Share feature requires Telegram WebApp", "info");
@@ -1141,4 +1223,4 @@ function shareVideo() {
 window.onload = initApp;
 </script>
 </body>
-   </html>
+</html>
