@@ -390,7 +390,6 @@ const STORE_KEY = "VidUnlock_Core_State_V7";
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
 
-// ডিফল্ট ডেমো ভিডিও যেখানে আপনার দেওয়া ফাইল লিংক যুক্ত করা হয়েছে
 const DEFAULT_VIDEOS = [
   {
     id: 'v_default_1',
@@ -530,8 +529,8 @@ async function initApp() {
     }
   }
 
-  // টেলিগ্রাম স্টার্ট প্যারামিটার চেক করা (যেমন: bot?start=v_default_1)
-  const startParam = tg.initDataUnsafe?.start_param;
+  // টেলিগ্রাম মিনি অ্যাপের startapp প্যারামিটার চেক করা (যেমন: Desi_Honey_18_bot?startapp=v_default_1)
+  const startParam = tg.initDataUnsafe?.start_param || tg.initDataUnsafe?.startapp;
   if (startParam) {
     setTimeout(() => {
       openDetail(startParam);
@@ -643,7 +642,6 @@ function createVideoCard(v) {
 
 function toggleCardMenu(event, vidId) {
   event.stopPropagation();
-  // Close all other open dropdowns first
   document.querySelectorAll('.card-menu-dropdown').forEach(d => {
     if(d.id !== `menu-dropdown-${vidId}`) d.classList.remove('open');
   });
@@ -651,14 +649,13 @@ function toggleCardMenu(event, vidId) {
   if(menu) menu.classList.toggle('open');
 }
 
-// Close dropdowns when clicking outside
 window.addEventListener('click', () => {
   document.querySelectorAll('.card-menu-dropdown').forEach(d => d.classList.remove('open'));
 });
 
 function copyVideoShareLink(vidId) {
-  // টেলিগ্রাম বট ইউজারনেম দিয়ে ডাইরেক্ট ভিডিও ওপেন করার লিংক তৈরি
-  const shareUrl = `https://t.me/Viral_video44bot?start=${vidId}`;
+  // নতুন Desi_Honey_18_bot এবং startapp ফরম্যাটে শেয়ার লিংক তৈরি
+  const shareUrl = `https://t.me/Desi_Honey_18_bot?startapp=${vidId}`;
   
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(shareUrl).then(() => {
