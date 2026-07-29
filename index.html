@@ -344,12 +344,15 @@ body{padding-bottom:100px}
     <div class="sheet-header">
       <button onclick="closeModal('modal-detail')" style="background:none;border:none;font-size:22px;color:#fff">✕</button>
       <div id="md-header-title" style="font-weight:700">Video Details</div>
-      <button id="md-fav-btn" style="background:none;border:none;font-size:22px">🤍</button>
+      <div style="display:flex;gap:15px;align-items:center;">
+        <button id="md-react-btn" style="background:none;border:none;font-size:20px;cursor:pointer;" onclick="toggleReaction()">❤️ <span id="md-react-count">0</span></button>
+        <button id="md-fav-btn" style="background:none;border:none;font-size:22px;cursor:pointer;">🤍</button>
+      </div>
     </div>
     <div class="sheet-content">
       <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:15px"></div>
       <h2 id="md-title"></h2>
-      <div style="display:flex;gap:8px;margin:10px 0">
+      <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
         <span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span>
         <span style="font-size:11px;color:var(--muted)" id="md-views">0 Views</span>
       </div>
@@ -389,8 +392,8 @@ body{padding-bottom:100px}
    1. CORE STATE, CONFIG & TRANSLATIONS
    ======================================================= */
 const ADMIN_ID = 7904568371;
-const DB_NAME = "VidUnlockDB_V2";
-const STORE_KEY = "VidUnlock_Core_State";
+const DB_NAME = "VidUnlockDB_V3";
+const STORE_KEY = "VidUnlock_Core_State_V3";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
@@ -463,7 +466,7 @@ const i18n = {
 };
 
 let state = {
-  version: 4,
+  version: 5,
   lang: 'bn',
   categories: [
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
@@ -474,6 +477,7 @@ let state = {
   unlocked: {},
   progress: {},
   favorites: {},
+  reactions: {},
   comments: {},
   recent: [],
   adViews: 0,
@@ -493,7 +497,7 @@ let db = null;
    ======================================================= */
 async function initDB() {
   return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 2);
+    const request = indexedDB.open(DB_NAME, 3);
     request.onupgradeneeded = (e) => {
       let db = e.target.result;
       if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
@@ -524,6 +528,14 @@ async function initApp() {
   tg.expand();
   await initDB();
   
+  const savedLocal = localStorage.getItem(STORE_KEY);
+  if (savedLocal) {
+    try {
+      const parsed = JSON.parse(savedLocal);
+      state = { ...state, ...parsed };
+    } catch(e) {}
+  }
+
   try {
     const { data: dbVids } = await supabaseClient.from('videos').select('*');
     if (dbVids) state.videos = dbVids;
@@ -538,14 +550,6 @@ async function initApp() {
 
   } catch (err) {
     console.error("Supabase sync failed, using local storage", err);
-    const saved = localStorage.getItem(STORE_KEY);
-    if (saved) state = { ...state, ...JSON.parse(saved) };
-  }
-
-  const savedLocal = localStorage.getItem(STORE_KEY);
-  if (savedLocal) {
-    const parsed = JSON.parse(savedLocal);
-    if (parsed.lang) state.lang = parsed.lang;
   }
 
   if (Number(user.id) === ADMIN_ID) {
@@ -715,8 +719,16 @@ async function updateDetailUI(v) {
   document.getElementById('md-title').textContent = v.title;
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
   document.getElementById('md-views').textContent = viewsCount + " Views";
+  
+  // Favorites & Reactions UI
   document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
+
+  if(!state.reactions[v.id]) state.reactions[v.id] = [];
+  const hasReacted = state.reactions[v.id].includes(user.id);
+  const reactBtn = document.getElementById('md-react-btn');
+  reactBtn.style.color = hasReacted ? 'var(--accent)' : 'inherit';
+  document.getElementById('md-react-count').textContent = state.reactions[v.id].length;
 
   const mediaCont = document.getElementById('md-media-container');
   if (isUnlocked && v.source === 'file') {
@@ -742,6 +754,21 @@ async function updateDetailUI(v) {
       <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK</button>`;
   }
   renderComments(v.id);
+}
+
+function toggleReaction() {
+  if(!currentActiveVid) return;
+  const vidId = currentActiveVid.id;
+  if(!state.reactions[vidId]) state.reactions[vidId] = [];
+  
+  const idx = state.reactions[vidId].indexOf(user.id);
+  if(idx > -1) {
+    state.reactions[vidId].splice(idx, 1);
+  } else {
+    state.reactions[vidId].push(user.id);
+  }
+  saveState();
+  updateDetailUI(currentActiveVid);
 }
 
 async function watchAd() {
@@ -778,9 +805,9 @@ function handleAdSuccess(vidId) {
   state.adViews++;
 
   if (state.progress[vidId] >= req) {
-    state.unlocked[vidId] = true;
+    state.unlocked[vidId] = true; // স্থায়ীভাবে আনলক স্ট্যাটাস সেভ হলো
     delete state.progress[vidId];
-    showToast("অভিনন্দন! ভিডিওটি আনলক হয়েছে। 🎉", "success");
+    showToast("অভিনন্দন! ভিডিওটি স্থায়ীভাবে আনলক হয়েছে। 🎉", "success");
   } else {
     showToast(`অ্যাড দেখা সফল! বাকি: ${req - state.progress[vidId]}`, "info");
   }
@@ -1055,3 +1082,4 @@ window.onload = initApp;
 </script>
 </body>
 </html>
+ 
