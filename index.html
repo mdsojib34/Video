@@ -7,7 +7,7 @@
 <!-- Telegram Mini App SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- Advertisement SDK -->
-<script src='//libtl.com/sdk.js' data-zone='11404425' data-sdk='show_11404425'></script>
+<script src="//libtl.com/sdk.js" data-zone="11404425" data-sdk="show_11404425"></script>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -305,7 +305,6 @@ body{padding-bottom:100px}
     <div id="admin-cat-list"></div>
   </div>
 
-  <!-- ADMIN: VIRAL LINKS MANAGEMENT -->
   <div id="admin-viral" class="admin-subview hidden">
     <div class="admin-card">
       <h4 data-i18n="addViralLink">➕ নতুন ভাইরাল লিংক যোগ করুন</h4>
@@ -380,16 +379,18 @@ body{padding-bottom:100px}
 <div id="toast-container"></div>
 
 <script>
-/* =======================================================
-   1. CORE STATE, CONFIG & TRANSLATIONS
-   ======================================================= */
 const ADMIN_ID = 7904568371;
-const STORE_KEY = "VidUnlock_Core_State_V5";
+const STORE_KEY = "VidUnlock_Core_State_V6";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabaseClient;
+try {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.error("Supabase init error:", e);
+}
 
 const i18n = {
   bn: {
@@ -476,18 +477,15 @@ let state = {
   settings: { maintenance: false }
 };
 
-let tg = window.Telegram.WebApp;
+let tg = window.Telegram.WebApp || {};
 let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
-let currentView = 'home';
 let currentCat = 'cat_all';
 let isAdShowing = false;
+let currentActiveVid = null;
 
-/* =======================================================
-   3. APP INITIALIZATION & SUPABASE SYNC
-   ======================================================= */
 async function initApp() {
-  tg.ready();
-  tg.expand();
+  if (tg.ready) tg.ready();
+  if (tg.expand) tg.expand();
   
   const savedLocal = localStorage.getItem(STORE_KEY);
   if (savedLocal) {
@@ -497,41 +495,43 @@ async function initApp() {
     } catch(e) {}
   }
 
-  try {
-    const { data: dbVids } = await supabaseClient.from('videos').select('*');
-    if (dbVids) state.videos = dbVids;
+  if (supabaseClient) {
+    try {
+      const { data: dbVids } = await supabaseClient.from('videos').select('*');
+      if (dbVids) state.videos = dbVids;
 
-    const { data: dbCats } = await supabaseClient.from('categories').select('*');
-    if (dbCats && dbCats.length > 0) {
-      state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨', order: 0 }, ...dbCats.filter(c => c.id !== 'cat_all')];
+      const { data: dbCats } = await supabaseClient.from('categories').select('*');
+      if (dbCats && dbCats.length > 0) {
+        state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨', order: 0 }, ...dbCats.filter(c => c.id !== 'cat_all')];
+      }
+
+      const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
+      if (dbViral) state.viralLinks = dbViral;
+    } catch (err) {
+      console.error("Supabase sync failed, using local storage", err);
     }
-
-    const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
-    if (dbViral) state.viralLinks = dbViral;
-
-  } catch (err) {
-    console.error("Supabase sync failed, using local storage", err);
   }
 
   if (Number(user.id) === ADMIN_ID) {
-    document.getElementById('nav-admin').classList.remove('hidden');
-    document.getElementById('u-badge').style.display = 'inline-block';
+    const navAdmin = document.getElementById('nav-admin');
+    if(navAdmin) navAdmin.classList.remove('hidden');
+    const uBadge = document.getElementById('u-badge');
+    if(uBadge) uBadge.style.display = 'inline-block';
   }
 
   applyLanguage();
   updateUserUI();
   renderCategories();
   renderAll();
-  document.getElementById('app-loader').style.display = 'none';
+  
+  const loader = document.getElementById('app-loader');
+  if(loader) loader.style.display = 'none';
 }
 
 function saveState() {
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
 }
 
-/* =======================================================
-   4. LANGUAGE SYSTEM (BN / EN)
-   ======================================================= */
 function toggleLanguage() {
   state.lang = state.lang === 'bn' ? 'en' : 'bn';
   saveState();
@@ -540,44 +540,50 @@ function toggleLanguage() {
 
 function applyLanguage() {
   const currentLang = state.lang;
-  document.getElementById('lang-toggle-btn').textContent = currentLang === 'bn' ? '🌐 EN' : '🌐 BN';
+  const langToggleBtn = document.getElementById('lang-toggle-btn');
+  if(langToggleBtn) langToggleBtn.textContent = currentLang === 'bn' ? '🌐 EN' : '🌐 BN';
 
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    if (i18n[currentLang][key]) {
+    if (i18n[currentLang] && i18n[currentLang][key]) {
       el.textContent = i18n[currentLang][key];
     }
   });
 
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     const key = el.getAttribute('data-i18n-ph');
-    if (i18n[currentLang][key]) {
+    if (i18n[currentLang] && i18n[currentLang][key]) {
       el.placeholder = i18n[currentLang][key];
     }
   });
 
-  document.getElementById('hero-welcome').textContent = currentLang === 'bn' ? `হ্যালো! 👋` : `Hello! 👋`;
+  const heroWelcome = document.getElementById('hero-welcome');
+  if(heroWelcome) heroWelcome.textContent = currentLang === 'bn' ? `হ্যালো! 👋` : `Hello! 👋`;
 }
 
-/* =======================================================
-   5. RENDERING LOGIC
-   ======================================================= */
 function renderCategories() {
   const container = document.getElementById('category-tabs');
-  container.innerHTML = state.categories.map(c => `
-    <button class="tab ${currentCat === c.id ? 'active' : ''}" onclick="switchCat('${c.id}')">
-      ${c.icon} ${c.name}
-    </button>
-  `).join('');
+  if(container) {
+    container.innerHTML = state.categories.map(c => `
+      <button class="tab ${currentCat === c.id ? 'active' : ''}" onclick="switchCat('${c.id}')">
+        ${c.icon} ${c.name}
+      </button>
+    `).join('');
+  }
   
   const select = document.getElementById('av-cat');
-  if(select) select.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  if(select) {
+    select.innerHTML = state.categories.filter(c => c.id !== 'cat_all').map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
 }
 
 function createVideoCard(v) {
   const isUnlocked = state.unlocked[v.id];
   const isFav = state.favorites[v.id];
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
+  const catObj = state.categories.find(c => c.id === v.category_id || c.id === v.categoryId);
+  const catName = catObj ? catObj.name : '';
+
   return `
     <div class="card" onclick="openDetail('${v.id}')">
       <div class="card-thumb">
@@ -588,7 +594,7 @@ function createVideoCard(v) {
         <div class="card-play"><div class="play-btn-circle">▶</div></div>
       </div>
       <div class="card-body">
-        <div class="card-cat">${state.categories.find(c=>c.id===v.category_id || c.id===v.categoryId)?.name || ''}</div>
+        <div class="card-cat">${catName}</div>
         <div class="card-title">${v.title}</div>
         <div class="card-footer">
           <span>👁 ${viewsCount} views</span>
@@ -610,25 +616,31 @@ function renderAll() {
 
 function renderHome() {
   const grid = document.getElementById('main-grid');
+  if(!grid) return;
   let vids = state.videos;
-  if (currentCat !== 'cat_all') vids = vids.filter(v => (v.category_id === currentCat || v.categoryId === currentCat));
+  if (currentCat !== 'cat_all') {
+    vids = vids.filter(v => (v.category_id === currentCat || v.categoryId === currentCat));
+  }
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>📹</i>No videos found</div>';
 }
 
 function renderFavs() {
   const grid = document.getElementById('fav-grid');
+  if(!grid) return;
   const vids = state.videos.filter(v => state.favorites[v.id]);
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>❤️</i>No favorites yet</div>';
 }
 
 function renderUnlocked() {
   const grid = document.getElementById('unlock-grid');
+  if(!grid) return;
   const vids = state.videos.filter(v => state.unlocked[v.id]);
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>🔓</i>No unlocked videos</div>';
 }
 
 function renderViralLinks() {
   const cont = document.getElementById('viral-links-list');
+  if(!cont) return;
   const links = state.viralLinks || [];
   
   if (!links.length) {
@@ -652,11 +664,6 @@ function renderViralLinks() {
   `).join('');
 }
 
-/* =======================================================
-   6. VIDEO ACTIONS & AD SYSTEM
-   ======================================================= */
-let currentActiveVid = null;
-
 async function openDetail(id) {
   const v = state.videos.find(x => x.id === id);
   if (!v) return;
@@ -667,7 +674,8 @@ async function openDetail(id) {
   saveState();
 
   updateDetailUI(v);
-  document.getElementById('modal-detail').classList.add('open');
+  const modal = document.getElementById('modal-detail');
+  if(modal) modal.classList.add('open');
 }
 
 async function updateDetailUI(v) {
@@ -676,40 +684,52 @@ async function updateDetailUI(v) {
   const req = v.required_ads || v.requiredAds || 1;
   const pct = Math.floor((prog/req)*100);
 
-  document.getElementById('md-title').textContent = v.title;
-  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
-  document.getElementById('md-views').textContent = viewsCount + " Views";
+  const titleEl = document.getElementById('md-title');
+  if(titleEl) titleEl.textContent = v.title;
   
-  document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
-  document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
+  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
+  const viewsEl = document.getElementById('md-views');
+  if(viewsEl) viewsEl.textContent = viewsCount + " Views";
+  
+  const favBtn = document.getElementById('md-fav-btn');
+  if(favBtn) {
+    favBtn.textContent = state.favorites[v.id] ? "❤️" : "🤍";
+    favBtn.onclick = () => toggleFav(v.id);
+  }
 
   if(!state.reactions[v.id]) state.reactions[v.id] = [];
   const hasReacted = state.reactions[v.id].includes(user.id);
   const reactBtn = document.getElementById('md-react-btn');
-  reactBtn.style.color = hasReacted ? 'var(--accent)' : 'inherit';
-  document.getElementById('md-react-count').textContent = state.reactions[v.id].length;
+  if(reactBtn) reactBtn.style.color = hasReacted ? 'var(--accent)' : 'inherit';
+  
+  const reactCount = document.getElementById('md-react-count');
+  if(reactCount) reactCount.textContent = state.reactions[v.id].length;
 
   const mediaCont = document.getElementById('md-media-container');
-  if (isUnlocked && v.videoUrl) {
-    mediaCont.innerHTML = `<video src="${v.videoUrl}" controls style="width:100%;height:100%"></video>`;
-  } else {
-    mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
+  if(mediaCont) {
+    if (isUnlocked && v.videoUrl) {
+      mediaCont.innerHTML = `<video src="${v.videoUrl}" controls style="width:100%;height:100%"></video>`;
+    } else {
+      mediaCont.innerHTML = `<img src="${v.thumb || ''}" style="width:100%;height:100%;object-fit:cover">`;
+    }
   }
 
   const actionArea = document.getElementById('md-action-area');
-  if (isUnlocked) {
-    actionArea.innerHTML = `
-      <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
-        <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
-        <p style="font-size:12px;color:var(--muted)">উপরের প্লেয়ারে ভিডিও প্লে করুন।</p>
-      </div>`;
-  } else {
-    actionArea.innerHTML = `
-      <div class="prog-wrap">
-        <div class="prog-labels"><span>আনলক অগ্রগতি</span><span id="prog-text">${prog}/${req} Ads</span></div>
-        <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:${pct}%"></div></div>
-      </div>
-      <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK</button>`;
+  if(actionArea) {
+    if (isUnlocked) {
+      actionArea.innerHTML = `
+        <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
+          <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
+          <p style="font-size:12px;color:var(--muted)">উপরের প্লেয়ারে ভিডিও প্লে করুন।</p>
+        </div>`;
+    } else {
+      actionArea.innerHTML = `
+        <div class="prog-wrap">
+          <div class="prog-labels"><span>আনলক অগ্রগতি</span><span id="prog-text">${prog}/${req} Ads</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:${pct}%"></div></div>
+        </div>
+        <button class="btn btn-p" id="ad-btn" onclick="watchAd()">📺 WATCH AD TO UNLOCK</button>`;
+    }
   }
   renderComments(v.id);
 }
@@ -740,7 +760,7 @@ async function watchAd() {
   }
 
   isAdShowing = true;
-  btn.disabled = true;
+  if(btn) btn.disabled = true;
 
   try {
     await show_11404425(); 
@@ -788,80 +808,83 @@ function watchExternal(link) {
   }
 }
 
-/* =======================================================
-   7. ADMIN ACTIONS (SUPABASE STORAGE UPLOAD)
-   ======================================================= */
 async function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
   const ads = parseInt(document.getElementById('av-ads').value) || 1;
-  const thumbBase64 = document.getElementById('av-thumb-prev')._data;
+  const thumbPrev = document.getElementById('av-thumb-prev');
+  const thumbBase64 = thumbPrev ? thumbPrev._data : '';
   const fileInput = document.getElementById('av-file');
   const uploadBtn = document.getElementById('upload-btn');
 
   if (!title) return showToast("দয়া করে ভিডিওর শিরোনাম দিন");
-  if (!fileInput.files[0]) return showToast("দয়া করে একটি ভিডিও ফাইল সিলেক্ট করুন");
+  if (!fileInput || !fileInput.files[0]) return showToast("দয়া করে একটি ভিডিও ফাইল সিলেক্ট করুন");
 
-  uploadBtn.disabled = true;
-  uploadBtn.textContent = "ক্লাউডে আপলোড হচ্ছে... দয়া করে অপেক্ষা করুন ⏳";
+  if(uploadBtn) {
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = "ক্লাউডে আপলোড হচ্ছে... দয়া করে অপেক্ষা করুন ⏳";
+  }
 
   try {
     const videoFile = fileInput.files[0];
-    const fileName = `video_${Date.now()}_${Math.random().toString(36.substring(2, 7))}.${videoFile.name.split('.').pop()}`;
+    const fileName = `video_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${videoFile.name.split('.').pop()}`;
 
-    // Supabase Storage-এ ভিডিও আপলোড (bucket নাম 'videos' দিতে হবে, অথবা আপনার বালতি অনুযায়ী বদলাতে পারেন)
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
-      .from('videos')
-      .upload(fileName, videoFile);
+    if (supabaseClient) {
+      const { error: uploadError } = await supabaseClient.storage
+        .from('videos')
+        .upload(fileName, videoFile);
 
-    if (uploadError) {
-      throw uploadError;
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabaseClient.storage
+        .from('videos')
+        .getPublicUrl(fileName);
+
+      const videoPublicUrl = publicUrlData.publicUrl;
+      const vidId = 'v' + Date.now();
+
+      const vidData = { 
+        id: vidId, 
+        title, 
+        category_id: catId, 
+        source: 'file', 
+        videoUrl: videoPublicUrl,
+        required_ads: ads, 
+        thumb: thumbBase64 || '', 
+        views: {}
+      };
+
+      await supabaseClient.from('videos').insert([vidData]);
+      state.videos.push(vidData);
     }
 
-    // পাবলিক ইউআরএল জেনারেট করা
-    const { data: publicUrlData } = supabaseClient.storage
-      .from('videos')
-      .getPublicUrl(fileName);
-
-    const videoPublicUrl = publicUrlData.publicUrl;
-    const vidId = 'v' + Date.now();
-
-    const vidData = { 
-      id: vidId, 
-      title, 
-      category_id: catId, 
-      source: 'file', 
-      videoUrl: videoPublicUrl,
-      required_ads: ads, 
-      thumb: thumbBase64 || '', 
-      views: {}
-    };
-
-    const { error: dbError } = await supabaseClient.from('videos').insert([vidData]);
-    if (dbError) throw dbError;
-
-    state.videos.push(vidData);
     saveState();
     renderAll();
     showToast("ভিডিও সফলভাবে ক্লাউডে আপলোড ও সেভ হয়েছে! ✅", "success");
     
     document.getElementById('av-title').value = '';
     document.getElementById('av-file').value = '';
-    document.getElementById('av-thumb-prev').innerHTML = '<span>Preview</span>';
-    document.getElementById('av-thumb-prev')._data = null;
+    if(thumbPrev) {
+      thumbPrev.innerHTML = '<span>Preview</span>';
+      thumbPrev._data = null;
+    }
 
   } catch (err) {
     console.error("Upload error:", err);
     showToast("আপলোড ব্যর্থ হয়েছে! Supabase Storage bucket পলিসি বা সাইজ চেক করুন।", "danger");
   } finally {
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = "ক্লাউডে আপলোড ও সেভ করুন";
+    if(uploadBtn) {
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = "ক্লাউডে আপলোড ও সেভ করুন";
+    }
   }
 }
 
 async function deleteVideo(id) {
   if (!confirm("ডিলিট করতে চান?")) return;
-  try { await supabaseClient.from('videos').delete().eq('id', id); } catch (err) {}
+  if (supabaseClient) {
+    try { await supabaseClient.from('videos').delete().eq('id', id); } catch (err) {}
+  }
   state.videos = state.videos.filter(v => v.id !== id);
   saveState();
   renderAll();
@@ -869,37 +892,39 @@ async function deleteVideo(id) {
 }
 
 async function saveCategory() {
-  const name = document.getElementById('ac-name').value;
-  const icon = document.getElementById('ac-icon').value || '📁';
+  const nameInput = document.getElementById('ac-name');
+  const iconInput = document.getElementById('ac-icon');
+  const name = nameInput ? nameInput.value : '';
+  const icon = iconInput ? iconInput.value || '📁' : '📁';
   if(!name) return showToast("ক্যাটাগরির নাম দিন");
   
   const catId = 'cat_' + Date.now();
   const catData = { id: catId, name, icon, order: state.categories.length };
   
-  try {
-    await supabaseClient.from('categories').insert([catData]);
-  } catch(e) {}
+  if (supabaseClient) {
+    try { await supabaseClient.from('categories').insert([catData]); } catch(e) {}
+  }
 
   state.categories.push(catData);
   saveState();
   renderCategories();
   showToast("ক্যাটাগরি সেভ হয়েছে! ✅", "success");
-  document.getElementById('ac-name').value = '';
-  document.getElementById('ac-icon').value = '';
+  if(nameInput) nameInput.value = '';
+  if(iconInput) iconInput.value = '';
 }
 
 async function saveViralLink() {
-  const title = document.getElementById('avl-title').value;
-  const url = document.getElementById('avl-url').value;
+  const titleInput = document.getElementById('avl-title');
+  const urlInput = document.getElementById('avl-url');
+  const title = titleInput ? titleInput.value : '';
+  const url = urlInput ? urlInput.value : '';
 
   if (!title || !url) return showToast("টাইটেল এবং লিংক ইউআরএল প্রবেশ করুন");
 
   const linkData = { id: 'vl_' + Date.now(), title, url };
 
-  try {
-    await supabaseClient.from('viral_links').insert([linkData]);
-  } catch (err) {
-    console.error(err);
+  if (supabaseClient) {
+    try { await supabaseClient.from('viral_links').insert([linkData]); } catch (err) {}
   }
 
   if (!state.viralLinks) state.viralLinks = [];
@@ -908,17 +933,15 @@ async function saveViralLink() {
   renderAll();
   showToast("ভাইরাল লিংক সেভ হয়েছে! 🔥", "success");
   
-  document.getElementById('avl-title').value = '';
-  document.getElementById('avl-url').value = '';
+  if(titleInput) titleInput.value = '';
+  if(urlInput) urlInput.value = '';
 }
 
 async function deleteViralLink(id) {
   if (!confirm("ভাইরাল লিংকটি ডিলিট করতে চান?")) return;
   
-  try {
-    await supabaseClient.from('viral_links').delete().eq('id', id);
-  } catch (err) {
-    console.error(err);
+  if (supabaseClient) {
+    try { await supabaseClient.from('viral_links').delete().eq('id', id); } catch (err) {}
   }
 
   state.viralLinks = state.viralLinks.filter(l => l.id !== id);
@@ -929,17 +952,19 @@ async function deleteViralLink(id) {
 
 function renderAdmin() {
   if (Number(user.id) !== ADMIN_ID) return;
-  document.getElementById('ad-stat-v').textContent = state.videos.length;
-  document.getElementById('ad-stat-c').textContent = state.categories.length;
-  document.getElementById('ad-stat-u').textContent = Object.keys(state.users).length;
-  document.getElementById('ad-stat-av').textContent = state.adViews;
+  
+  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setEl('ad-stat-v', state.videos.length);
+  setEl('ad-stat-c', state.categories.length);
+  setEl('ad-stat-u', Object.keys(state.users || {}).length);
+  setEl('ad-stat-av', state.adViews);
 
   const vidListCont = document.getElementById('admin-vid-list');
   if (vidListCont) {
     vidListCont.innerHTML = state.videos.length ? state.videos.map(v => `
       <div class="admin-list-item">
         <div class="admin-list-info">
-          <img src="${v.thumb}" class="admin-list-thumb">
+          <img src="${v.thumb || ''}" class="admin-list-thumb">
           <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">${v.title}</div>
         </div>
         <button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteVideo('${v.id}')">ডিলিট</button>
@@ -976,18 +1001,20 @@ function renderAdmin() {
 
 function switchAdminSubView(id, btn) {
   document.querySelectorAll('.admin-subview').forEach(v => v.classList.add('hidden'));
-  document.getElementById('admin-' + id).classList.remove('hidden');
-  const tabs = btn.parentElement.querySelectorAll('.tab');
-  tabs.forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
+  const subview = document.getElementById('admin-' + id);
+  if(subview) subview.classList.remove('hidden');
+  
+  if(btn && btn.parentElement) {
+    const tabs = btn.parentElement.querySelectorAll('.tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
 }
 
-/* =======================================================
-   8. UTILS & OTHERS
-   ========================================================= */
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + viewId).classList.add('active');
+  const targetView = document.getElementById('view-' + viewId);
+  if(targetView) targetView.classList.add('active');
   
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(n => n.classList.remove('active'));
@@ -996,8 +1023,6 @@ function showView(viewId) {
   if (viewIndexMap[viewId] !== undefined && navItems[viewIndexMap[viewId]]) {
     navItems[viewIndexMap[viewId]].classList.add('active');
   }
-  
-  currentView = viewId;
 }
 
 function switchCat(id) {
@@ -1007,8 +1032,10 @@ function switchCat(id) {
 }
 
 function handleSearch() {
-  const q = document.getElementById('main-search').value.toLowerCase();
+  const searchInput = document.getElementById('main-search');
+  const q = searchInput ? searchInput.value.toLowerCase() : '';
   const grid = document.getElementById('main-grid');
+  if(!grid) return;
   const filtered = state.videos.filter(v => v.title.toLowerCase().includes(q));
   grid.innerHTML = filtered.map(createVideoCard).join('');
 }
@@ -1021,6 +1048,7 @@ function toggleFav(id) {
 
 function showToast(msg, type = 'info') {
   const cont = document.getElementById('toast-container');
+  if(!cont) return;
   const toast = document.createElement('div');
   toast.className = `toast`;
   toast.innerHTML = `<span>${type === 'success' ? '✅' : 'ℹ️'}</span> ${msg}`;
@@ -1029,22 +1057,24 @@ function showToast(msg, type = 'info') {
 }
 
 function updateUserUI() {
-  document.getElementById('u-name').textContent = user.first_name;
-  document.getElementById('u-avatar').textContent = user.first_name.charAt(0);
-  document.getElementById('prof-name').textContent = user.first_name;
-  document.getElementById('prof-id').textContent = `ID: ${user.id}`;
+  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setEl('u-name', user.first_name);
+  setEl('u-avatar', user.first_name ? user.first_name.charAt(0) : 'U');
+  setEl('prof-name', user.first_name);
+  setEl('prof-id', `ID: ${user.id}`);
 }
 
 function updateStats() {
-  document.getElementById('stat-total-v').textContent = state.videos.length;
-  document.getElementById('stat-unlocked-v').textContent = Object.keys(state.unlocked).length;
-  document.getElementById('stat-fav-v').textContent = Object.keys(state.favorites).filter(k => state.favorites[k]).length;
+  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setEl('stat-total-v', state.videos.length);
+  setEl('stat-unlocked-v', Object.keys(state.unlocked).length);
+  setEl('stat-fav-v', Object.keys(state.favorites).filter(k => state.favorites[k]).length);
 }
 
 function previewFile(input, targetId) {
   const file = input.files[0];
   const target = document.getElementById(targetId);
-  if (file) {
+  if (file && target) {
     const reader = new FileReader();
     reader.onload = (e) => {
       target.innerHTML = `<img src="${e.target.result}">`;
@@ -1055,12 +1085,15 @@ function previewFile(input, targetId) {
 }
 
 function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.getElementById('md-media-container').innerHTML = '';
+  const modal = document.getElementById(id);
+  if(modal) modal.classList.remove('open');
+  const mediaCont = document.getElementById('md-media-container');
+  if(mediaCont) mediaCont.innerHTML = '';
 }
 
 function renderComments(vidId) {
   const cont = document.getElementById('md-comments');
+  if(!cont) return;
   const list = state.comments[vidId] || [];
   cont.innerHTML = list.map(c => `
     <div class="comment-item">
@@ -1072,7 +1105,7 @@ function renderComments(vidId) {
 
 function postComment() {
   const input = document.getElementById('md-comment-input');
-  if(!input.value || !currentActiveVid) return;
+  if(!input || !input.value || !currentActiveVid) return;
   if(!state.comments[currentActiveVid.id]) state.comments[currentActiveVid.id] = [];
   state.comments[currentActiveVid.id].unshift({ user: user.first_name, text: input.value });
   input.value = '';
@@ -1092,6 +1125,14 @@ function clearAppData() {
   if (confirm("Clear everything?")) {
     localStorage.clear();
     location.reload();
+  }
+}
+
+function shareVideo() {
+  if (tg.switchInlineQuery) {
+    tg.switchInlineQuery("Check out this awesome video!");
+  } else {
+    showToast("Share feature requires Telegram WebApp", "info");
   }
 }
 
