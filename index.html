@@ -106,7 +106,7 @@ body{padding-bottom:100px}
 .viral-title{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .viral-url{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
 
-/* MODAL / BOTTOM SHEET - EXACT SCREENSHOT STYLE MATCH */
+/* MODAL / BOTTOM SHEET */
 .modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:none;align-items:flex-end}
 .modal.open{display:flex}
 .modal-sheet{background:#121212;color:#ffffff;width:100%;max-height:92vh;border-radius:28px 28px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.4s cubic-bezier(0,0,0.2,1);border-top:1px solid #2a2a2a}
@@ -114,7 +114,7 @@ body{padding-bottom:100px}
 .sheet-header{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222}
 .sheet-content{padding:16px;overflow-y:auto;flex:1}
 
-/* SCREENSHOT MATCHING DETAILS UI */
+/* DETAILS UI */
 .detail-top-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -143,7 +143,7 @@ body{padding-bottom:100px}
   display: block;
 }
 
-/* BIG GRADIENT WATCH AD BUTTON */
+/* WATCH AD BUTTON */
 .btn-watch-ad {
   background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 50%, #9c27b0 100%);
   color: #ffffff;
@@ -164,7 +164,7 @@ body{padding-bottom:100px}
 }
 .btn-watch-ad:active { transform: scale(0.97); }
 
-/* BOTTOM ACTION BUTTONS ROW (Home, Comments, Share) */
+/* BOTTOM ACTION BUTTONS */
 .detail-action-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -197,7 +197,7 @@ body{padding-bottom:100px}
 .comment-item{background:#1e1e1e;padding:12px;border-radius:12px;border:1px solid #2c2c2c}
 .comment-meta{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;color:#a855f7}
 
-/* ADMIN INTERFACE */
+/* ADMIN */
 .admin-card{background:var(--surface);border:1px solid var(--border);padding:15px;border-radius:18px;margin-bottom:15px}
 .form-group{margin-bottom:12px}
 .form-group label{display:block;font-size:11px;margin-bottom:5px;color:var(--muted)}
@@ -205,7 +205,6 @@ body{padding-bottom:100px}
 .thumb-prev{width:100%;aspect-ratio:16/9;border:2px dashed var(--border);border-radius:12px;margin-top:5px;display:grid;place-items:center;overflow:hidden;background:var(--surface-2);color:var(--muted)}
 .thumb-prev img{width:100%;height:100%;object-fit:cover}
 
-/* ADMIN LIST ITEMS */
 .admin-list-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);padding:10px 12px;border-radius:12px;margin-bottom:8px}
 .admin-list-info{display:flex;align-items:center;gap:10px;overflow:hidden}
 .admin-list-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;background:#e2e8f0}
@@ -397,7 +396,7 @@ body{padding-bottom:100px}
   </div>
 </section>
 
-<!-- MODAL: DETAIL (MATCHING YOUR SCREENSHOT) -->
+<!-- MODAL: DETAIL -->
 <div class="modal" id="modal-detail">
   <div class="modal-sheet">
     <div class="sheet-header">
@@ -413,10 +412,10 @@ body{padding-bottom:100px}
       <h2 id="md-title" style="font-size:16px;color:#fff;margin-bottom:6px;line-height:1.4"></h2>
       <div style="font-size:11px;color:#9ca3af;margin-bottom:15px">🔥 New 🔥 Each round has ad step 🔒</div>
 
-      <!-- EXACT STATS BOXES AS IN SCREENSHOT -->
+      <!-- STATS BOXES -->
       <div class="detail-top-stats">
         <div class="detail-stat-box">
-          <b id="md-views-num">82</b>
+          <b id="md-views-num">0</b>
           <span>Views</span>
         </div>
         <div class="detail-stat-box">
@@ -429,10 +428,10 @@ body{padding-bottom:100px}
         </div>
       </div>
 
-      <!-- BIG WATCH AD BUTTON -->
+      <!-- WATCH AD BUTTON -->
       <div id="md-action-area"></div>
 
-      <!-- BOTTOM ACTION ROW (Home, Comments, Share) -->
+      <!-- BOTTOM ACTION ROW -->
       <div class="detail-action-row">
         <button class="action-icon-btn" onclick="closeModal('modal-detail'); showView('home')">
           <span style="font-size:16px">🏠</span> Home
@@ -473,7 +472,7 @@ body{padding-bottom:100px}
 
 <script>
 const ADMIN_ID = 7904568371;
-const STORE_KEY = "VidUnlock_Core_State_V8";
+const STORE_KEY = "VidUnlock_Core_State_V9";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
@@ -486,7 +485,7 @@ const DEFAULT_VIDEOS = [
     link: 'https://mdsojib34.github.io/Video/',
     thumb: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60',
     required_ads: 8,
-    views: { '1': true, '2': true }
+    views: {}
   }
 ];
 
@@ -561,7 +560,7 @@ const i18n = {
 };
 
 let state = {
-  version: 8,
+  version: 9,
   lang: 'bn',
   categories: [
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
@@ -572,16 +571,14 @@ let state = {
   unlocked: {},
   progress: {},
   favorites: {},
-  reactions: {},
   comments: {},
-  recent: [],
   adViews: 0,
   users: {},
   settings: { maintenance: false }
 };
 
 let tg = window.Telegram.WebApp || {};
-let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
+let user = tg.initDataUnsafe?.user || { id: Math.floor(Math.random() * 1000000), first_name: 'Guest' };
 let currentCat = 'cat_all';
 let isAdShowing = false;
 let currentActiveVid = null;
@@ -610,6 +607,15 @@ async function initApp() {
 
       const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
       if (dbViral) state.viralLinks = dbViral;
+
+      const { data: dbComments } = await supabaseClient.from('comments').select('*');
+      if (dbComments) {
+        state.comments = {};
+        dbComments.forEach(c => {
+          if (!state.comments[c.video_id]) state.comments[c.video_id] = [];
+          state.comments[c.video_id].push({ user: c.user_name, text: c.text, time: c.created_at });
+        });
+      }
     } catch (err) {}
   }
 
@@ -686,7 +692,7 @@ function renderCategories() {
 function createVideoCard(v) {
   const isUnlocked = state.unlocked[v.id];
   const isFav = state.favorites[v.id];
-  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
+  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : (Number(v.views) || 0)) : 0;
   const catObj = state.categories.find(c => c.id === v.category_id || c.id === v.categoryId);
   const catName = catObj ? catObj.name : '';
   const reqAds = v.required_ads || v.requiredAds || 8;
@@ -824,9 +830,17 @@ async function openDetail(id) {
   currentActiveVid = v;
 
   if (!v.views) v.views = {};
+  if (typeof v.views !== 'object') v.views = {};
   v.views[user.id] = true;
-  saveState();
 
+  // Supabase-এ ভিউ আপডেট করা যাতে সবাই দেখতে পায়
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('videos').update({ views: v.views }).eq('id', v.id);
+    } catch (e) {}
+  }
+
+  saveState();
   updateDetailUI(v);
   
   const modal = document.getElementById('modal-detail');
@@ -841,14 +855,14 @@ async function updateDetailUI(v) {
   const titleEl = document.getElementById('md-title');
   if(titleEl) titleEl.textContent = v.title;
   
-  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : 0) : 0;
+  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : (Number(v.views) || 0)) : 0;
   const viewsNumEl = document.getElementById('md-views-num');
   if(viewsNumEl) viewsNumEl.textContent = viewsCount;
 
   const roundsNumEl = document.getElementById('md-rounds-num');
   if(roundsNumEl) roundsNumEl.textContent = `${prog}/${req}`;
 
-  const catObj = state.categories.find(c => c.id === v.category_id || c.categoryId === v.categoryId);
+  const catObj = state.categories.find(c => c.id === v.category_id || c.id === v.categoryId);
   const catNameEl = document.getElementById('md-cat-name');
   if(catNameEl) catNameEl.textContent = catObj ? catObj.name : 'Viral video';
   
@@ -1220,20 +1234,40 @@ function renderComments(vidId) {
   const list = state.comments[vidId] || [];
   cont.innerHTML = list.map(c => `
     <div class="comment-item">
-      <div class="comment-meta"><span>${c.user}</span><span>Just now</span></div>
+      <div class="comment-meta"><span>${c.user}</span><span>${c.time ? new Date(c.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}</span></div>
       <div style="font-size:12px;color:#fff">${c.text}</div>
     </div>
   `).join('');
 }
 
-function postComment() {
+async function postComment() {
   const input = document.getElementById('md-comment-input');
   if(!input || !input.value || !currentActiveVid) return;
+  
+  const newComment = {
+    video_id: currentActiveVid.id,
+    user_name: user.first_name,
+    text: input.value,
+    created_at: new Date().toISOString()
+  };
+
   if(!state.comments[currentActiveVid.id]) state.comments[currentActiveVid.id] = [];
-  state.comments[currentActiveVid.id].unshift({ user: user.first_name, text: input.value });
+  state.comments[currentActiveVid.id].unshift({ user: newComment.user_name, text: newComment.text, time: newComment.created_at });
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('comments').insert([{
+        video_id: newComment.video_id,
+        user_name: newComment.user_name,
+        text: newComment.text
+      }]);
+    } catch (e) {}
+  }
+
   input.value = '';
   saveState();
   renderComments(currentActiveVid.id);
+  showToast("কমেন্ট যোগ করা হয়েছে! ✅", "success");
 }
 
 function exportData() {
