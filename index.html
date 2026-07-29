@@ -277,21 +277,12 @@ body{padding-bottom:100px}
       <div class="form-group"><label>শিরোনাম</label><input type="text" id="av-title"></div>
       <div class="form-group"><label>ক্যাটাগরি</label><select id="av-cat"></select></div>
       <div class="form-group">
-        <label>থাম্বনেইল</label>
-        <input type="file" accept="image/*" onchange="previewFile(this, 'av-thumb-prev')">
-        <div class="thumb-prev" id="av-thumb-prev"><span>Preview</span></div>
+        <label>থাম্বনেইল ইমেজ লিংক</label>
+        <input type="text" id="av-thumb" placeholder="https://image-url.com/thumb.jpg">
       </div>
       <div class="form-group">
-        <label>সোর্স টাইপ</label>
-        <select id="av-source" onchange="toggleSourceType(this.value)">
-          <option value="link">External Link / Telegram</option>
-          <option value="file">📁 Gallery Upload (IndexedDB)</option>
-        </select>
-      </div>
-      <div id="source-link-wrap" class="form-group"><label>ভিডিও লিঙ্ক</label><input type="text" id="av-link"></div>
-      <div id="source-file-wrap" class="form-group hidden">
-        <label>ভিডিও ফাইল</label>
-        <input type="file" id="av-file" accept="video/*">
+        <label>ভিডিও শেয়ার লিংক / ডিরেক্ট লিংক</label>
+        <input type="text" id="av-link" placeholder="https://t.me/example/123 অথবা ভিডিও লিংক">
       </div>
       <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="1" min="1"></div>
       <button class="btn btn-p" onclick="saveVideo()">সেভ ভিডিও</button>
@@ -349,9 +340,15 @@ body{padding-bottom:100px}
     <div class="sheet-content">
       <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:15px"></div>
       <h2 id="md-title"></h2>
-      <div style="display:flex;gap:8px;margin:10px 0">
-        <span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span>
-        <span style="font-size:11px;color:var(--muted)" id="md-views">0 Views</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0">
+        <div>
+          <span class="badge-unlocked" id="md-badge" style="padding:2px 8px;border-radius:6px;font-size:10px">Premium</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:8px" id="md-views">0 Views</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button id="like-btn" onclick="reactVideo('like')" style="background:var(--surface);border:1px solid var(--border);padding:6px 12px;border-radius:10px;color:#fff;cursor:pointer">👍 <span id="like-count">0</span></button>
+          <button id="love-btn" onclick="reactVideo('love')" style="background:var(--surface);border:1px solid var(--border);padding:6px 12px;border-radius:10px;color:#fff;cursor:pointer">❤️ <span id="love-count">0</span></button>
+        </div>
       </div>
       <p id="md-desc" style="font-size:13px;color:var(--muted);line-height:1.5"></p>
       
@@ -389,11 +386,10 @@ body{padding-bottom:100px}
    1. CORE STATE, CONFIG & TRANSLATIONS
    ======================================================= */
 const ADMIN_ID = 7904568371;
-const DB_NAME = "VidUnlockDB_V2";
-const STORE_KEY = "VidUnlock_Core_State";
+const STORE_KEY = "VidUnlock_Core_State_V3";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iOmF0OjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -463,7 +459,7 @@ const i18n = {
 };
 
 let state = {
-  version: 4,
+  version: 5,
   lang: 'bn',
   categories: [
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
@@ -475,7 +471,7 @@ let state = {
   progress: {},
   favorites: {},
   comments: {},
-  recent: [],
+  reactions: {},
   adViews: 0,
   users: {},
   settings: { maintenance: false }
@@ -486,44 +482,22 @@ let user = tg.initDataUnsafe?.user || { id: 123456, first_name: 'Guest' };
 let currentView = 'home';
 let currentCat = 'cat_all';
 let isAdShowing = false;
-let db = null;
 
 /* =======================================================
-   2. INDEXEDDB SETUP
-   ======================================================= */
-async function initDB() {
-  return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 2);
-    request.onupgradeneeded = (e) => {
-      let db = e.target.result;
-      if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
-    };
-    request.onsuccess = (e) => { db = e.target.result; resolve(); };
-  });
-}
-
-async function saveFile(id, blob) {
-  const tx = db.transaction('files', 'readwrite');
-  return tx.objectStore('files').put(blob, id);
-}
-
-async function getFile(id) {
-  return new Promise((resolve) => {
-    const tx = db.transaction('files', 'readonly');
-    const req = tx.objectStore('files').get(id);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => resolve(null);
-  });
-}
-
-/* =======================================================
-   3. APP INITIALIZATION & SUPABASE SYNC
+   2. APP INITIALIZATION & SUPABASE SYNC
    ======================================================= */
 async function initApp() {
   tg.ready();
   tg.expand();
-  await initDB();
   
+  const savedLocal = localStorage.getItem(STORE_KEY);
+  if (savedLocal) {
+    try {
+      const parsed = JSON.parse(savedLocal);
+      state = { ...state, ...parsed };
+    } catch(e) {}
+  }
+
   try {
     const { data: dbVids } = await supabaseClient.from('videos').select('*');
     if (dbVids) state.videos = dbVids;
@@ -538,15 +512,6 @@ async function initApp() {
 
   } catch (err) {
     console.error("Supabase sync failed, using local storage", err);
-    const saved = localStorage.getItem(STORE_KEY);
-    if (saved) state = { ...state, ...JSON.parse(saved) };
-  }
-
-  const savedLocal = localStorage.getItem(STORE_KEY);
-  if (savedLocal) {
-    const parsed = JSON.parse(savedLocal);
-    if (parsed.viralLinks) state.viralLinks = parsed.viralLinks;
-    if (parsed.lang) state.lang = parsed.lang;
   }
 
   if (Number(user.id) === ADMIN_ID) {
@@ -566,7 +531,7 @@ function saveState() {
 }
 
 /* =======================================================
-   4. LANGUAGE SYSTEM (BN / EN)
+   3. LANGUAGE SYSTEM (BN / EN)
    ======================================================= */
 function toggleLanguage() {
   state.lang = state.lang === 'bn' ? 'en' : 'bn';
@@ -578,7 +543,6 @@ function applyLanguage() {
   const currentLang = state.lang;
   document.getElementById('lang-toggle-btn').textContent = currentLang === 'bn' ? '🌐 EN' : '🌐 BN';
 
-  // Translate elements with data-i18n attribute
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (i18n[currentLang][key]) {
@@ -586,7 +550,6 @@ function applyLanguage() {
     }
   });
 
-  // Translate placeholders
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     const key = el.getAttribute('data-i18n-ph');
     if (i18n[currentLang][key]) {
@@ -598,7 +561,7 @@ function applyLanguage() {
 }
 
 /* =======================================================
-   5. RENDERING LOGIC
+   4. RENDERING LOGIC
    ======================================================= */
 function renderCategories() {
   const container = document.getElementById('category-tabs');
@@ -665,7 +628,6 @@ function renderUnlocked() {
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>🔓</i>No unlocked videos</div>';
 }
 
-/* VIRAL LINKS VIEW RENDER */
 function renderViralLinks() {
   const cont = document.getElementById('viral-links-list');
   const links = state.viralLinks || [];
@@ -692,7 +654,7 @@ function renderViralLinks() {
 }
 
 /* =======================================================
-   6. VIDEO ACTIONS & AD SYSTEM
+   5. VIDEO ACTIONS & AD SYSTEM
    ======================================================= */
 let currentActiveVid = null;
 
@@ -709,7 +671,7 @@ async function openDetail(id) {
   document.getElementById('modal-detail').classList.add('open');
 }
 
-async function updateDetailUI(v) {
+function updateDetailUI(v) {
   const isUnlocked = state.unlocked[v.id];
   const prog = state.progress[v.id] || 0;
   const req = v.required_ads || v.requiredAds || 1;
@@ -721,20 +683,20 @@ async function updateDetailUI(v) {
   document.getElementById('md-fav-btn').textContent = state.favorites[v.id] ? "❤️" : "🤍";
   document.getElementById('md-fav-btn').onclick = () => toggleFav(v.id);
 
+  // Reactions count
+  if(!state.reactions[v.id]) state.reactions[v.id] = { like: 0, love: 0 };
+  document.getElementById('like-count').textContent = state.reactions[v.id].like;
+  document.getElementById('love-count').textContent = state.reactions[v.id].love;
+
   const mediaCont = document.getElementById('md-media-container');
-  if (isUnlocked && v.source === 'file') {
-    const blob = await getFile(v.fileId);
-    if (blob) mediaCont.innerHTML = `<video src="${URL.createObjectURL(blob)}" controls style="width:100%;height:100%"></video>`;
-  } else {
-    mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
-  }
+  mediaCont.innerHTML = `<img src="${v.thumb}" style="width:100%;height:100%;object-fit:cover">`;
 
   const actionArea = document.getElementById('md-action-area');
   if (isUnlocked) {
     actionArea.innerHTML = `
       <div class="admin-card" style="text-align:center;background:rgba(34,197,138,0.1)">
         <h3 style="color:var(--success);margin-bottom:10px">🔓 ভিডিও আনলকড!</h3>
-        ${v.source === 'link' ? `<button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO</button>` : `<p style="font-size:12px;color:var(--muted)">প্লেয়ারে ভিডিও চালু করুন।</p>`}
+        <button class="btn btn-s" onclick="watchExternal('${v.link}')">▶ WATCH VIDEO / OPEN LINK</button>
       </div>`;
   } else {
     actionArea.innerHTML = `
@@ -781,9 +743,9 @@ function handleAdSuccess(vidId) {
   state.adViews++;
 
   if (state.progress[vidId] >= req) {
-    state.unlocked[vidId] = true;
+    state.unlocked[vidId] = true; // Permanent unlock saved to state
     delete state.progress[vidId];
-    showToast("অভিনন্দন! ভিডিওটি আনলক হয়েছে। 🎉", "success");
+    showToast("অভিনন্দন! ভিডিওটি স্থায়ীভাবে আনলক হয়েছে। 🎉", "success");
   } else {
     showToast(`অ্যাড দেখা সফল! বাকি: ${req - state.progress[vidId]}`, "info");
   }
@@ -795,12 +757,10 @@ function handleAdSuccess(vidId) {
 
 function watchExternal(link) {
   if (!link) return;
-  
   let finalLink = link;
   if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
     finalLink = 'https://' + finalLink;
   }
-  
   if (tg.openLink) {
     tg.openLink(finalLink);
   } else {
@@ -808,28 +768,48 @@ function watchExternal(link) {
   }
 }
 
+function reactVideo(type) {
+  if(!currentActiveVid) return;
+  const id = currentActiveVid.id;
+  if(!state.reactions[id]) state.reactions[id] = { like: 0, love: 0 };
+  state.reactions[id][type]++;
+  saveState();
+  document.getElementById('like-count').textContent = state.reactions[id].like;
+  document.getElementById('love-count').textContent = state.reactions[id].love;
+  showToast("রিঅ্যাকশন সফল! ❤️", "success");
+}
+
+function shareVideo() {
+  if(!currentActiveVid) return;
+  const text = `এই প্রিমিয়াম ভিডিওটি দেখতে ভিজিট করুন: ${currentActiveVid.title} - ${currentActiveVid.link}`;
+  if(tg.openTelegramLink) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(currentActiveVid.link)}&text=${encodeURIComponent(text)}`);
+  } else {
+    navigator.clipboard.writeText(currentActiveVid.link);
+    showToast("লিংক কপি করা হয়েছে!", "success");
+  }
+}
+
 /* =======================================================
-   7. ADMIN ACTIONS (ADD & DELETE)
+   6. ADMIN ACTIONS (ADD & DELETE)
    ======================================================= */
 async function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
-  const source = document.getElementById('av-source').value;
+  const thumb = document.getElementById('av-thumb').value;
   const link = document.getElementById('av-link').value;
   const ads = parseInt(document.getElementById('av-ads').value) || 1;
-  const thumbBase64 = document.getElementById('av-thumb-prev')._data;
 
-  if (!title) return showToast("শিরোনাম দিন");
+  if (!title || !link) return showToast("শিরোনাম এবং ভিডিও লিংক দিন");
 
   const vidId = 'v' + Date.now();
   const vidData = { 
     id: vidId, 
     title, 
     category_id: catId, 
-    source, 
     link, 
     required_ads: ads, 
-    thumb: thumbBase64 || '', 
+    thumb: thumb || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe', 
     views: {}
   };
 
@@ -843,6 +823,7 @@ async function saveVideo() {
   showToast("ভিডিও সফলভাবে সেভ হয়েছে! ✅", "success");
   document.getElementById('av-title').value = '';
   document.getElementById('av-link').value = '';
+  document.getElementById('av-thumb').value = '';
 }
 
 async function deleteVideo(id) {
@@ -854,7 +835,6 @@ async function deleteVideo(id) {
   showToast("ভিডিও ডিলিট হয়েছে! 🗑️", "success");
 }
 
-/* SAVE VIRAL LINK (ADMIN) */
 async function saveViralLink() {
   const title = document.getElementById('avl-title').value;
   const url = document.getElementById('avl-url').value;
@@ -865,9 +845,7 @@ async function saveViralLink() {
 
   try {
     await supabaseClient.from('viral_links').insert([linkData]);
-  } catch (err) {
-    console.error(err);
-  }
+  } catch (err) { console.error(err); }
 
   if (!state.viralLinks) state.viralLinks = [];
   state.viralLinks.push(linkData);
@@ -879,15 +857,9 @@ async function saveViralLink() {
   document.getElementById('avl-url').value = '';
 }
 
-/* DELETE VIRAL LINK (ADMIN) */
 async function deleteViralLink(id) {
   if (!confirm("ভাইরাল লিংকটি ডিলিট করতে চান?")) return;
-  
-  try {
-    await supabaseClient.from('viral_links').delete().eq('id', id);
-  } catch (err) {
-    console.error(err);
-  }
+  try { await supabaseClient.from('viral_links').delete().eq('id', id); } catch (err) {}
 
   state.viralLinks = state.viralLinks.filter(l => l.id !== id);
   saveState();
@@ -902,7 +874,6 @@ function renderAdmin() {
   document.getElementById('ad-stat-u').textContent = Object.keys(state.users).length;
   document.getElementById('ad-stat-av').textContent = state.adViews;
 
-  // Video list
   const vidListCont = document.getElementById('admin-vid-list');
   if (vidListCont) {
     vidListCont.innerHTML = state.videos.length ? state.videos.map(v => `
@@ -916,7 +887,6 @@ function renderAdmin() {
     `).join('') : '<div class="empty-state">কোনো ভিডিও নেই</div>';
   }
 
-  // Viral Links List (Admin)
   const viralListCont = document.getElementById('admin-viral-list');
   if (viralListCont) {
     const links = state.viralLinks || [];
@@ -944,7 +914,7 @@ function switchAdminSubView(id, btn) {
 }
 
 /* =======================================================
-   8. UTILS & OTHERS
+   7. UTILS & OTHERS
    ========================================================= */
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1000,19 +970,6 @@ function updateStats() {
   document.getElementById('stat-total-v').textContent = state.videos.length;
   document.getElementById('stat-unlocked-v').textContent = Object.keys(state.unlocked).length;
   document.getElementById('stat-fav-v').textContent = Object.keys(state.favorites).filter(k => state.favorites[k]).length;
-}
-
-function previewFile(input, targetId) {
-  const file = input.files[0];
-  const target = document.getElementById(targetId);
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      target.innerHTML = `<img src="${e.target.result}">`;
-      target._data = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
 }
 
 function closeModal(id) {
