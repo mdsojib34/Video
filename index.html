@@ -255,7 +255,7 @@ body{padding-bottom:100px}
   </div>
 </header>
 
-<!-- SEARCH & CATEGories -->
+<!-- SEARCH & CATEGORIES -->
 <div id="sticky-utils">
   <div class="search-container">
     <div class="search-box">
@@ -597,19 +597,19 @@ async function initApp() {
 
   if (supabaseClient) {
     try {
-      const { data: dbVids } = await supabaseClient.from('videos').select('*');
-      if (dbVids && dbVids.length > 0) state.videos = dbVids;
+      const { data: dbVids, error: errVids } = await supabaseClient.from('videos').select('*');
+      if (!errVids && dbVids && dbVids.length > 0) state.videos = dbVids;
 
-      const { data: dbCats } = await supabaseClient.from('categories').select('*');
-      if (dbCats && dbCats.length > 0) {
+      const { data: dbCats, error: errCats } = await supabaseClient.from('categories').select('*');
+      if (!errCats && dbCats && dbCats.length > 0) {
         state.categories = [{ id: 'cat_all', name: 'সব', icon: '✨', order: 0 }, ...dbCats.filter(c => c.id !== 'cat_all')];
       }
 
-      const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
-      if (dbViral) state.viralLinks = dbViral;
+      const { data: dbViral, error: errViral } = await supabaseClient.from('viral_links').select('*');
+      if (!errViral && dbViral) state.viralLinks = dbViral;
 
-      const { data: dbComments } = await supabaseClient.from('comments').select('*');
-      if (dbComments) {
+      const { data: dbComments, error: errComments } = await supabaseClient.from('comments').select('*');
+      if (!errComments && dbComments) {
         state.comments = {};
         dbComments.forEach(c => {
           if (!state.comments[c.video_id]) state.comments[c.video_id] = [];
@@ -826,7 +826,10 @@ function renderViralLinks() {
 
 async function openDetail(id) {
   const v = state.videos.find(x => x.id === id);
-  if (!v) return;
+  if (!v) {
+    showToast("ভিডিও পাওয়া যায়নি!", "danger");
+    return;
+  }
   currentActiveVid = v;
 
   if (!v.views) v.views = {};
