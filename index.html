@@ -255,7 +255,7 @@ body{padding-bottom:100px}
   </div>
 </header>
 
-<!-- SEARCH & CATEGORIES -->
+<!-- SEARCH & CATEGories -->
 <div id="sticky-utils">
   <div class="search-container">
     <div class="search-box">
@@ -477,17 +477,8 @@ const STORE_KEY = "VidUnlock_Core_State_V9";
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
 
-const DEFAULT_VIDEOS = [
-  {
-    id: 'v_default_1',
-    title: 'ছোট ভাইকে চুটাতে দিলো বড়ো আপু',
-    category_id: 'cat_viral',
-    link: 'https://mdsojib34.github.io/Video/',
-    thumb: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60',
-    required_ads: 8,
-    views: {}
-  }
-];
+// ডিফল্ট বা ফলব্যাক ভিডিও তালিকা খালি করে দেওয়া হলো, এখন শুধু ডাটাবেজ থেকে লোড হবে
+const DEFAULT_VIDEOS = [];
 
 let supabaseClient;
 try {
