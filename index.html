@@ -80,6 +80,7 @@ body{padding-bottom:100px}
 .card-thumb{aspect-ratio:16/10;position:relative;background:#e2e8f0;cursor:pointer}
 .card-thumb img{width:100%;height:100%;object-fit:cover}
 .card-badge{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:6px;font-size:9px;font-weight:700;backdrop-filter:blur(6px)}
+.badge-locked{background:rgba(255,255,255,0.85);color:var(--warning);border:1px solid var(--border)}
 .badge-unlocked{background:rgba(16,185,129,0.9);color:#fff}
 .card-play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,0.1)}
 .play-btn-circle{width:36px;height:36px;background:rgba(255,255,255,0.8);backdrop-filter:blur(4px);border-radius:50%;display:grid;place-items:center;color:#0f172a}
@@ -104,6 +105,97 @@ body{padding-bottom:100px}
 .viral-icon{width:42px;height:42px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;font-size:20px;flex-shrink:0}
 .viral-title{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .viral-url{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+
+/* MODAL / BOTTOM SHEET */
+.modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:none;align-items:flex-end}
+.modal.open{display:flex}
+.modal-sheet{background:#121212;color:#ffffff;width:100%;max-height:92vh;border-radius:28px 28px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.4s cubic-bezier(0,0,0.2,1);border-top:1px solid #2a2a2a}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-header{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222}
+.sheet-content{padding:16px;overflow-y:auto;flex:1}
+
+/* DETAILS UI */
+.detail-top-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 15px 0;
+}
+.detail-stat-box {
+  background: #1e1e1e;
+  border: 1px solid #2c2c2c;
+  border-radius: 16px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.detail-stat-box b {
+  display: block;
+  font-size: 18px;
+  color: #fff;
+  font-weight: 800;
+}
+.detail-stat-box span {
+  font-size: 10px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-top: 2px;
+  display: block;
+}
+
+/* WATCH AD BUTTON */
+.btn-watch-ad {
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 50%, #9c27b0 100%);
+  color: #ffffff;
+  border: none;
+  width: 100%;
+  padding: 16px;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 25px rgba(255, 65, 108, 0.4);
+  cursor: pointer;
+  margin-top: 15px;
+  transition: 0.2s;
+}
+.btn-watch-ad:active { transform: scale(0.97); }
+
+/* BOTTOM ACTION BUTTONS */
+.detail-action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 15px;
+}
+.action-icon-btn {
+  background: #1e1e1e;
+  border: 1px solid #2c2c2c;
+  padding: 14px 10px;
+  border-radius: 16px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.action-icon-btn.share-btn {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  border: none;
+}
+.action-icon-btn:active { transform: scale(0.96); }
+
+/* COMMENTS */
+.comment-list{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.comment-item{background:#1e1e1e;padding:12px;border-radius:12px;border:1px solid #2c2c2c}
+.comment-meta{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;color:#a855f7}
 
 /* ADMIN */
 .admin-card{background:var(--surface);border:1px solid var(--border);padding:15px;border-radius:18px;margin-bottom:15px}
@@ -163,7 +255,7 @@ body{padding-bottom:100px}
   </div>
 </header>
 
-<!-- SEARCH & CATEGORIES -->
+<!-- SEARCH & CATEGories -->
 <div id="sticky-utils">
   <div class="search-container">
     <div class="search-box">
@@ -178,9 +270,10 @@ body{padding-bottom:100px}
 <section class="view active" id="view-home">
   <div class="hero-card">
     <h2 id="hero-welcome">হ্যালো! 👋</h2>
-    <p data-i18n="heroSub">আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো দেখুন একদম ফ্রিতে।</p>
+    <p data-i18n="heroSub">আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন একদম ফ্রিতে।</p>
     <div class="hero-stats">
       <div class="stat-pill"><b id="stat-total-v">0</b><span data-i18n="totalVideo">ভিডিও</span></div>
+      <div class="stat-pill"><b id="stat-unlocked-v">0</b><span data-i18n="unlockedVideo">আনলক</span></div>
       <div class="stat-pill"><b id="stat-fav-v">0</b><span data-i18n="favVideo">পছন্দ</span></div>
     </div>
   </div>
@@ -197,6 +290,12 @@ body{padding-bottom:100px}
   <div class="grid" id="fav-grid"></div>
 </section>
 
+<!-- VIEW: UNLOCKED -->
+<section class="view" id="view-unlock">
+  <h3 class="page-title" data-i18n="unlockedVids">🔓 আনলক করা</h3>
+  <div class="grid" id="unlock-grid"></div>
+</section>
+
 <!-- VIEW: VIRAL LINKS -->
 <section class="view" id="view-viral">
   <h3 class="page-title" data-i18n="viralLinks">🔥 ভাইরাল লিংক</h3>
@@ -211,9 +310,11 @@ body{padding-bottom:100px}
     <p style="color:var(--muted);font-size:12px" id="prof-id">ID: 000000</p>
   </div>
   <div class="admin-card" style="padding:0">
-    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="showView('fav')" data-i18n="myFavs">❤️ আমার পছন্দের ভিডিও</button>
+    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start;width:100%;background:none;padding:12px 16px;text-align:left;cursor:pointer;color:var(--text)" onclick="showView('fav')" data-i18n="myFavs">❤️ আমার পছন্দের ভিডিও</button>
     <div style="height:1px;background:var(--border)"></div>
-    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start" onclick="exportData()" data-i18n="backupDownload">📥 ব্যাকআপ ডাউনলোড</button>
+    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start;width:100%;background:none;padding:12px 16px;text-align:left;cursor:pointer;color:var(--text)" onclick="showView('unlock')" data-i18n="unlockedVids">🔓 আনলক করা ভিডিও</button>
+    <div style="height:1px;background:var(--border)"></div>
+    <button class="btn btn-g" style="border:none;border-radius:0;justify-content:flex-start;width:100%;background:none;padding:12px 16px;text-align:left;cursor:pointer;color:var(--text)" onclick="exportData()" data-i18n="backupDownload">📥 ব্যাকআপ ডাউনলোড</button>
   </div>
 </section>
 
@@ -251,7 +352,8 @@ body{padding-bottom:100px}
         <label>📁 ভিডিও ফাইল সিলেক্ট করুন</label>
         <input type="file" id="av-file" accept="video/*">
       </div>
-      <button class="btn btn-p" onclick="saveVideo()" id="upload-btn">ক্লাউডে আপলোড ও সেভ করুন</button>
+      <div class="form-group"><label>প্রয়োজনীয় বিজ্ঞাপন (Required Ads)</label><input type="number" id="av-ads" value="8" min="1"></div>
+      <button class="tab active" style="width:100%;border:none;border-radius:10px;padding:12px;font-weight:700;cursor:pointer" onclick="saveVideo()" id="upload-btn">ক্লাউডে আপলোড ও সেভ করুন</button>
     </div>
 
     <h4 style="margin:15px 0 10px">সকল ভিডিও তালিকা ও ডিলিট</h4>
@@ -263,7 +365,7 @@ body{padding-bottom:100px}
       <h4>➕ নতুন ক্যাটাগরি</h4>
       <div class="form-group"><label>নাম</label><input type="text" id="ac-name"></div>
       <div class="form-group"><label>ইমোজি/আইকন</label><input type="text" id="ac-icon" placeholder="🔥"></div>
-      <button class="btn btn-p" onclick="saveCategory()">সেভ ক্যাটাগরি</button>
+      <button class="tab active" style="width:100%;border:none;border-radius:10px;padding:12px;font-weight:700;cursor:pointer" onclick="saveCategory()">সেভ ক্যাটাগরি</button>
     </div>
 
     <h4 style="margin:15px 0 10px">সকল ক্যাটাগরি তালিকা ও ডিলিট</h4>
@@ -275,7 +377,7 @@ body{padding-bottom:100px}
       <h4 data-i18n="addViralLink">➕ নতুন ভাইরাল লিংক যোগ করুন</h4>
       <div class="form-group"><label data-i18n="linkTitle">লিংকের শিরোনাম</label><input type="text" id="avl-title" placeholder="যেমন: নতুন ভাইরাল ভিডিও লিংক"></div>
       <div class="form-group"><label data-i18n="linkUrl">ইউআরএল (URL)</label><input type="text" id="avl-url" placeholder="https://t.me/example"></div>
-      <button class="btn btn-p" onclick="saveViralLink()" data-i18n="saveLink">সেভ ভাইরাল লিংক</button>
+      <button class="tab active" style="width:100%;border:none;border-radius:10px;padding:12px;font-weight:700;cursor:pointer" onclick="saveViralLink()" data-i18n="saveLink">সেভ ভাইরাল লিংক</button>
     </div>
 
     <h4 style="margin:15px 0 10px" data-i18n="allViralLinks">সকল ভাইরাল লিংক তালিকা</h4>
@@ -286,18 +388,81 @@ body{padding-bottom:100px}
     <div class="admin-card">
       <h4>Data Management</h4>
       <div style="display:grid;gap:10px;margin-top:10px">
-        <button class="btn btn-g" onclick="exportData()">📥 Export Backup (JSON)</button>
-        <label class="btn btn-g" style="cursor:pointer;text-align:center">📤 Import Backup<input type="file" style="display:none" accept=".json" onchange="importData(this)"></label>
-        <button class="btn btn-d" onclick="clearAppData()">⚠️ Clear All Data</button>
+        <button class="tab active" style="border:none;border-radius:10px;padding:12px;font-weight:700;cursor:pointer" onclick="exportData()">📥 Export Backup (JSON)</button>
+        <label class="tab" style="cursor:pointer;text-align:center;border-radius:10px;padding:12px;font-weight:700">📤 Import Backup<input type="file" style="display:none" accept=".json" onchange="importData(this)"></label>
+        <button class="tab" style="background:var(--danger);color:#fff;border:none;border-radius:10px;padding:12px;font-weight:700;cursor:pointer" onclick="clearAppData()">⚠️ Clear All Data</button>
       </div>
     </div>
   </div>
 </section>
 
+<!-- MODAL: DETAIL -->
+<div class="modal" id="modal-detail">
+  <div class="modal-sheet">
+    <div class="sheet-header">
+      <button onclick="closeModal('modal-detail')" style="background:none;border:none;font-size:22px;color:#fff;cursor:pointer">✕</button>
+      <div id="md-header-title" style="font-weight:700;color:#fff">Desi Honey</div>
+      <div style="display:flex;gap:15px;align-items:center;">
+        <button id="md-fav-btn" style="background:none;border:none;font-size:22px;cursor:pointer;">🤍</button>
+      </div>
+    </div>
+    <div class="sheet-content">
+      <div id="md-media-container" style="width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;margin-bottom:10px;position:relative"></div>
+      
+      <h2 id="md-title" style="font-size:16px;color:#fff;margin-bottom:6px;line-height:1.4"></h2>
+      <div style="font-size:11px;color:#9ca3af;margin-bottom:15px">🔥 New 🔥 Each round has ad step 🔒</div>
+
+      <!-- STATS BOXES -->
+      <div class="detail-top-stats">
+        <div class="detail-stat-box">
+          <b id="md-views-num">0</b>
+          <span>Views</span>
+        </div>
+        <div class="detail-stat-box">
+          <b id="md-rounds-num">0/8</b>
+          <span>Rounds Done</span>
+        </div>
+        <div class="detail-stat-box">
+          <b id="md-cat-name">Viral video</b>
+          <span>Category</span>
+        </div>
+      </div>
+
+      <!-- WATCH AD BUTTON -->
+      <div id="md-action-area"></div>
+
+      <!-- BOTTOM ACTION ROW -->
+      <div class="detail-action-row">
+        <button class="action-icon-btn" onclick="closeModal('modal-detail'); showView('home')">
+          <span style="font-size:16px">🏠</span> Home
+        </button>
+        <button class="action-icon-btn" onclick="scrollToComments()">
+          <span style="font-size:16px">💬</span> Comments
+        </button>
+        <button class="action-icon-btn share-btn" onclick="shareVideo()">
+          <span style="font-size:16px">🔗</span> Share
+        </button>
+      </div>
+
+      <div style="margin-top:25px;border-top:1px solid #222;padding-top:15px" id="comment-section-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h4 style="color:#fff">💬 কমেন্টস</h4>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="md-comment-input" placeholder="আপনার মন্তব্য লিখুন..." style="flex:1;background:#1e1e1e;border:1px solid #2c2c2c;padding:10px;border-radius:10px;color:#fff;outline:none">
+          <button class="tab active" style="width:auto;padding:0 15px;border:none;border-radius:10px;font-weight:700;cursor:pointer" onclick="postComment()">Submit</button>
+        </div>
+        <div class="comment-list" id="md-comments"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="showView('home')"><i>🏠</i><span data-i18n="home">হোম</span></button>
   <button class="nav-item" onclick="showView('fav')"><i>❤️</i><span data-i18n="fav">পছন্দ</span></button>
+  <button class="nav-item" onclick="showView('unlock')"><i>🔓</i><span data-i18n="unlock">আনলক</span></button>
   <button class="nav-item" onclick="showView('viral')"><i>🔥</i><span data-i18n="viralLinks">ভাইরাল লিংক</span></button>
   <button class="nav-item" onclick="showView('profile')"><i>👤</i><span data-i18n="profile">প্রোফাইল</span></button>
   <button class="nav-item hidden" id="nav-admin" onclick="showView('admin')"><i>🛠</i><span data-i18n="admin">অ্যাডমিন</span></button>
@@ -307,7 +472,7 @@ body{padding-bottom:100px}
 
 <script>
 const ADMIN_ID = 7904568371;
-const STORE_KEY = "VidUnlock_Core_State_V10";
+const STORE_KEY = "VidUnlock_Core_State_V9";
 
 const SUPABASE_URL = 'https://xvrmkygegzyavwhtvcjp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cm1reWdlZ3p5YXZ3aHR2Y2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg4ODksImV4cCI6MjEwMDgyNDg4OX0.Zm2nj2ea3Cz9tVgL7EQBNoYZ_krAZcYg-CSUg7_Ppk0';
@@ -319,6 +484,7 @@ const DEFAULT_VIDEOS = [
     category_id: 'cat_viral',
     link: 'https://mdsojib34.github.io/Video/',
     thumb: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60',
+    required_ads: 8,
     views: {}
   }
 ];
@@ -332,14 +498,17 @@ const i18n = {
   bn: {
     premiumAccess: "PREMIUM ACCESS",
     searchPlaceholder: "ভিডিও বা ক্যাটাগরি খুঁজুন...",
-    heroSub: "আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো দেখুন একদম ফ্রিতে।",
+    heroSub: "আপনার পছন্দের প্রিমিয়াম ভিডিওগুলো আনলক করুন একদম ফ্রিতে।",
     totalVideo: "ভিডিও",
+    unlockedVideo: "আনলক",
     favVideo: "পছন্দ",
     allVideos: "সব ভিডিও",
     myFavs: "❤️ আপনার পছন্দ",
+    unlockedVids: "🔓 আনলক করা",
     viralLinks: "🔥 ভাইরাল লিংক",
     home: "হোম",
     fav: "পছন্দ",
+    unlock: "আনলক",
     profile: "প্রোফাইল",
     admin: "অ্যাডমিন",
     backupDownload: "📥 ব্যাকআপ ডাউনলোড",
@@ -354,19 +523,23 @@ const i18n = {
     linkUrl: "ইউআরএল (URL)",
     saveLink: "সেভ ভাইরাল লিংক",
     allViralLinks: "সকল ভাইরাল লিংক তালিকা",
+    visitLink: "লিংকে যান 🚀",
     delete: "ডিলিট"
   },
   en: {
     premiumAccess: "PREMIUM ACCESS",
     searchPlaceholder: "Search videos or categories...",
-    heroSub: "Watch your favorite premium videos completely for free.",
+    heroSub: "Unlock your favorite premium videos completely for free.",
     totalVideo: "VIDEOS",
+    unlockedVideo: "UNLOCKED",
     favVideo: "FAVORITES",
     allVideos: "All Videos",
     myFavs: "❤️ Favorites",
+    unlockedVids: "🔓 Unlocked Videos",
     viralLinks: "🔥 Viral Links",
     home: "Home",
     fav: "Favorites",
+    unlock: "Unlocked",
     profile: "Profile",
     admin: "Admin",
     backupDownload: "📥 Backup Download",
@@ -381,12 +554,13 @@ const i18n = {
     linkUrl: "URL",
     saveLink: "Save Link",
     allViralLinks: "All Viral Links",
+    visitLink: "Visit Link 🚀",
     delete: "Delete"
   }
 };
 
 let state = {
-  version: 10,
+  version: 9,
   lang: 'bn',
   categories: [
     { id: 'cat_all', name: 'সব', icon: '✨', order: 0 },
@@ -394,7 +568,11 @@ let state = {
   ],
   videos: DEFAULT_VIDEOS,
   viralLinks: [],
+  unlocked: {},
+  progress: {},
   favorites: {},
+  comments: {},
+  adViews: 0,
   users: {},
   settings: { maintenance: false }
 };
@@ -402,6 +580,8 @@ let state = {
 let tg = window.Telegram.WebApp || {};
 let user = tg.initDataUnsafe?.user || { id: Math.floor(Math.random() * 1000000), first_name: 'Guest' };
 let currentCat = 'cat_all';
+let isAdShowing = false;
+let currentActiveVid = null;
 
 async function initApp() {
   if (tg.ready) tg.ready();
@@ -427,7 +607,21 @@ async function initApp() {
 
       const { data: dbViral } = await supabaseClient.from('viral_links').select('*');
       if (dbViral) state.viralLinks = dbViral;
+
+      const { data: dbComments } = await supabaseClient.from('comments').select('*');
+      if (dbComments) {
+        state.comments = {};
+        dbComments.forEach(c => {
+          if (!state.comments[c.video_id]) state.comments[c.video_id] = [];
+          state.comments[c.video_id].push({ user: c.user_name, text: c.text, time: c.created_at });
+        });
+      }
     } catch (err) {}
+  }
+
+  const startParam = tg.initDataUnsafe?.start_param || tg.initDataUnsafe?.startapp;
+  if (startParam) {
+    setTimeout(() => { openDetail(startParam); }, 500);
   }
 
   if (Number(user.id) === ADMIN_ID) {
@@ -496,24 +690,27 @@ function renderCategories() {
 }
 
 function createVideoCard(v) {
+  const isUnlocked = state.unlocked[v.id];
   const isFav = state.favorites[v.id];
   const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : (Number(v.views) || 0)) : 0;
   const catObj = state.categories.find(c => c.id === v.category_id || c.id === v.categoryId);
   const catName = catObj ? catObj.name : '';
+  const reqAds = v.required_ads || v.requiredAds || 8;
+  const prog = state.progress[v.id] || 0;
 
   return `
     <div class="card" id="card-${v.id}">
-      <div class="card-thumb" onclick="playVideo('${v.link}')">
+      <div class="card-thumb" onclick="openDetail('${v.id}')">
         <img src="${v.thumb || ''}" loading="lazy">
-        <div class="card-badge badge-unlocked">
-          🔓 সরাসরি প্লে
+        <div class="card-badge ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}">
+          ${isUnlocked ? '🔓 আনলক' : `UNLOCK — ${prog}/${reqAds}`}
         </div>
         <div class="card-play"><div class="play-btn-circle">▶</div></div>
       </div>
       <div class="card-body">
         <div class="card-cat">${catName}</div>
         <div class="card-title-row">
-          <div class="card-title" onclick="playVideo('${v.link}')">${v.title}</div>
+          <div class="card-title" onclick="openDetail('${v.id}')">${v.title}</div>
           <button class="card-menu-btn" onclick="toggleCardMenu(event, '${v.id}')">⋮</button>
         </div>
         
@@ -521,29 +718,13 @@ function createVideoCard(v) {
           <div class="card-menu-item" onclick="copyVideoShareLink('${v.id}')">📋 লিংক কপি করুন</div>
         </div>
 
-        <div class="card-footer" onclick="playVideo('${v.link}')" style="cursor:pointer">
+        <div class="card-footer" onclick="openDetail('${v.id}')" style="cursor:pointer">
           <span>👁 ${viewsCount} views</span>
-          <span onclick="event.stopPropagation(); toggleFav('${v.id}')">${isFav ? '❤️' : '🤍'}</span>
+          <span>${isFav ? '❤️' : '🤍'}</span>
         </div>
       </div>
     </div>
   `;
-}
-
-function playVideo(link) {
-  if (!link) {
-    showToast("ভিডিও লিংক পাওয়া যায়নি!", "danger");
-    return;
-  }
-  let finalLink = link;
-  if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
-    finalLink = 'https://' + finalLink;
-  }
-  if (tg.openLink) {
-    tg.openLink(finalLink);
-  } else {
-    window.open(finalLink, '_blank');
-  }
 }
 
 function toggleCardMenu(event, vidId) {
@@ -589,6 +770,7 @@ function fallbackCopyText(text) {
 function renderAll() {
   renderHome();
   renderFavs();
+  renderUnlocked();
   renderViralLinks();
   renderAdmin();
   updateStats();
@@ -611,6 +793,13 @@ function renderFavs() {
   grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>❤️</i>No favorites yet</div>';
 }
 
+function renderUnlocked() {
+  const grid = document.getElementById('unlock-grid');
+  if(!grid) return;
+  const vids = state.videos.filter(v => state.unlocked[v.id]);
+  grid.innerHTML = vids.length ? vids.map(createVideoCard).join('') : '<div class="empty-state"><i>🔓</i>No unlocked videos</div>';
+}
+
 function renderViralLinks() {
   const cont = document.getElementById('viral-links-list');
   if(!cont) return;
@@ -628,16 +817,153 @@ function renderViralLinks() {
           <div class="viral-url">${l.url}</div>
         </div>
       </div>
-      <button class="btn btn-s" style="width:auto;padding:8px 14px;font-size:12px" onclick="playVideo('${l.url}')">
+      <button class="tab active" style="width:auto;padding:8px 14px;font-size:12px;border:none;border-radius:8px;cursor:pointer" onclick="watchExternal('${l.url}')">
         Open 🚀
       </button>
     </div>
   `).join('');
 }
 
+async function openDetail(id) {
+  const v = state.videos.find(x => x.id === id);
+  if (!v) return;
+  currentActiveVid = v;
+
+  if (!v.views) v.views = {};
+  if (typeof v.views !== 'object') v.views = {};
+  v.views[user.id] = true;
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('videos').update({ views: v.views }).eq('id', v.id);
+    } catch (e) {}
+  }
+
+  saveState();
+  updateDetailUI(v);
+  
+  const modal = document.getElementById('modal-detail');
+  if(modal) modal.classList.add('open');
+}
+
+async function updateDetailUI(v) {
+  const isUnlocked = state.unlocked[v.id];
+  const prog = state.progress[v.id] || 0;
+  const req = v.required_ads || v.requiredAds || 8;
+
+  const titleEl = document.getElementById('md-title');
+  if(titleEl) titleEl.textContent = v.title;
+  
+  const viewsCount = v.views ? (typeof v.views === 'object' ? Object.keys(v.views).length : (Number(v.views) || 0)) : 0;
+  const viewsNumEl = document.getElementById('md-views-num');
+  if(viewsNumEl) viewsNumEl.textContent = viewsCount;
+
+  const roundsNumEl = document.getElementById('md-rounds-num');
+  if(roundsNumEl) roundsNumEl.textContent = `${prog}/${req}`;
+
+  const catObj = state.categories.find(c => c.id === v.category_id || c.id === v.categoryId);
+  const catNameEl = document.getElementById('md-cat-name');
+  if(catNameEl) catNameEl.textContent = catObj ? catObj.name : 'Viral video';
+  
+  const favBtn = document.getElementById('md-fav-btn');
+  if(favBtn) {
+    favBtn.textContent = state.favorites[v.id] ? "❤️" : "🤍";
+    favBtn.onclick = () => toggleFav(v.id);
+  }
+
+  const mediaCont = document.getElementById('md-media-container');
+  if(mediaCont) {
+    if (isUnlocked && v.link) {
+      mediaCont.innerHTML = `<video src="${v.link}" controls autoplay style="width:100%;height:100%"></video>`;
+    } else {
+      mediaCont.innerHTML = `<img src="${v.thumb || ''}" style="width:100%;height:100%;object-fit:cover">`;
+    }
+  }
+
+  const actionArea = document.getElementById('md-action-area');
+  if(actionArea) {
+    if (isUnlocked) {
+      actionArea.innerHTML = `
+        <div style="background:rgba(16,185,129,0.15);border:1px solid #10b981;border-radius:18px;padding:16px;text-align:center;margin-top:15px">
+          <h3 style="color:#10b981;margin-bottom:5px">🔓 ভিডিও আনলকড!</h3>
+          <p style="font-size:12px;color:#9ca3af">উপরের প্লেয়ারে ভিডিও প্লে করুন।</p>
+        </div>`;
+    } else {
+      actionArea.innerHTML = `
+        <button class="btn-watch-ad" id="ad-btn" onclick="watchAd()">
+          <span>▶ WATCH AD ( ${prog}/${req} )</span>
+        </button>
+        <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:8px">Complete ${req} rounds to unlock</div>`;
+    }
+  }
+  renderComments(v.id);
+}
+
+function scrollToComments() {
+  const box = document.getElementById('comment-section-box');
+  if(box) box.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function watchAd() {
+  if (isAdShowing) return;
+  const v = currentActiveVid;
+  const btn = document.getElementById('ad-btn');
+  
+  if (typeof show_11404425 !== 'function') {
+    showToast("Ad SDK loading...", "warning");
+    return;
+  }
+
+  isAdShowing = true;
+  if(btn) btn.disabled = true;
+
+  try {
+    await show_11404425(); 
+    handleAdSuccess(v.id);
+  } catch (err) {
+    console.error("Ad failed:", err);
+    showToast("Ad display failed.", "danger");
+  } finally {
+    isAdShowing = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function handleAdSuccess(vidId) {
+  const v = state.videos.find(x => x.id === vidId);
+  if(!v) return;
+
+  const req = v.required_ads || v.requiredAds || 8;
+  state.progress[vidId] = (state.progress[vidId] || 0) + 1;
+  state.adViews++;
+
+  if (state.progress[vidId] >= req) {
+    state.unlocked[vidId] = true;
+    delete state.progress[vidId];
+    showToast("অভিনন্দন! ভিডিওটি সম্পূর্ণ আনলক হয়েছে। 🎉", "success");
+  } else {
+    showToast(`রাউন্ড সম্পন্ন! বাকি: ${req - state.progress[vidId]}`, "info");
+  }
+  
+  saveState();
+  renderAll();
+  updateDetailUI(v);
+}
+
+function watchExternal(link) {
+  if (!link) return;
+  let finalLink = link;
+  if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
+    finalLink = 'https://' + finalLink;
+  }
+  if (tg.openLink) tg.openLink(finalLink);
+  else window.open(finalLink, '_blank');
+}
+
 async function saveVideo() {
   const title = document.getElementById('av-title').value;
   const catId = document.getElementById('av-cat').value;
+  const ads = parseInt(document.getElementById('av-ads').value) || 8;
   const thumbPrev = document.getElementById('av-thumb-prev');
   const thumbBase64 = thumbPrev ? thumbPrev._data : '';
   const fileInput = document.getElementById('av-file');
@@ -666,6 +992,7 @@ async function saveVideo() {
         category_id: catId, 
         source: 'file', 
         link: publicUrlData.publicUrl,
+        required_ads: ads, 
         thumb: thumbBase64 || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60', 
         views: {}
       };
@@ -766,7 +1093,7 @@ function renderAdmin() {
   setEl('ad-stat-v', state.videos.length);
   setEl('ad-stat-c', state.categories.length);
   setEl('ad-stat-u', Object.keys(state.users || {}).length);
-  setEl('ad-stat-av', 0);
+  setEl('ad-stat-av', state.adViews);
 
   const vidListCont = document.getElementById('admin-vid-list');
   if (vidListCont) {
@@ -776,7 +1103,7 @@ function renderAdmin() {
           <img src="${v.thumb || ''}" class="admin-list-thumb">
           <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">${v.title}</div>
         </div>
-        <button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteVideo('${v.id}')">ডিলিট</button>
+        <button class="tab" style="background:var(--danger);color:#fff;width:auto;padding:6px 12px;font-size:11px;border:none;border-radius:8px;cursor:pointer" onclick="deleteVideo('${v.id}')">ডিলিট</button>
       </div>
     `).join('') : '<div class="empty-state">কোনো ভিডিও নেই</div>';
   }
@@ -802,7 +1129,7 @@ function renderAdmin() {
             <div style="font-size:10px;color:var(--muted);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.url}</div>
           </div>
         </div>
-        <button class="btn btn-d" style="width:auto;padding:6px 12px;font-size:11px" onclick="deleteViralLink('${l.id}')">ডিলিট</button>
+        <button class="tab" style="background:var(--danger);color:#fff;width:auto;padding:6px 12px;font-size:11px;border:none;border-radius:8px;cursor:pointer" onclick="deleteViralLink('${l.id}')">ডিলিট</button>
       </div>
     `).join('') : '<div class="empty-state">কোনো লিংক যুক্ত নেই</div>';
   }
@@ -828,7 +1155,7 @@ function showView(viewId) {
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(n => n.classList.remove('active'));
   
-  const viewIndexMap = { 'home': 0, 'fav': 1, 'viral': 2, 'profile': 3, 'admin': 4 };
+  const viewIndexMap = { 'home': 0, 'fav': 1, 'unlock': 2, 'viral': 3, 'profile': 4, 'admin': 5 };
   if (viewIndexMap[viewId] !== undefined && navItems[viewIndexMap[viewId]]) {
     navItems[viewIndexMap[viewId]].classList.add('active');
   }
@@ -876,6 +1203,7 @@ function updateUserUI() {
 function updateStats() {
   const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
   setEl('stat-total-v', state.videos.length);
+  setEl('stat-unlocked-v', Object.keys(state.unlocked).length);
   setEl('stat-fav-v', Object.keys(state.favorites).filter(k => state.favorites[k]).length);
 }
 
@@ -892,6 +1220,55 @@ function previewFile(input, targetId) {
   }
 }
 
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if(modal) modal.classList.remove('open');
+  const mediaCont = document.getElementById('md-media-container');
+  if(mediaCont) mediaCont.innerHTML = '';
+}
+
+function renderComments(vidId) {
+  const cont = document.getElementById('md-comments');
+  if(!cont) return;
+  const list = state.comments[vidId] || [];
+  cont.innerHTML = list.map(c => `
+    <div class="comment-item">
+      <div class="comment-meta"><span>${c.user}</span><span>${c.time ? new Date(c.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}</span></div>
+      <div style="font-size:12px;color:#fff">${c.text}</div>
+    </div>
+  `).join('');
+}
+
+async function postComment() {
+  const input = document.getElementById('md-comment-input');
+  if(!input || !input.value || !currentActiveVid) return;
+  
+  const newComment = {
+    video_id: currentActiveVid.id,
+    user_name: user.first_name,
+    text: input.value,
+    created_at: new Date().toISOString()
+  };
+
+  if(!state.comments[currentActiveVid.id]) state.comments[currentActiveVid.id] = [];
+  state.comments[currentActiveVid.id].unshift({ user: newComment.user_name, text: newComment.text, time: newComment.created_at });
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('comments').insert([{
+        video_id: newComment.video_id,
+        user_name: newComment.user_name,
+        text: newComment.text
+      }]);
+    } catch (e) {}
+  }
+
+  input.value = '';
+  saveState();
+  renderComments(currentActiveVid.id);
+  showToast("কমেন্ট যোগ করা হয়েছে! ✅", "success");
+}
+
 function exportData() {
   const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -904,6 +1281,16 @@ function clearAppData() {
   if (confirm("Clear everything?")) {
     localStorage.clear();
     location.reload();
+  }
+}
+
+function shareVideo() {
+  if (currentActiveVid) {
+    copyVideoShareLink(currentActiveVid.id);
+  } else if (tg.switchInlineQuery) {
+    tg.switchInlineQuery("Check out this awesome video!");
+  } else {
+    showToast("Share feature requires Telegram WebApp", "info");
   }
 }
 
